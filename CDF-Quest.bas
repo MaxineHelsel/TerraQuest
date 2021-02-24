@@ -7,7 +7,11 @@ SCREEN NEWIMAGE(640, 480, 32)
 
 'declare variable names and data types
 DIM SHARED file AS file
-DIM SHARED map AS map
+DIM SHARED player AS character
+DIM SHARED tick AS UNSIGNED INTEGER64
+DIM SHARED tile(40, 30)
+DIM SHARED theme
+
 
 'include character data and other values in seperate files
 file.char_file = "Assets\Tiles\character.png"
@@ -15,10 +19,10 @@ file.grass_file = "Assets\Tiles\grass.png"
 file.snow_file = "Assets\Tiles\snow.png"
 file.interior_file = "Assets\Tiles\interior.png"
 
-map.theme = 0
+'load mapdata from file
+theme = 0
+tile(10, 20) = 1
 
-
-DATA
 
 
 'load assets
@@ -32,7 +36,16 @@ DO
     SETBG
     SETMAP
     PRINT FRAMEPS
+    PRINT player.x
+    PRINT player.y
+    PRINT player.facing
+    PRINT tick
 
+
+    MOVE
+    SPSET
+
+    tick = tick + 1
     LIMIT 60
     DISPLAY
     CLS
@@ -55,29 +68,102 @@ SUB SETBG
     DIM ii AS BYTE
     FOR i = 0 TO 30
         FOR ii = 0 TO 40
-            IF map.theme = 0 THEN
+            IF theme = 0 THEN
                 PUTIMAGE (ii * 16, i * 16), file.grass, , (16, 16)-(31, 31)
-            ELSEIF map.theme = 1 THEN
+            ELSEIF theme = 1 THEN
                 PUTIMAGE (ii * 16, i * 16), file.snow, , (16, 16)-(31, 31)
             END IF
         NEXT
     NEXT
 END SUB
+'tile list
+'0=grass
+'1=cut grass
 
 SUB SETMAP
     DIM i AS BYTE
     DIM ii AS BYTE
     FOR i = 0 TO 30
         FOR ii = 0 TO 40
-            IF map.theme = 0 THEN
+            IF theme = 0 THEN
+                IF tile(ii, i) = 1 THEN PUTIMAGE (ii * 16, i * 16), file.grass, , (0, 16)-(15, 31)
 
-            ELSEIF map.theme = 1 THEN
+            ELSEIF theme = 1 THEN
 
             END IF
         NEXT
     NEXT
 
 END SUB
+
+SUB MOVE
+    STATIC stopping
+    STATIC delta
+
+    IF KEYDOWN(119) THEN player.y = player.y - .5: player.facing = 0: player.moving = 1 ELSE player.moving = 0
+    IF KEYDOWN(115) THEN player.y = player.y + .5: player.facing = 1: player.moving = 1
+    IF KEYDOWN(97) THEN player.x = player.x - .5: player.facing = 2: player.moving = 1
+    IF KEYDOWN(100) THEN player.x = player.x + .5: player.facing = 3: player.moving = 1
+    IF KEYDOWN(100306) AND player.moving = 1 THEN
+        IF player.facing = 0 THEN player.y = player.y - .5
+        IF player.facing = 1 THEN player.y = player.y + .5
+        IF player.facing = 2 THEN player.x = player.x - .5
+        IF player.facing = 3 THEN player.x = player.x + .5
+    END IF
+    PRINT player.moving
+END SUB
+
+SUB SPSET
+    STATIC anim AS BYTE
+
+    SELECT CASE player.facing
+        CASE 0
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (0, 0)-(15, 17)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 0)-(31, 17)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (32, 0)-(47, 17)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 0)-(31, 17)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 0)-(31, 17)
+            END IF
+        CASE 1
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (0, 36)-(15, 54)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 36)-(31, 53)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (32, 36)-(47, 53)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 36)-(31, 53)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 36)-(31, 53)
+            END IF
+
+        CASE 2
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (0, 54)-(15, 71)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 54)-(31, 71)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (32, 54)-(47, 71)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 54)-(31, 71)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 54)-(31, 71)
+            END IF
+
+        CASE 3
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (0, 18)-(15, 35)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 18)-(31, 35)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (32, 18)-(47, 35)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 18)-(31, 35)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2), file.char, , (16, 18)-(31, 35)
+            END IF
+    END SELECT
+
+    PRINT anim
+    anim = anim + 1
+    IF KEYDOWN(100306) THEN anim = anim + 1
+    IF anim > 59 THEN anim = 0
+END SUB
+
+
 
 TYPE file
     char_file AS STRING
@@ -90,8 +176,16 @@ TYPE file
     interior AS LONG
 END TYPE
 
-TYPE map
-    theme AS BYTE
+
+TYPE character
+    x AS SINGLE
+    y AS SINGLE
+    facing AS BYTE
+    moving AS BYTE
+    type AS BYTE
+
+    level AS BYTE
+
 END TYPE
 
 
