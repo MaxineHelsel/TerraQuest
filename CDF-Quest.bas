@@ -17,6 +17,10 @@ file.interior_file = "Assets\Tiles\interior.png"
 
 map.theme = 0
 
+
+DATA
+
+
 'load assets
 file.char = LOADIMAGE(file.char_file)
 file.grass = LOADIMAGE(file.grass_file)
@@ -25,19 +29,8 @@ file.interior = LOADIMAGE(file.interior_file)
 
 
 DO
-    DIM i AS BYTE
-    DIM ii AS BYTE
-    FOR i = 0 TO 30
-        FOR ii = 0 TO 40
-            IF map.theme = 0 THEN
-                PUTIMAGE (ii * 16, i * 16), file.grass, , (16, 16)-(31, 31)
-            ELSEIF map.theme = 1 THEN
-
-            END IF
-        NEXT
-    NEXT
-
-
+    SETBG
+    SETMAP
     PRINT FRAMEPS
 
     LIMIT 60
@@ -65,10 +58,25 @@ SUB SETBG
             IF map.theme = 0 THEN
                 PUTIMAGE (ii * 16, i * 16), file.grass, , (16, 16)-(31, 31)
             ELSEIF map.theme = 1 THEN
+                PUTIMAGE (ii * 16, i * 16), file.snow, , (16, 16)-(31, 31)
+            END IF
+        NEXT
+    NEXT
+END SUB
+
+SUB SETMAP
+    DIM i AS BYTE
+    DIM ii AS BYTE
+    FOR i = 0 TO 30
+        FOR ii = 0 TO 40
+            IF map.theme = 0 THEN
+
+            ELSEIF map.theme = 1 THEN
 
             END IF
         NEXT
     NEXT
+
 END SUB
 
 TYPE file
