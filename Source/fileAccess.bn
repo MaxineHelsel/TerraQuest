@@ -1,1 +1,6 @@
- 
+SUB loadAssets
+    file.char = loadimage(file.char_file)
+    file.grass = loadimage(file.grass_file)
+    file.snow = loadimage(file.snow_file)
+    file.interior = loadimage(file.interior_file)
+END SUB
