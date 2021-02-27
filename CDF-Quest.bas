@@ -23,9 +23,18 @@ file.interior_file = "Assets\Tiles\interior.png"
 
 'load mapdata from file
 theme = 0
+tile(10, 10) = 2
+tile(11, 10) = 2
+
+tile(14, 10) = 2
+tile(17, 10) = 2
+tile(17, 12) = 2
+tile(19, 10) = 2
+tile(19, 12) = 2
 
 
-
+player.x = 10
+player.y = 10
 
 'load assets
 file.char = LOADIMAGE(file.char_file)
@@ -37,15 +46,17 @@ file.interior = LOADIMAGE(file.interior_file)
 DO
     SETBG
     SETMAP
-    PRINT FRAMEPS
-    PRINT player.x
-    PRINT player.y
-    PRINT player.facing
-    PRINT tick
+    PRINT "Framerate: "; FRAMEPS
+    PRINT "Player.x: "; player.x
+    PRINT "Player.y: "; player.y
+    PRINT "Player.facing: "; player.facing
+    PRINT "Frame: "; tick
 
 
     MOVE
+    COLDET
     SPSET
+
 
     tick = tick + 1
     LIMIT 60
@@ -86,6 +97,7 @@ END SUB
 'tile list
 '0=grass
 '1=cut grass
+'2=bush
 
 SUB SETMAP
     DIM i AS BYTE
@@ -94,7 +106,7 @@ SUB SETMAP
         FOR ii = 0 TO 40
             IF theme = 0 THEN
                 IF tile(ii, i) = 1 THEN PUTIMAGE (ii * 16, i * 16)-((ii * 16) + 16, (i * 16) + 16), file.grass, , (0, 16)-(15, 31)
-
+                IF tile(ii, i) = 2 THEN PUTIMAGE (ii * 16, i * 16)-((ii * 16) + 16, (i * 16) + 16), file.grass, , (128, 16)-(143, 31)
             ELSEIF theme = 1 THEN
 
             END IF
@@ -104,21 +116,71 @@ SUB SETMAP
 END SUB
 
 SUB MOVE
-    STATIC stopping
-    STATIC delta
-
-    IF KEYDOWN(119) THEN player.y = player.y - .5: player.facing = 0: player.moving = 1 ELSE player.moving = 0
-    IF KEYDOWN(115) THEN player.y = player.y + .5: player.facing = 1: player.moving = 1
-    IF KEYDOWN(97) THEN player.x = player.x - .5: player.facing = 2: player.moving = 1
-    IF KEYDOWN(100) THEN player.x = player.x + .5: player.facing = 3: player.moving = 1
-    IF KEYDOWN(100306) = 0 AND player.moving = 1 THEN
-        IF player.facing = 0 THEN player.y = player.y - .5
-        IF player.facing = 1 THEN player.y = player.y + .5
-        IF player.facing = 2 THEN player.x = player.x - .5
-        IF player.facing = 3 THEN player.x = player.x + .5
+    player.moving = 0
+    IF KEYDOWN(119) THEN
+        player.y = player.y - .5
+        player.facing = 0
+        player.moving = 1
+        IF KEYDOWN(100306) = 0 THEN player.y = player.y - .5
     END IF
-    PRINT player.moving
+    IF KEYDOWN(115) THEN
+        player.y = player.y + .5: player.facing = 1: player.moving = 1
+        IF KEYDOWN(100306) = 0 THEN player.y = player.y + .5
+    END IF
+    IF KEYDOWN(97) THEN
+        player.x = player.x - .5: player.facing = 2: player.moving = 1
+        IF KEYDOWN(100306) = 0 THEN player.x = player.x - .5
+    END IF
+    IF KEYDOWN(100) THEN
+        player.x = player.x + .5: player.facing = 3: player.moving = 1
+        IF KEYDOWN(100306) = 0 THEN player.x = player.x + .5
+    END IF
+    PRINT "Player is moving?: "; player.moving
 END SUB
+
+SUB COLDET
+    PRINT "Current Tile ID: "; tile(INT((player.x + 8) / 16), INT((player.y + 8) / 16))
+
+    SELECT CASE tile(INT((player.x) / 16), INT((player.y - 1) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.y = player.y + 1
+    END SELECT
+    SELECT CASE tile(INT((player.x + 16) / 16), INT((player.y - 1) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.y = player.y + 1
+    END SELECT
+
+    SELECT CASE tile(INT((player.x - 1) / 16), INT((player.y) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.x = player.x + 1
+    END SELECT
+    SELECT CASE tile(INT((player.x - 1) / 16), INT((player.y + 16) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.x = player.x + 1
+    END SELECT
+
+    SELECT CASE tile(INT((player.x) / 16), INT((player.y + 17) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.y = player.y - 1
+    END SELECT
+    SELECT CASE tile(INT((player.x + 16) / 16), INT((player.y + 17) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.y = player.y - 1
+    END SELECT
+
+    SELECT CASE tile(INT((player.x + 17) / 16), INT((player.y) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.x = player.x - 1
+    END SELECT
+    SELECT CASE tile(INT((player.x + 17) / 16), INT((player.y + 16) / 16))
+        CASE 2
+            IF player.moving = 1 THEN player.x = player.x - 1
+    END SELECT
+
+
+
+END SUB
+
 
 SUB SPSET
     STATIC anim AS BYTE
@@ -164,7 +226,7 @@ SUB SPSET
             END IF
     END SELECT
 
-    PRINT anim
+    PRINT "Animation Frame: "; anim
     anim = anim + 1
     IF KEYDOWN(100306) = 0 THEN anim = anim + 1
     IF anim > 59 THEN anim = 0
