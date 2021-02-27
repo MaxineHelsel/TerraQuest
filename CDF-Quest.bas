@@ -11,8 +11,8 @@ DIM SHARED player AS character
 DIM SHARED tick AS UNSIGNED INTEGER64
 DIM SHARED tile(40, 30)
 DIM SHARED theme
-DIM window.x
-DIM window.y
+DIM SHARED window.x
+DIM SHARED window.y
 
 
 'include character data and other values in seperate files
@@ -56,16 +56,12 @@ DO
     MOVE
     COLDET
     SPSET
+    ZOOM
 
 
-    tick = tick + 1
     LIMIT 60
-    IF KEYDOWN(32) = 0 THEN WINDOW SCREEN(window.x - 72, window.y - 52)-(window.x + 88, window.y + 68) ELSE WINDOW
+    tick = tick + 1
     DISPLAY
-    window.x = player.x
-    window.y = player.y
-    IF window.x - 72 < 0 THEN window.x = 72
-    IF window.y - 52 < 0 THEN window.y = 52
     CLS
 LOOP
 
@@ -117,68 +113,101 @@ END SUB
 
 SUB MOVE
     player.moving = 0
+    player.lastx = player.x
+    player.lasty = player.y
     IF KEYDOWN(119) THEN
         player.y = player.y - .5
         player.facing = 0
         player.moving = 1
+
         IF KEYDOWN(100306) = 0 THEN player.y = player.y - .5
     END IF
     IF KEYDOWN(115) THEN
-        player.y = player.y + .5: player.facing = 1: player.moving = 1
+        player.y = player.y + .5
+        player.facing = 1
+        player.moving = 1
+
         IF KEYDOWN(100306) = 0 THEN player.y = player.y + .5
     END IF
     IF KEYDOWN(97) THEN
-        player.x = player.x - .5: player.facing = 2: player.moving = 1
+        player.x = player.x - .5
+        player.facing = 2
+        player.moving = 1
+
         IF KEYDOWN(100306) = 0 THEN player.x = player.x - .5
     END IF
     IF KEYDOWN(100) THEN
-        player.x = player.x + .5: player.facing = 3: player.moving = 1
+        player.x = player.x + .5
+        player.facing = 3
+        player.moving = 1
+
         IF KEYDOWN(100306) = 0 THEN player.x = player.x + .5
     END IF
     PRINT "Player is moving?: "; player.moving
+    IF player.x <= 0 THEN player.x = 0
+    IF player.y <= 0 THEN player.y = 0
+    IF player.x >= 640 - 16 THEN player.x = 640 - 16
+    IF player.y >= 480 - 16 THEN player.y = 480 - 16
 END SUB
 
 SUB COLDET
     PRINT "Current Tile ID: "; tile(INT((player.x + 8) / 16), INT((player.y + 8) / 16))
 
-    SELECT CASE tile(INT((player.x) / 16), INT((player.y - 1) / 16))
+    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y) / 16))
         CASE 2
-            IF player.moving = 1 THEN player.y = player.y + 1
-    END SELECT
-    SELECT CASE tile(INT((player.x + 16) / 16), INT((player.y - 1) / 16))
-        CASE 2
-            IF player.moving = 1 THEN player.y = player.y + 1
+            SWAP player.y, player.lasty
+            PRINT "ul"
+            GOTO col2
     END SELECT
 
-    SELECT CASE tile(INT((player.x - 1) / 16), INT((player.y) / 16))
+    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
         CASE 2
-            IF player.moving = 1 THEN player.x = player.x + 1
-    END SELECT
-    SELECT CASE tile(INT((player.x - 1) / 16), INT((player.y + 16) / 16))
-        CASE 2
-            IF player.moving = 1 THEN player.x = player.x + 1
+            SWAP player.y, player.lasty
+            PRINT "dl"
     END SELECT
 
-    SELECT CASE tile(INT((player.x) / 16), INT((player.y + 17) / 16))
+    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
         CASE 2
-            IF player.moving = 1 THEN player.y = player.y - 1
-    END SELECT
-    SELECT CASE tile(INT((player.x + 16) / 16), INT((player.y + 17) / 16))
-        CASE 2
-            IF player.moving = 1 THEN player.y = player.y - 1
+            SWAP player.y, player.lasty
+            PRINT "ur"
+            GOTO col2
     END SELECT
 
-    SELECT CASE tile(INT((player.x + 17) / 16), INT((player.y) / 16))
+    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
         CASE 2
-            IF player.moving = 1 THEN player.x = player.x - 1
-    END SELECT
-    SELECT CASE tile(INT((player.x + 17) / 16), INT((player.y + 16) / 16))
-        CASE 2
-            IF player.moving = 1 THEN player.x = player.x - 1
+            SWAP player.y, player.lasty
+            PRINT "dr"
     END SELECT
 
+    col2:
 
+    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 1) / 16))
+        CASE 2
+            SWAP player.y, player.lasty
+            player.x = player.lastx
+            PRINT "ul"
+    END SELECT
 
+    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
+        CASE 2
+            SWAP player.y, player.lasty
+            player.x = player.lastx
+            PRINT "ur"
+    END SELECT
+
+    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
+        CASE 2
+            SWAP player.y, player.lasty
+            player.x = player.lastx
+            PRINT "dl"
+    END SELECT
+
+    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
+        CASE 2
+            SWAP player.y, player.lasty
+            player.x = player.lastx
+            PRINT "dr"
+    END SELECT
 END SUB
 
 
@@ -232,6 +261,17 @@ SUB SPSET
     IF anim > 59 THEN anim = 0
 END SUB
 
+SUB ZOOM
+    IF KEYDOWN(32) = 0 THEN WINDOW SCREEN(window.x - 72, window.y - 52)-(window.x + 88, window.y + 68) ELSE WINDOW
+
+    window.x = player.x
+    window.y = player.y
+    PRINT window.x + 88 - (window.x - 72)
+    IF window.x - 72 < 0 THEN window.x = 72
+    IF window.y - 52 < 0 THEN window.y = 52
+    IF window.x + 88 > 640 THEN window.x = 552
+    IF window.y + 68 > 480 THEN window.y = 412
+END SUB
 
 
 TYPE file
@@ -249,6 +289,9 @@ END TYPE
 TYPE character
     x AS SINGLE
     y AS SINGLE
+    lastx AS SINGLE
+    lasty AS SINGLE
+
     facing AS BYTE
     moving AS BYTE
     type AS BYTE
