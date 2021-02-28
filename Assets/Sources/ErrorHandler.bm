@@ -1,0 +1,59 @@
+ 
+
+SUB ERRORHANDLER
+    SELECT CASE ERR
+        CLS
+        LOCATE 1, 1
+        CENTERPRINT "CDF ERROR HANDLER"
+        PRINT
+        PRINT "Error Code:"; ERR; "  Error Line:"; ERRORLINE
+        PRINT
+        CASE 100
+            PRINT "Assets folder is incomplete, this error can be triggered by one or more of the  following conditions:"
+            PRINT
+            PRINT
+            PRINT "     The assets folder is missing"
+            PRINT
+            PRINT "     Sub-directories in the Assets folder are missing"
+            PRINT
+            PRINT "     The contents of assets, or the directory itself is corrupted"
+            PRINT
+            PRINT "     You do not have proper permissions to access the assets directory"
+            PRINT
+            PRINT
+            PRINT "Make sure the entireity of the assets folder is present and accessible to your  user account and, if necessary, redownload the assets folder."
+            PRINT
+            PRINT "The assets folder, and its contents are necessary for the game to load, as it   contains all sprite and texture files, sounds and music, and user saved data.   Without these, the game will not play correctly. It is advised to not continue."
+            PRINT
+            PRINT
+            CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop (recommended)"
+            DO
+                IF KEYHIT = 113 THEN END
+                IF KEYHIT = 105 THEN RESUME NEXT
+            LOOP
+        CASE 101
+            PRINT "Maps folder could not be found, this error can be triggered by one or more of   the following conditions:"
+            PRINT
+            PRINT
+            PRINT "     The maps folder is missing"
+            PRINT
+            PRINT "     The contents of maps, or the directory itself is corrupted"
+            PRINT
+            PRINT "     You do not have proper permissions to access the maps directory"
+            PRINT
+            PRINT
+            PRINT "Make sure the maps folder is present and accessible to your user account and, ifnecessary, redownload the maps folder."
+            PRINT
+            PRINT "The maps folder is necessary to already exist, and have the hub world map       present, or the game will be rendered completely unplayable, it is recomended tonot continue."
+            PRINT
+            CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop (recommended)"
+            DO
+                IF KEYHIT = 113 THEN END
+                IF KEYHIT = 105 THEN RESUME NEXT
+            LOOP
+
+    END SELECT
+    KEYCLEAR
+    CLS
+    RESUME NEXT
+END SUB
