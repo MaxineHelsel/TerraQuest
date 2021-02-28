@@ -31,6 +31,7 @@ DIM SHARED displayskip AS UNSIGNED BIT
 DIM SHARED stillcam AS UNSIGNED BIT
 DIM SHARED fullcam AS UNSIGNED BIT
 DIM SHARED freecam AS UNSIGNED BIT
+DIM SHARED noclip AS UNSIGNED BIT
 
 DIM SHARED map.name AS STRING
 DIM SHARED map.theme AS BYTE
@@ -42,6 +43,7 @@ DIM SHARED new AS UNSIGNED BIT
 
 DIM SHARED hostos AS STRING
 DIM SHARED bit32 AS UNSIGNED BIT
+
 
 
 
@@ -61,7 +63,7 @@ IF DIREXISTS("Maps") = 0 THEN ERROR 101
 
 'set default variables/load variables
 gamename = "CDF-Quest Game Engine Test"
-ver = "Alpha 0.02"
+ver = "Alpha 0.03"
 OSPROBE
 
 'include character data and other values in seperate files
@@ -193,6 +195,8 @@ SUB DEV
                 freecam = freecam + 1
                 fullcam = 0
                 stillcam = 0
+            CASE "noclip", "nc"
+                noclip = noclip + 1
             CASE ELSE
         END SELECT
         displayskip = 1
