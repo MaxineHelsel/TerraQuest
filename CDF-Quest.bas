@@ -11,15 +11,23 @@ TITLE "CDF-Quest"
 
 'declare variable names and data types
 DIM SHARED file AS file
+
 DIM SHARED player AS character
+
 DIM SHARED tick AS UNSIGNED INTEGER64
+
 DIM SHARED tile(40, 30) AS BYTE
+
 DIM SHARED window.x AS SINGLE
 DIM SHARED window.y AS SINGLE
+
 DIM SHARED debug AS UNSIGNED BIT
+
 DIM SHARED gamename AS STRING
 DIM SHARED ver AS STRING
+
 DIM SHARED displayskip AS UNSIGNED BIT
+
 DIM SHARED stillcam AS UNSIGNED BIT
 DIM SHARED fullcam AS UNSIGNED BIT
 DIM SHARED freecam AS UNSIGNED BIT
@@ -28,9 +36,14 @@ DIM SHARED map.name AS STRING
 DIM SHARED map.theme AS BYTE
 DIM SHARED map.foldername AS STRING
 
-DIM load AS BYTE
+DIM SHARED load AS BYTE
 
-DIM new AS UNSIGNED BIT
+DIM SHARED new AS UNSIGNED BIT
+
+DIM SHARED hostos AS STRING
+DIM SHARED bit32 AS UNSIGNED BIT
+
+
 
 
 IF DIREXISTS("Assets") THEN
@@ -48,7 +61,8 @@ IF DIREXISTS("Maps") = 0 THEN ERROR 101
 
 'set default variables/load variables
 gamename = "CDF-Quest Game Engine Test"
-ver = "Alpha 0.01"
+ver = "Alpha 0.02"
+OSPROBE
 
 'include character data and other values in seperate files
 file.char_file = "Assets\Tiles\character.png"
@@ -68,8 +82,22 @@ file.interior = LOADIMAGE(file.interior_file)
 DIM opt AS STRING
 PRINT "placeholder title screen"
 INPUT "(P)lay game, (C)reate map"; opt
-IF opt = "p" GOTO game
+IF opt = "p" THEN
+    map.theme = 0
+    tile(10, 10) = 2
+    tile(11, 10) = 2
 
+    tile(14, 10) = 2
+    tile(17, 10) = 1
+    tile(17, 12) = 2
+    tile(19, 10) = 2
+    tile(19, 12) = 2
+
+    tile(33, 22) = 2
+    tile(8, 9) = 3
+
+    GOTO game
+END IF
 
 
 INPUT "(c)reate new map, (l)oad existing map"; opt
@@ -86,20 +114,6 @@ END IF
 IF load = 1 THEN
 
 END IF
-map.theme = 0
-tile(10, 10) = 2
-tile(11, 10) = 2
-
-tile(14, 10) = 2
-tile(17, 10) = 1
-tile(17, 12) = 2
-tile(19, 10) = 2
-tile(19, 12) = 2
-
-tile(33, 22) = 2
-tile(8, 9) = 3
-
-
 
 
 
@@ -127,13 +141,21 @@ SUB DEV
     PRINTMODE FILLBACKGROUND
     DIM comin AS STRING
     DIM dv AS SINGLE
-    DIM i AS BYTE
+
 
     PRINT gamename
     LOCATE 1, 80 - LEN(ver) - 8
     PRINT "Version: " + ver
+
     PRINT "Framerate: "; FRAMEPS
+    LOCATE 2, 80 - LEN(hostos) - 17
+    PRINT "Operating System: " + hostos
+
     PRINT "Frame: "; tick
+    LOCATE 3, 80 - 13 - 6
+    PRINT "Architecture:";
+    PRINT STR$(64 / (bit32 + 1)) + "-Bit"
+
     PRINT "Player.x: "; player.x; "/"; INT(player.x / 16)
     PRINT "Player.y: "; player.y; "/"; INT(player.y / 16)
     PRINT "Player.facing: "; player.facing
@@ -189,17 +211,6 @@ SUB INTER
 END SUB
 
 
-
-FUNCTION FRAMEPS
-    STATIC ps AS BYTE
-    STATIC cs AS BYTE
-    STATIC frame AS INTEGER
-    STATIC frps AS INTEGER
-    ps = cs
-    cs = VAL(MID$(TIME$, 7, 2))
-    IF cs = ps THEN frame = frame + 1 ELSE frps = frame: frame = 0
-    FRAMEPS = frps + 1
-END FUNCTION
 
 
 
@@ -296,58 +307,6 @@ END SUB
 
 
 
-SUB COLDET
-    player.tile = tile(INT((player.x + 8) / 16), INT((player.y + 8) / 16))
-
-    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-            GOTO col2
-    END SELECT
-
-    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-    END SELECT
-
-    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-            GOTO col2
-    END SELECT
-
-    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-    END SELECT
-
-    col2:
-
-    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 1) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-            player.x = player.lastx
-    END SELECT
-
-    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-            player.x = player.lastx
-    END SELECT
-
-    SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-            player.x = player.lastx
-    END SELECT
-
-    SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
-        CASE 2, 3
-            SWAP player.y, player.lasty
-            player.x = player.lastx
-    END SELECT
-END SUB
-
 
 
 SUB SPSET
@@ -415,8 +374,9 @@ END SUB
 
 '$include: 'Assets\Sources\ErrorHandler.bm'
 '$include: 'Assets\Sources\TextControl.bm'
-
-
+'$include: 'Assets\Sources\FrameRate.bm'
+'$include: 'Assets\Sources\OsProbe.bm'
+'$include: 'Assets\Sources\CollisionDetection.bm'
 
 TYPE file
     char_file AS STRING
@@ -444,6 +404,12 @@ TYPE character
 
     level AS BYTE
 
+END TYPE
+
+
+
+TYPE settings
+    mode AS BYTE
 END TYPE
 
 
