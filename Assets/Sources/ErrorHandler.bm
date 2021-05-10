@@ -1,13 +1,15 @@
  
 
-SUB ERRORHANDLER
-    SELECT CASE ERR
+Sub ERRORHANDLER
+    AUTODISPLAY
         CLS
         LOCATE 1, 1
         CENTERPRINT "CDF ERROR HANDLER"
         PRINT
         PRINT "Error Code:"; ERR; "  Error Line:"; ERRORLINE
         PRINT
+
+    SELECT CASE ERR
         CASE 100
             PRINT "Assets folder is incomplete, this error can be triggered by one or more of the  following conditions:"
             PRINT
@@ -28,7 +30,7 @@ SUB ERRORHANDLER
             PRINT
             CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop (recommended)"
             DO
-                IF KEYHIT = 113 THEN END
+                IF KEYHIT = 113 THEN system
                 IF KEYHIT = 105 THEN RESUME NEXT
             LOOP
         CASE 101
@@ -48,7 +50,7 @@ SUB ERRORHANDLER
             PRINT
             CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop (recommended)"
             DO
-                IF KEYHIT = 113 THEN END
+                IF KEYHIT = 113 THEN system
                 IF KEYHIT = 105 THEN RESUME NEXT
             LOOP
 

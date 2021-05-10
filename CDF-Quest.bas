@@ -11,12 +11,11 @@ TITLE "CDF-Quest"
 
 'declare variable names and data types
 DIM SHARED file AS file
-
 DIM SHARED player AS character
+DIM SHARED map AS map
+DIM SHARED tile(40, 30) AS BYTE
 
 DIM SHARED tick AS UNSIGNED INTEGER64
-
-DIM SHARED tile(40, 30) AS BYTE
 
 DIM SHARED window.x AS SINGLE
 DIM SHARED window.y AS SINGLE
@@ -33,16 +32,15 @@ DIM SHARED fullcam AS UNSIGNED BIT
 DIM SHARED freecam AS UNSIGNED BIT
 DIM SHARED noclip AS UNSIGNED BIT
 
-DIM SHARED map.name AS STRING
-DIM SHARED map.theme AS BYTE
-DIM SHARED map.foldername AS STRING
-
 DIM SHARED load AS BYTE
 
 DIM SHARED new AS UNSIGNED BIT
 
 DIM SHARED hostos AS STRING
 DIM SHARED bit32 AS UNSIGNED BIT
+
+DIM SHARED gamemode AS BYTE
+
 
 
 
@@ -63,7 +61,7 @@ IF DIREXISTS("Maps") = 0 THEN ERROR 101
 
 'set default variables/load variables
 gamename = "CDF-Quest Game Engine Test"
-ver = "Alpha 0.03"
+ver = "Alpha 0.05"
 OSPROBE
 
 'include character data and other values in seperate files
@@ -71,13 +69,14 @@ file.char_file = "Assets\Tiles\character.png"
 file.grass_file = "Assets\Tiles\grass.png"
 file.snow_file = "Assets\Tiles\snow.png"
 file.interior_file = "Assets\Tiles\interior.png"
+file.hudtex_file = "Assets\Tiles\HUD.png"
 
 'load assets
 file.char = LOADIMAGE(file.char_file)
 file.grass = LOADIMAGE(file.grass_file)
 file.snow = LOADIMAGE(file.snow_file)
 file.interior = LOADIMAGE(file.interior_file)
-
+file.hudtex = LOADIMAGE(file.hudtex_file)
 'load mapdata from file
 
 
@@ -99,6 +98,9 @@ IF opt = "p" THEN
     tile(8, 9) = 3
 
     GOTO game
+    IF opt = "c" THEN
+        gamemode = 1
+    END IF
 END IF
 
 
@@ -128,7 +130,9 @@ DO
     COLDET
     SPSET
     INTER
+    IF gamemode = 1 THEN TILESET
     ZOOM
+    HUD
     IF debug = 1 THEN DEV
     LIMIT 60
     tick = tick + 1
@@ -136,6 +140,56 @@ DO
     displayskip = 0
     CLS
 LOOP
+
+SUB HUD
+
+    DIM tmpheal AS BYTE
+    DIM token AS BYTE
+    token = 1
+
+    tmpheal = player.health
+
+    WHILE tmpheal > 0
+        SELECT CASE tmpheal
+            CASE 1
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (64, 32)-(95, 63)
+            CASE 2
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (32, 32)-(63, 63)
+            CASE 3
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (0, 32)-(31, 63)
+            CASE 4
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (128, 0)-(159, 31)
+            CASE 5
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (96, 0)-(127, 31)
+            CASE 6
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (64, 0)-(95, 31)
+            CASE 7
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (32, 0)-(63, 31)
+            CASE 8 TO 255
+                PUTIMAGE (window.x + 88 - 16, window.y - 52 + (token - 1) * 16)-(window.x + 88, window.y - 52 + 16 + (token - 1) * 16), file.hudtex, , (0, 0)-(31, 31)
+
+        END SELECT
+        tmpheal = tmpheal - 8
+        token = token + 1
+    WEND
+END SUB
+
+SUB TILESET
+    IF KEYDOWN(105) THEN
+
+        SELECT CASE KEYHIT
+            CASE 49
+
+                tile(INT((player.x + 8) / 16), INT((player.y + 8) / 16)) = 0
+            CASE 50
+                tile(INT((player.x + 8) / 16), INT((player.y + 8) / 16)) = 1
+            CASE 51
+                tile(INT((player.x + 8) / 16), INT((player.y + 8) / 16)) = 2
+
+
+        END SELECT
+    END IF
+END SUB
 
 
 
@@ -160,11 +214,23 @@ SUB DEV
 
     PRINT "Player.x: "; player.x; "/"; INT(player.x / 16)
     PRINT "Player.y: "; player.y; "/"; INT(player.y / 16)
+    PRINT "Window.x: "; window.x
+    PRINT "Window.y: "; window.y
     PRINT "Player.facing: "; player.facing
     PRINT "Player is moving?: "; player.moving
     PRINT "Current Tile ID: "; player.tile
-    PRINT window.x; window.y
-    PRINT freecam
+    PRINT "Gamemode: ";
+    SELECT CASE gamemode
+        CASE 0
+            PRINT "Standard"
+        CASE 1
+            PRINT "Map Maker"
+    END SELECT
+    PRINT
+    IF stillcam = 1 THEN PRINT "Still Camera Enabled"
+    IF freecam = 1 THEN PRINT "Free Camera Enabled"
+    IF fullcam = 1 THEN PRINT "Full Camera Enabled"
+    IF noclip = 1 THEN PRINT "No Clip Enabled"
     IF KEYDOWN(47) THEN
         KEYCLEAR
 
@@ -197,6 +263,19 @@ SUB DEV
                 stillcam = 0
             CASE "noclip", "nc"
                 noclip = noclip + 1
+            CASE "exit"
+                SYSTEM
+            CASE "error"
+                LOCATE 28, 1: PRINT "                          "
+                LOCATE 28, 1: INPUT "Simulate error number: ", dv
+                ERROR dv
+            CASE "gamemode", "gm"
+                LOCATE 28, 1: PRINT "                     "
+                LOCATE 28, 1: INPUT "Change Gamemode to: ", gamemode
+            CASE "health"
+                LOCATE 28, 1: PRINT "                      "
+                LOCATE 28, 1: INPUT "Set Health to: ", player.health
+
             CASE ELSE
         END SELECT
         displayskip = 1
@@ -313,54 +392,6 @@ END SUB
 
 
 
-SUB SPSET
-    STATIC anim AS BYTE
-    SELECT CASE player.facing
-        CASE 0
-            IF player.moving = 1 THEN
-                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 0)-(15, 17)
-                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 0)-(31, 17)
-                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 0)-(47, 17)
-                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 0)-(31, 17)
-            ELSE
-                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 0)-(31, 17)
-            END IF
-        CASE 1
-            IF player.moving = 1 THEN
-                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 36)-(15, 54)
-                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 36)-(31, 53)
-                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 36)-(47, 53)
-                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 36)-(31, 53)
-            ELSE
-                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 36)-(31, 53)
-            END IF
-
-        CASE 2
-            IF player.moving = 1 THEN
-                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 54)-(15, 71)
-                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 54)-(31, 71)
-                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 54)-(47, 71)
-                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 54)-(31, 71)
-            ELSE
-                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 54)-(31, 71)
-            END IF
-
-        CASE 3
-            IF player.moving = 1 THEN
-                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 18)-(15, 35)
-                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 18)-(31, 35)
-                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 18)-(47, 35)
-                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 18)-(31, 35)
-            ELSE
-                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 18)-(31, 35)
-            END IF
-    END SELECT
-
-    anim = anim + 1
-    IF KEYDOWN(100306) = 0 THEN anim = anim + 1
-    IF anim > 59 THEN anim = 0
-END SUB
-
 
 
 SUB ZOOM
@@ -376,21 +407,24 @@ SUB ZOOM
     IF fullcam = 0 THEN WINDOW SCREEN(window.x - 72, window.y - 52)-(window.x + 88, window.y + 68) ELSE WINDOW
 END SUB
 
-'$include: 'Assets\Sources\ErrorHandler.bm'
 '$include: 'Assets\Sources\TextControl.bm'
+'$include: 'Assets\Sources\ErrorHandler.bm'
 '$include: 'Assets\Sources\FrameRate.bm'
 '$include: 'Assets\Sources\OsProbe.bm'
 '$include: 'Assets\Sources\CollisionDetection.bm'
+'$include: 'Assets\Sources\SpriteAnimation.bm'
 
 TYPE file
     char_file AS STRING
     grass_file AS STRING
     snow_file AS STRING
     interior_file AS STRING
+    hudtex_file AS STRING
     char AS LONG
     grass AS LONG
     snow AS LONG
     interior AS LONG
+    hudtex AS LONG
 END TYPE
 
 
@@ -408,12 +442,17 @@ TYPE character
 
     level AS BYTE
 
+    health AS BYTE
+    points AS BYTE
+
 END TYPE
 
 
 
-TYPE settings
-    mode AS BYTE
+TYPE map
+    name AS STRING
+    theme AS BYTE
+    foldername AS STRING
 END TYPE
 
 
