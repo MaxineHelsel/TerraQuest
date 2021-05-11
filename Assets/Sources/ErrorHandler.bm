@@ -1,9 +1,9 @@
  
 
-Sub ERRORHANDLER
+SUB ERRORHANDLER
     AUTODISPLAY
-        CLS
-        LOCATE 1, 1
+    CLS
+    LOCATE 1, 1
         CENTERPRINT "CDF ERROR HANDLER"
         PRINT
         PRINT "Error Code:"; ERR; "  Error Line:"; ERRORLINE
@@ -53,7 +53,14 @@ Sub ERRORHANDLER
                 IF KEYHIT = 113 THEN system
                 IF KEYHIT = 105 THEN RESUME NEXT
             LOOP
-
+        case else
+            Print "Unrecognized error, contact developers
+                                     ?
+            CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop (recommended)"
+            DO
+                IF KEYHIT = 113 THEN system
+                IF KEYHIT = 105 THEN RESUME NEXT
+            LOOP
     END SELECT
     KEYCLEAR
     CLS
