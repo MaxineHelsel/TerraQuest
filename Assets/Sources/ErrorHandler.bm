@@ -6,7 +6,9 @@ SUB ERRORHANDLER
     LOCATE 1, 1
         CENTERPRINT "CDF ERROR HANDLER"
         PRINT
-        PRINT "Error Code:"; ERR; "  Error Line:"; ERRORLINE
+        PRINT "Error Code:"; ERR
+        locate 3,1
+        endprint "Error Line:"+ str$(ERRORLINE)
         PRINT
 
     SELECT CASE ERR
@@ -53,6 +55,17 @@ SUB ERRORHANDLER
                 IF KEYHIT = 113 THEN system
                 IF KEYHIT = 105 THEN RESUME NEXT
             LOOP
+        Case 102
+            PRINT "Invalid Code Position, This error occurs when the program flow enters an area    that it should not be, This is most likely a programming issue, and not an end user issue.
+            PRINT "
+            PRINT "There is no user solution to this issue, please file a bug report to the         developers, including the line number and what you were doing when it occured.
+            Print "
+            CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop (recommended)"
+            DO
+                IF KEYHIT = 113 THEN system
+                IF KEYHIT = 105 THEN RESUME NEXT
+            LOOP
+
         case else
             Print "Unrecognized error, contact developers
                                      ?
