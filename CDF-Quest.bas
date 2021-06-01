@@ -156,6 +156,7 @@ Sub DEV
         ENDPRINT "Version: " + Game.Version
         ENDPRINT "Version Designation: " + Game.Designation
         ENDPRINT "Operating System: " + Game.HostOS
+        If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
         Print
         ENDPRINT "Flags:"
         If Flag.StillCam = 1 Then ENDPRINT "Still Camera Enabled"

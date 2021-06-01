@@ -48,6 +48,7 @@ Dim Shared Game.Version As String
 Dim Shared Game.Buildinfo As String
 Dim Shared Game.HostOS As String
 Dim Shared Game.Designation As String
+Dim Shared Game.32Bit as unsigned bit
 
 
 
