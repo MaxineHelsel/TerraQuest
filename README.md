@@ -1,16 +1,24 @@
 # CDF-Quest
 
 
+# Updates
+Updates are usually pushed in 2-3 stages:
 
+- Linux
+Linux is pushed first, because that is what i use to primarily code and develop CDF-Quest. as such when it comes to pushing it requires no further testing.
+- Windows
+Windows comes second, because it does not require me to switch systems, as i can use wine to compile and test the windows version. This is also why sometimes the windows and linux versions are pushed together.
+- macOS
+macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
 
-
-# Alpha Version 15
+# ChangeLog
+### Alpha Version 15
 
 Added Version Designation to debug menu
 - This is to establish what branch your version was pulled from on the github
 
 
-# Alpha Version 14
+### Alpha Version 14
 
 Fixed tile overlap bug
 
@@ -30,7 +38,7 @@ Collision has been re added, however
     it is a tiledata flag and must be manually set for each tile for now
     
     
-# Alpha Version 13
+### Alpha Version 13
 
 Complete Refactor
     The refactor in this update is not complete, as such certian functions are broken, future versions will finish this.
@@ -51,7 +59,7 @@ added a tile info file
 new command /new to create a new world
     
 
-# Alpha Version 12
+### Alpha Version 12
 
 Updated Hub World
     Added path from door to well.
@@ -66,7 +74,7 @@ Added world version checking
     checks to make sure the the world being loaded is compatable with the current version, if not error 103 is triggered, and allows you to update the manifest file of the world to match current version if you are sure that it is compatable. otherwise you can return to where you were, or quit to desktop
     
     
-# Alpha Version 11
+### Alpha Version 11
 
 Minor Refactoring
     Refactored the code a bit, doesnt change much from gameplay perspective
@@ -78,7 +86,7 @@ Added Gold and Experience values to character data type
     Currently does nothing yet, just a placeholder as is the level and points values.
     
 
-# Alpha Version 10
+### Alpha Version 10
 
 Removed legacy map editor controls
     You can no longer hold "i" and press number keys to place tiles, this has been replaced by the new map editor mode
@@ -99,7 +107,7 @@ Removed Placeholder Titlescreen
     CDF-Quest will now default load "Hub" world. if this world does not exist, it will throw an error and, if you continue, will take you to a blank world with default values. use /gamemode and choose 1 to enter map editor mode
     
     
-# Alpha Version 9
+### Alpha Version 9
 
 Added Protected World password
     This prevents worlds from being accidentally overwriten if you do not provide the protection password that is matched in the manifest file, this is not a security feature and is easily bypassed, it exists soley to prevent saving to the wrong world on accident.
