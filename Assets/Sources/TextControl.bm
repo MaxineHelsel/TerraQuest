@@ -1,20 +1,21 @@
-SUB CENTERPRINT (nam$)
-    _PRINTMODE _KEEPBACKGROUND
-    DIM i AS _BYTE
-    FOR i = 0 TO INT(40 - (LEN(nam$) / 2) - 1)
-        PRINT " ";
-    NEXT
-    _PRINTMODE _FILLBACKGROUND
-    PRINT nam$
-END SUB
+Sub CENTERPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As _Byte
+    For i = 0 To Int(40 - (Len(nam$) / 2) - 1)
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
+End Sub
 
-SUB ENDPRINT (nam$)
-    _PRINTMODE _KEEPBACKGROUND
-    DIM i AS _BYTE
-    FOR i = 0 TO INT(80 - (LEN(nam$))) - 1
-        PRINT " ";
-    NEXT
-    _PRINTMODE _FILLBACKGROUND
-    PRINT nam$
-END SUB
+Sub ENDPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As _Byte
+    For i = 0 To Int(80 - (Len(nam$))) - 1
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
+End Sub
+
 

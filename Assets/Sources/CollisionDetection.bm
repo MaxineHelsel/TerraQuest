@@ -1,71 +1,72 @@
-SUB COLDET
-    player.tile = tile(INT((player.x + 8) / 16), INT((player.y + 8) / 16))
-    SELECT CASE player.facing
-        CASE 0
-            IF player.y - 8 <= 0 THEN EXIT SELECT
-            player.tilefacing = tile(INT((player.x + 8) / 16), INT((player.y + 8 - 16) / 16))
-        CASE 1
-            IF player.y + 8 + 16 >= 480 THEN EXIT SELECT
-            player.tilefacing = tile(INT((player.x + 8) / 16), INT((player.y + 8 + 16) / 16))
-        CASE 2
-            IF player.x - 8 <= 0 THEN EXIT SELECT
-            player.tilefacing = tile(INT((player.x + 8 - 16) / 16), INT((player.y + 8) / 16))
-        CASE 3
-            IF player.x + 8 + 16 >= 640 THEN EXIT SELECT
-            player.tilefacing = tile(INT((player.x + 8 + 16) / 16), INT((player.y + 8) / 16))
-    END SELECT
+
+Sub COLDET
+    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    Select Case Player.facing
+        Case 0
+            If Player.y - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
+        Case 1
+            If Player.y + 8 + 16 >= 480 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
+        Case 2
+            If Player.x - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+        Case 3
+            If Player.x + 8 + 16 >= 640 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    End Select
 
 
 
-    IF noclip = 0 THEN
-        SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-                GOTO col2
-        END SELECT
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                GoTo col2
+        End Select
 
-        SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-        END SELECT
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+        End Select
 
-        SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-                GOTO col2
-        END SELECT
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                GoTo col2
+        End Select
 
-        SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-        END SELECT
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+        End Select
 
         col2:
 
-        SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 1) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-                player.x = player.lastx
-        END SELECT
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
 
-        SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-                player.x = player.lastx
-        END SELECT
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
 
-        SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-                player.x = player.lastx
-        END SELECT
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
 
-        SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
-                SWAP player.y, player.lasty
-                player.x = player.lastx
-        END SELECT
-    END IF
-END SUB
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+    End If
+End Sub
 
- 
+
