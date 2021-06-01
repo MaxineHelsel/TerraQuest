@@ -1,16 +1,16 @@
-#CDF-Quest
+# CDF-Quest
 
 
 
 
 
-#Alpha Version 15
+# Alpha Version 15
 
 Added Version Designation to debug menu
     This is to establish what branch your version was pulled from on the github
 
 
-#Alpha Version 14
+# Alpha Version 14
 
 Fixed tile overlap bug
 
@@ -23,14 +23,14 @@ added 4 new commands
     /walltile (/wt)
     /ceilingtile (/ct)
     /tiledata   (/td)
-    
     these 4 commands replace the /set-tile (/st) command.
+    
     
 Collision has been re added, however
     it is a tiledata flag and must be manually set for each tile for now
     
     
-#Alpha Version 13
+# Alpha Version 13
 
 Complete Refactor
     The refactor in this update is not complete, as such certian functions are broken, future versions will finish this.
@@ -51,7 +51,7 @@ added a tile info file
 new command /new to create a new world
     
 
-#Alpha Version 12
+# Alpha Version 12
 
 Updated Hub World
     Added path from door to well.
@@ -66,7 +66,7 @@ Added world version checking
     checks to make sure the the world being loaded is compatable with the current version, if not error 103 is triggered, and allows you to update the manifest file of the world to match current version if you are sure that it is compatable. otherwise you can return to where you were, or quit to desktop
     
     
-#Alpha Version 11
+# Alpha Version 11
 
 Minor Refactoring
     Refactored the code a bit, doesnt change much from gameplay perspective
@@ -78,7 +78,7 @@ Added Gold and Experience values to character data type
     Currently does nothing yet, just a placeholder as is the level and points values.
     
 
-#Alpha Version 10
+# Alpha Version 10
 
 Removed legacy map editor controls
     You can no longer hold "i" and press number keys to place tiles, this has been replaced by the new map editor mode
@@ -99,7 +99,7 @@ Removed Placeholder Titlescreen
     CDF-Quest will now default load "Hub" world. if this world does not exist, it will throw an error and, if you continue, will take you to a blank world with default values. use /gamemode and choose 1 to enter map editor mode
     
     
-#Alpha Version 9
+# Alpha Version 9
 
 Added Protected World password
     This prevents worlds from being accidentally overwriten if you do not provide the protection password that is matched in the manifest file, this is not a security feature and is easily bypassed, it exists soley to prevent saving to the wrong world on accident.
