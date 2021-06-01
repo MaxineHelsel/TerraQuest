@@ -41,8 +41,8 @@ SUB SPSET
             END IF
     END SELECT
 
-    anim = anim + 1
-    IF KEYDOWN(100306) = 0 THEN anim = anim + 1
+    anim = anim + settings.tickrate
+    IF KEYDOWN(100306) = 0 THEN anim = anim + settings.tickrate
     IF anim > 59 THEN anim = 0
 END SUB
 

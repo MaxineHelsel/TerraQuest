@@ -19,49 +19,49 @@ SUB COLDET
 
     IF noclip = 0 THEN
         SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
                 GOTO col2
         END SELECT
 
         SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
         END SELECT
 
         SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
                 GOTO col2
         END SELECT
 
         SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
         END SELECT
 
         col2:
 
         SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 1) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
                 player.x = player.lastx
         END SELECT
 
         SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 1) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
                 player.x = player.lastx
         END SELECT
 
         SELECT CASE tile(INT((player.x + 1) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
                 player.x = player.lastx
         END SELECT
 
         SELECT CASE tile(INT((player.x + 14) / 16), INT((player.y + 14) / 16))
-            CASE IS > 16
+            CASE IS > 15
                 SWAP player.y, player.lasty
                 player.x = player.lastx
         END SELECT
