@@ -4,11 +4,18 @@
 # Updates
 Updates are usually pushed in 2-3 stages:
 
+
+
 - Linux
+
 Linux is pushed first, because that is what i use to primarily code and develop CDF-Quest. as such when it comes to pushing it requires no further testing.
+
 - Windows
+
 Windows comes second, because it does not require me to switch systems, as i can use wine to compile and test the windows version. This is also why sometimes the windows and linux versions are pushed together.
+
 - macOS
+
 macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
 
 # ChangeLog
