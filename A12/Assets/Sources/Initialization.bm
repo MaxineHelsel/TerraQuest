@@ -1,0 +1,28 @@
+SUB INITIALIZE
+
+    IF DIREXISTS("Assets") THEN
+        IF DIREXISTS("Assets\Tiles") = 0 THEN ERROR 100
+        IF DIREXISTS("Assets\Music") = 0 THEN ERROR 100
+        IF DIREXISTS("Assets\Sounds") = 0 THEN ERROR 100
+        IF DIREXISTS("Assets\Worlds") = 0 THEN ERROR 100
+        IF DIREXISTS("Assets\SaveData") = 0 THEN MKDIR "Assets\SaveData": new = 1
+    ELSE ERROR 100
+    END IF
+
+
+
+    IF new = 1 THEN SAVESETTINGS
+    LOADSETTINGS
+
+    OSPROBE
+
+    file.char = LOADIMAGE(file.char_file)
+    file.grass = LOADIMAGE(file.grass_file)
+    file.snow = LOADIMAGE(file.snow_file)
+    file.interior = LOADIMAGE(file.interior_file)
+    file.hudtex = LOADIMAGE(file.hudtex_file)
+
+    LOADWORLD ("Hub")
+    SETTHEME
+
+END SUB

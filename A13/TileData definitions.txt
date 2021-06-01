@@ -1,0 +1,3 @@
+TileData flags
+
+0 HasCollision

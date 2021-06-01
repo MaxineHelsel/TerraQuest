@@ -1,0 +1,49 @@
+SUB SPSET
+    STATIC anim AS BYTE
+    SELECT CASE player.facing
+        CASE 0
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 0)-(15, 17)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 0)-(31, 17)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 0)-(47, 17)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 0)-(31, 17)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 0)-(31, 17)
+            END IF
+        CASE 1
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 36)-(15, 54)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 36)-(31, 53)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 36)-(47, 53)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 36)-(31, 53)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 36)-(31, 53)
+            END IF
+
+        CASE 2
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 54)-(15, 71)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 54)-(31, 71)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 54)-(47, 71)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 54)-(31, 71)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 54)-(31, 71)
+            END IF
+
+        CASE 3
+            IF player.moving = 1 THEN
+                IF anim < 15 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (0, 18)-(15, 35)
+                IF anim > 14 AND anim < 30 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 18)-(31, 35)
+                IF anim > 29 AND anim < 45 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (32, 18)-(47, 35)
+                IF anim > 44 AND anim < 60 THEN PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 18)-(31, 35)
+            ELSE
+                PUTIMAGE (INT(player.x), INT(player.y) - 2)-((INT(player.x)) + 16, (INT(player.y) - 2) + 16), file.char, , (16, 18)-(31, 35)
+            END IF
+    END SELECT
+
+    anim = anim + settings.tickrate
+    IF KEYDOWN(100306) = 0 THEN anim = anim + settings.tickrate
+    IF anim > 59 THEN anim = 0
+END SUB
+
+

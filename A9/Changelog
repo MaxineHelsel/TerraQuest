@@ -1,0 +1,7 @@
+Version Alpha 9
+
+Added Protected World password
+    This prevents worlds from being accidentally overwriten if you do not provide the protection password that is matched in the manifest file, this is not a security feature and is easily bypassed, it exists soley to prevent saving to the wrong world on accident.
+
+Added file extention to world files
+    There was no issue with the game and no extentions, however when viewed in a file browser, the extentionless files could act strange, so ive added the cdf extention to both the manifest file, and the map files, this extention is contextual, as what is in the file and what it does is based on where its at in the folder structure and its title.
