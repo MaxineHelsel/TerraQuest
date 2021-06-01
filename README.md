@@ -7,7 +7,7 @@
 # Alpha Version 15
 
 Added Version Designation to debug menu
-    This is to establish what branch your version was pulled from on the github
+- This is to establish what branch your version was pulled from on the github
 
 
 # Alpha Version 14
