@@ -154,6 +154,7 @@ Sub DEV
         ENDPRINT "Debug Menu (Press F3 to Close)"
         Print
         ENDPRINT "Version: " + Game.Version
+        ENDPRINT "Version Designation: " + Game.Designation
         ENDPRINT "Operating System: " + Game.HostOS
         Print
         ENDPRINT "Flags:"
