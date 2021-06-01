@@ -1,0 +1,13 @@
+Sub ZOOM
+    If Flag.StillCam = 0 And Flag.FreeCam = 0 Then
+        CameraPositionX = Player.x
+        CameraPositionY = Player.y
+    End If
+    If CameraPositionX - 72 < 0 Then CameraPositionX = 72
+    If CameraPositionY - 52 < 0 Then CameraPositionY = 52
+    If CameraPositionX + 88 > 640 Then CameraPositionX = 552
+    If CameraPositionY + 68 > 480 Then CameraPositionY = 412
+
+    If Flag.FullCam = 0 Then Window Screen(CameraPositionX - 72, CameraPositionY - 52)-(CameraPositionX + 88 , CameraPositionY + 68 ) Else Window
+End Sub
+

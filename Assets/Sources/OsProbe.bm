@@ -1,0 +1,13 @@
+Sub OSPROBE
+    Select Case _OS$
+        Case "[WINDOWS][64BIT]"
+            Game.HostOS = "Windows"
+        Case "[LINUX][64BIT]"
+            Game.HostOS = "Linux"
+        Case "[MACOSX][64BIT][LINUX]"
+            Game.HostOS = "Mac OS"
+        Case Else
+            Game.HostOS = "Unknown OS"
+    End Select
+End Sub
+

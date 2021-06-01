@@ -1,0 +1,72 @@
+
+Sub COLDET
+    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    Select Case Player.facing
+        Case 0
+            If Player.y - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
+        Case 1
+            If Player.y + 8 + 16 >= 480 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
+        Case 2
+            If Player.x - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+        Case 3
+            If Player.x + 8 + 16 >= 640 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    End Select
+
+
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                GoTo col2
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                GoTo col2
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+        End Select
+
+        col2:
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+    End If
+End Sub
+
+
