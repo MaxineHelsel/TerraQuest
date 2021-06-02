@@ -7,13 +7,13 @@ PrintMode KeepBackground
 Title "CDF-Quest"
 
 
-'TODO
-'Change all references of multiple repeating sets of the same thing for grass and ice to just 1 thing,
-'and make the part where it asks for what tilesheet just have it as a variable and have it set when files are loaded or something
-
 '$include: 'Assets\Sources\VariableDeclaration.bi'
 
 '$include: 'Assets\Sources\DefaultValues.bi'
+
+'$include: 'Assets\Sources\TileIndex.bi'
+
+'$include: 'Assets\Sources\InventoryIndex.bi'
 
 
 INITIALIZE
