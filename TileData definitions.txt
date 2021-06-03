@@ -1,4 +1,0 @@
-TileData flags
-
-0 HasCollision
-1 GivesShadow
