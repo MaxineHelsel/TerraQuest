@@ -22,7 +22,16 @@ macOS comes last, because i have to switch to a different system and pull the al
 ### Alpha Version 15
 
 Added Version Designation to debug menu
+
 - This is to establish what branch your version was pulled from on the github
+
+Added Global Lighting
+
+- This can be used to set a day night cycle, so that night has a dark environment
+
+Added /lightlevel (/ll) command
+
+- This is just used to set the light level via command
 
 
 ### Alpha Version 14

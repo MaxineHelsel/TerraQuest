@@ -30,6 +30,8 @@ Dim Shared MapY As Integer64
 
 Dim Shared WorldName As String
 
+Dim Shared GlobalLightLevel as byte
+
 
 
 Dim Shared CurrentTick As Unsigned Integer64

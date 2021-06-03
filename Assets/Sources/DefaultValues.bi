@@ -25,5 +25,6 @@ Player.health = 8
 GameMode = 1
 Flag.DebugMode = 1
 Flag.NoClip = 0
+GlobalLightLevel = 13
 
 

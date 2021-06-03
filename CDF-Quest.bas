@@ -33,6 +33,7 @@ Do
     SPSET
     INTER
     ZOOM
+    SetLighting
     HUD
     DEV
     KeyPressed = KeyHit
@@ -46,6 +47,16 @@ Loop
 
 
 Error 102
+
+Sub SetLighting
+    Dim i As Byte
+    Dim ii As Byte
+    For i = 0 To 30
+        For ii = 0 To 40
+            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * GlobalLightLevel, 16)-(16 * GlobalLightLevel + 15, 31)
+        Next
+    Next
+End Sub
 
 
 
@@ -172,6 +183,7 @@ Sub DEV
         Print "FPS:" + Str$(FRAMEPS) + " /" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
+        Print "Light Level: (G:"; GlobalLightLevel; ", L: 0)"
         Print "Gamemode: ";
         Select Case GameMode
             Case 0
@@ -287,6 +299,9 @@ Sub DEV
                 Case "new"
                     NewWorld
 
+                Case "lightlevel", "ll"
+                    Locate 28, 1: Print "                    "
+                    Locate 28, 1: Input "Select Light Level  ", GlobalLightLevel
 
                 Case Else
             End Select
