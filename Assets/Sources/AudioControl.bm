@@ -1,0 +1,5 @@
+Sub PLAYSOUND (nam$)
+    _SndPlayFile nam$, , 1
+End Sub
+
+ 
