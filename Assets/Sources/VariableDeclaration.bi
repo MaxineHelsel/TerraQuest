@@ -92,18 +92,14 @@ Dim Shared prevfolder As String 'temp
 
 Type File
     PlayerSprites As String
-    GrassTiles As String
-    SnowTiles As String
-    InteriorTiles As String
+    TileSheet As String
     HudSprites As String
     Shadows As String
 End Type
 
 Type Texture
     PlayerSprites As Long
-    GrassTiles As Long
-    SnowTiles As Long
-    InteriorTiles As Long
+    TileSheet As Long
     HudSprites As Long
     Shadows As Long
 End Type

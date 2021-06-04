@@ -60,15 +60,6 @@ End Sub
 
 
 
-Sub SETTHEME
-    Select Case map.theme
-        Case 0
-            theme = Texture.GrassTiles
-        Case 1
-            theme = Texture.SnowTiles
-    End Select
-End Sub
-
 
 Sub HUD
     If Flag.HudDisplay = 0 Then
@@ -103,7 +94,7 @@ Sub HUD
         Select Case GameMode
             Case 1
                 For hbpos = 0 To 5
-                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), theme, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
                 Next
 
 
@@ -270,11 +261,6 @@ Sub DEV
                     Locate 28, 1: Print "                                "
                     Locate 28, 1: Input "Name of World Folder to load: ", WorldName
                     LOADWORLD
-
-                Case "theme"
-                    Locate 28, 1: Print "                "
-                    Locate 28, 1: Input "Set Theme ID: ", map.theme
-                    SETTHEME
                 Case "groundtile", "gt"
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "Set GroundTile ID: ", GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
@@ -326,7 +312,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), theme, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
 
 
             tileposx = WallTile(ii, i) * 16
@@ -335,7 +321,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), theme, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
 
 
             tileposx = CeilingTile(ii, i) * 16
@@ -344,7 +330,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), theme, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
 
 
         Next
@@ -391,7 +377,11 @@ End Sub
 Sub INITIALIZE
 
     If DirExists("Assets") Then
-        If DirExists("Assets\Tiles") = 0 Then Error 100
+        If DirExists("Assets\Sprites") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Entities") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Items") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Other") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Tiles") = 0 Then Error 100
         If DirExists("Assets\Music") = 0 Then Error 100
         If DirExists("Assets\Sounds") = 0 Then Error 100
         If DirExists("Assets\Worlds") = 0 Then Error 100
@@ -407,9 +397,7 @@ Sub INITIALIZE
     OSPROBE
 
     Texture.PlayerSprites = LoadImage(File.PlayerSprites)
-    Texture.GrassTiles = LoadImage(File.GrassTiles)
-    Texture.SnowTiles = LoadImage(File.SnowTiles)
-    Texture.InteriorTiles = LoadImage(File.InteriorTiles)
+    Texture.TileSheet = LoadImage(File.TileSheet)
     Texture.HudSprites = LoadImage(File.HudSprites)
     Texture.Shadows = LoadImage(File.Shadows)
 
@@ -418,7 +406,7 @@ Sub INITIALIZE
 
     WorldName = "Hub"
     LOADWORLD
-    SETTHEME
+
 
 End Sub
 
@@ -544,7 +532,7 @@ Sub SETBG
         Dim ii As Byte
         For i = 0 To 30
             For ii = 0 To 40
-                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), theme, , (16, 0)-(31, 15)
+                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
             Next
         Next
     End If

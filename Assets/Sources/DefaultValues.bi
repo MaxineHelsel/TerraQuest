@@ -11,12 +11,10 @@ Settings.FrameRate = 60
 Settings.TickRate = 1
 
 'File name locations
-File.PlayerSprites = "Assets\Tiles\character.png"
-File.GrassTiles = "Assets\Tiles\grass.png"
-File.SnowTiles = "Assets\Tiles\snow.png"
-File.InteriorTiles = "Assets\Tiles\interior.png"
-File.HudSprites = "Assets\Tiles\HUD.png"
-File.Shadows = "Assets\Tiles\Shadows.png"
+File.PlayerSprites = "Assets\Sprites\Entities\character.png"
+File.TileSheet = "Assets\Sprites\Tiles\Tiles.png"
+File.HudSprites = "Assets\Sprites\Other\HUD.png"
+File.Shadows = "Assets\Sprites\Other\Shadows.png"
 
 Sounds.error = "Assets\Sounds\error.wav"
 

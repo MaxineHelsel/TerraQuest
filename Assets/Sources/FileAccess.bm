@@ -125,9 +125,6 @@ Sub LOADMAP (file As String)
         Next
     Next
     Get #1, iii, map.name
-    iii = iii + 1
-    Get #1, iii, map.theme
-    SETTHEME
     Close #1
     iii = 1
 
@@ -225,8 +222,6 @@ Sub SAVEMAP (headless)
         Next
     Next
     Put #1, iii, map.name
-    iii = iii + 1
-    Put #1, iii, map.theme
     Close #1
     iii = 1
 
@@ -254,8 +249,6 @@ Sub UPDATEMAP
         Next
     Next
     Put #1, iii, map.name
-    iii = iii + 1
-    Put #1, iii, map.theme
     Close #1
     badpw:
 
