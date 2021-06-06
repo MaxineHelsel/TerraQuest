@@ -4,7 +4,7 @@
 Game.Title = "CDF-Quest"
 Game.Buildinfo = "Core Mechanic Test"
 Game.Version = "Alpha Version 16"
-Game.Designation = "Edge"
+Game.Designation = "Unstable"
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file
 Settings.FrameRate = 60
