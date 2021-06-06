@@ -23,6 +23,16 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 - Removed /theme command
 
+- Reworked tile set
+
+- Tiles have been updated and tile IDs have been updated.
+
+- Added "interior shadow" tile attribute.
+
+- Added tile information for 8 tiles
+
+- Default world has been updated to showcase the new shadow effect
+
 ### Alpha Version 15
 
 Added Version Designation to debug menu
