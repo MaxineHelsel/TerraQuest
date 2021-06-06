@@ -19,6 +19,20 @@ Windows comes second, because it does not require me to switch systems, as i can
 macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
 
 # ChangeLog
+### Alpha Version 16
+
+- Removed /theme command
+
+- Reworked tile set
+
+- Tiles have been updated and tile IDs have been updated.
+
+- Added "interior shadow" tile attribute.
+
+- Added tile information for 8 tiles
+
+- Default world has been updated to showcase the new shadow effect
+
 ### Alpha Version 15
 
 Added Version Designation to debug menu

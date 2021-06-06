@@ -35,6 +35,8 @@ Do
     ZOOM
     SetLighting
     HUD
+    If Flag.InventoryOpen = 1 Then InventoryUI
+    UseItem
     DEV
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -48,26 +50,40 @@ Loop
 
 Error 102
 
+Sub InventoryUI
+
+End Sub
+
+Sub UseItem
+
+End Sub
+
+Sub INTER
+    Select Case KeyPressed
+        Case -15616
+            Flag.DebugMode = Flag.DebugMode + 1
+        Case -15104
+            Flag.HudDisplay = Flag.HudDisplay + 1
+        Case -101
+            Flag.InventoryOpen = Flag.InventoryOpen + 1
+
+
+    End Select
+End Sub
+
+
+
 Sub SetLighting
     Dim i As Byte
     Dim ii As Byte
     For i = 0 To 30
         For ii = 0 To 40
-            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * GlobalLightLevel, 16)-(16 * GlobalLightLevel + 15, 31)
+            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * (GlobalLightLevel - LocalLightLevel(ii, i)), 16)-(16 * (GlobalLightLevel - LocalLightLevel(ii, i)) + 15, 31)
         Next
     Next
 End Sub
 
 
-
-Sub SETTHEME
-    Select Case map.theme
-        Case 0
-            theme = Texture.GrassTiles
-        Case 1
-            theme = Texture.SnowTiles
-    End Select
-End Sub
 
 
 Sub HUD
@@ -77,7 +93,11 @@ Sub HUD
         Dim hboffset As Byte
         Dim hbpos As Byte
         Dim hbitemsize As Single
-
+        Dim invrow As Byte
+        Dim invoffset As Byte
+        Dim invheight As Byte
+        invoffset = 1
+        invheight = 5
         hboffset = 1
         token = 1
         hbitemsize = 2
@@ -98,53 +118,68 @@ Sub HUD
         'Hotbar
         For hbpos = 0 To 5
             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), CameraPositionY + 68 - 16 - hboffset)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), CameraPositionY + 68 - hboffset), Texture.HudSprites, , (0, 32)-(31, 63)
+            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(1, hbpos + 1, 1), Inventory(1, hbpos + 1, 2))-(Inventory(1, hbpos + 1, 1) + 15, Inventory(1, hbpos + 1, 2) + 15)
         Next
 
-        Select Case GameMode
-            Case 1
-                For hbpos = 0 To 5
-                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), theme, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
-                Next
 
+        If Flag.InventoryOpen = 1 Then
 
+            Select Case GameMode
+                Case 1
+                    For invrow = 0 To 2
+                        For hbpos = 0 To 5
+                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
+                        Next
+                    Next
 
-                If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
+            End Select
 
-                If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
-
-                If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
-
-                If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
-
-                If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
-
-                If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
-
-                Select Case KeyPressed
-                    Case 33
-                        Inventory(1, 1) = Inventory(1, 1) + 1
-                        If Inventory(1, 1) > 4 Then Inventory(1, 1) = 0
-                    Case 64
-                        Inventory(1, 2) = Inventory(1, 2) + 1
-                        If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
-                    Case 35
-                        Inventory(1, 3) = Inventory(1, 3) + 1
-                        If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
-                    Case 36
-                        Inventory(1, 4) = Inventory(1, 4) + 1
-                        If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
-                    Case 37
-                        Inventory(1, 5) = Inventory(1, 5) + 1
-                        If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
-                    Case 94
-                        Inventory(1, 6) = Inventory(1, 6) + 1
-                        If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
-
-                End Select
-
-        End Select
+        End If
 
     End If
+
+
+    '     Case 0
+    '        For hbpos = 0 To 5
+    '           PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
+    '      Next
+    '
+    '
+    '
+    ' If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
+
+    '   If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
+    '
+    '   If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
+    '
+    '   If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
+    '
+    '   If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
+    '
+    '   If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
+    '
+    '   Select Case KeyPressed
+    '       Case 33
+    '           Inventory(1, 1) = Inventory(1, 1) + 1
+    '           If Inventory(1, 1) > 5 Then Inventory(1, 1) = 0
+    '       Case 64
+    '           Inventory(1, 2) = Inventory(1, 2) + 1
+    '           If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
+    '       Case 35
+    '           Inventory(1, 3) = Inventory(1, 3) + 1
+    '           If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
+    '       Case 36
+    '           Inventory(1, 4) = Inventory(1, 4) + 1
+    '           If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
+    '       Case 37
+    '           Inventory(1, 5) = Inventory(1, 5) + 1
+    '           If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
+    '       Case 94
+    '           Inventory(1, 6) = Inventory(1, 6) + 1
+    '           If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
+    '
+    '        End Select
+
 
 End Sub
 
@@ -175,6 +210,7 @@ Sub DEV
         If Flag.FullCam = 1 Then ENDPRINT "Full Camera Enabled"
         If Flag.NoClip = 1 Then ENDPRINT "No Clip Enabled"
         If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
+        If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
 
 
         Locate 1, 1
@@ -187,11 +223,11 @@ Sub DEV
         Print "Gamemode: ";
         Select Case GameMode
             Case 0
-                Print "Debug Mode"
+                Print "Legacy Map Editor"
             Case 1
-                Print "Map Editor"
+                Print "Creative"
             Case 2
-                Print "Explorer"
+                Print "Survival"
             Case 3
                 Print "Combat"
             Case 4
@@ -270,11 +306,6 @@ Sub DEV
                     Locate 28, 1: Print "                                "
                     Locate 28, 1: Input "Name of World Folder to load: ", WorldName
                     LOADWORLD
-
-                Case "theme"
-                    Locate 28, 1: Print "                "
-                    Locate 28, 1: Input "Set Theme ID: ", map.theme
-                    SETTHEME
                 Case "groundtile", "gt"
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "Set GroundTile ID: ", GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
@@ -326,7 +357,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), theme, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
 
 
             tileposx = WallTile(ii, i) * 16
@@ -335,7 +366,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), theme, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
 
 
             tileposx = CeilingTile(ii, i) * 16
@@ -344,7 +375,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), theme, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
 
 
         Next
@@ -372,26 +403,40 @@ Sub CastShadow
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
             End If
 
+            If TileData(ii, i, 3) = 1 Then
+
+                If TileData(ii, i + 1, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
+                End If
+
+                If TileData(ii + 1, i, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
+                End If
+
+                If TileData(ii - 1, i, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
+                End If
+
+                If TileData(ii, i - 1, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
+                End If
+
+            End If
 
         Next
     Next
 End Sub
 
 
-Sub INTER
-    Select Case KeyPressed
-        Case -15616
-            Flag.DebugMode = Flag.DebugMode + 1
-        Case -15104
-            Flag.HudDisplay = Flag.HudDisplay + 1
-    End Select
-End Sub
-
 
 Sub INITIALIZE
 
     If DirExists("Assets") Then
-        If DirExists("Assets\Tiles") = 0 Then Error 100
+        If DirExists("Assets\Sprites") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Entities") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Items") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Other") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Tiles") = 0 Then Error 100
         If DirExists("Assets\Music") = 0 Then Error 100
         If DirExists("Assets\Sounds") = 0 Then Error 100
         If DirExists("Assets\Worlds") = 0 Then Error 100
@@ -407,9 +452,8 @@ Sub INITIALIZE
     OSPROBE
 
     Texture.PlayerSprites = LoadImage(File.PlayerSprites)
-    Texture.GrassTiles = LoadImage(File.GrassTiles)
-    Texture.SnowTiles = LoadImage(File.SnowTiles)
-    Texture.InteriorTiles = LoadImage(File.InteriorTiles)
+    Texture.TileSheet = LoadImage(File.TileSheet)
+    Texture.ItemSheet = LoadImage(File.ItemSheet)
     Texture.HudSprites = LoadImage(File.HudSprites)
     Texture.Shadows = LoadImage(File.Shadows)
 
@@ -418,7 +462,7 @@ Sub INITIALIZE
 
     WorldName = "Hub"
     LOADWORLD
-    SETTHEME
+
 
 End Sub
 
@@ -544,7 +588,7 @@ Sub SETBG
         Dim ii As Byte
         For i = 0 To 30
             For ii = 0 To 40
-                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), theme, , (16, 0)-(31, 15)
+                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
             Next
         Next
     End If
