@@ -93,7 +93,11 @@ Sub HUD
         Dim hboffset As Byte
         Dim hbpos As Byte
         Dim hbitemsize As Single
-
+        Dim invrow As Byte
+        Dim invoffset As Byte
+        Dim invheight As Byte
+        invoffset = 1
+        invheight = 5
         hboffset = 1
         token = 1
         hbitemsize = 2
@@ -118,52 +122,64 @@ Sub HUD
         Next
 
 
-        Select Case GameMode
+        If Flag.InventoryOpen = 1 Then
 
-            '     Case 0
-            '        For hbpos = 0 To 5
-            '           PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
-            '      Next
-            '
-            '
-            '
-            ' If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
+            Select Case GameMode
+                Case 1
+                    For invrow = 0 To 2
+                        For hbpos = 0 To 5
+                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
+                        Next
+                    Next
 
-            '   If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
-            '
-            '   If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
-            '
-            '   If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
-            '
-            '   If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
-            '
-            '   If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
-            '
-            '   Select Case KeyPressed
-            '       Case 33
-            '           Inventory(1, 1) = Inventory(1, 1) + 1
-            '           If Inventory(1, 1) > 5 Then Inventory(1, 1) = 0
-            '       Case 64
-            '           Inventory(1, 2) = Inventory(1, 2) + 1
-            '           If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
-            '       Case 35
-            '           Inventory(1, 3) = Inventory(1, 3) + 1
-            '           If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
-            '       Case 36
-            '           Inventory(1, 4) = Inventory(1, 4) + 1
-            '           If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
-            '       Case 37
-            '           Inventory(1, 5) = Inventory(1, 5) + 1
-            '           If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
-            '       Case 94
-            '           Inventory(1, 6) = Inventory(1, 6) + 1
-            '           If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
-            '
-            '        End Select
+            End Select
 
-        End Select
+        End If
 
     End If
+
+
+    '     Case 0
+    '        For hbpos = 0 To 5
+    '           PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
+    '      Next
+    '
+    '
+    '
+    ' If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
+
+    '   If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
+    '
+    '   If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
+    '
+    '   If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
+    '
+    '   If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
+    '
+    '   If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
+    '
+    '   Select Case KeyPressed
+    '       Case 33
+    '           Inventory(1, 1) = Inventory(1, 1) + 1
+    '           If Inventory(1, 1) > 5 Then Inventory(1, 1) = 0
+    '       Case 64
+    '           Inventory(1, 2) = Inventory(1, 2) + 1
+    '           If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
+    '       Case 35
+    '           Inventory(1, 3) = Inventory(1, 3) + 1
+    '           If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
+    '       Case 36
+    '           Inventory(1, 4) = Inventory(1, 4) + 1
+    '           If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
+    '       Case 37
+    '           Inventory(1, 5) = Inventory(1, 5) + 1
+    '           If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
+    '       Case 94
+    '           Inventory(1, 6) = Inventory(1, 6) + 1
+    '           If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
+    '
+    '        End Select
+
 
 End Sub
 
@@ -341,7 +357,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
 
 
             tileposx = WallTile(ii, i) * 16
@@ -350,7 +366,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
 
 
             tileposx = CeilingTile(ii, i) * 16
@@ -359,7 +375,7 @@ Sub SetMap
                 tileposx = tileposx - 256
                 tileposy = tileposy + 16
             Wend
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (tileposx, tileposy)-(tileposx + 15, tileposy + 15)
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
 
 
         Next
@@ -387,6 +403,25 @@ Sub CastShadow
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
             End If
 
+            If TileData(ii, i, 3) = 1 Then
+
+                If TileData(ii, i + 1, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
+                End If
+
+                If TileData(ii + 1, i, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
+                End If
+
+                If TileData(ii - 1, i, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
+                End If
+
+                If TileData(ii, i - 1, 3) = 0 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
+                End If
+
+            End If
 
         Next
     Next
