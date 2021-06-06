@@ -31,6 +31,7 @@ Dim Shared MapY As Integer64
 Dim Shared WorldName As String
 
 Dim Shared GlobalLightLevel as byte
+dim shared LocalLightLevel(41,31) as byte
 
 
 
@@ -43,7 +44,7 @@ Dim Shared KeyPressed As Long
 
 Dim Shared GameMode As Byte
 
-Dim Shared Inventory(4, 6) As Integer
+Dim Shared Inventory(4, 6,9) As Integer
 
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
@@ -63,6 +64,7 @@ Dim Shared Flag.FreeCam As Unsigned Bit
 Dim Shared Flag.NoClip As Unsigned Bit
 Dim Shared Flag.FrameRateLock As Unsigned Bit
 Dim Shared Flag.HudDisplay As Unsigned Bit
+dim shared Flag.InventoryOpen as unsigned bit
 Dim Shared bgdraw As Unsigned Bit
 
 
@@ -93,6 +95,7 @@ Dim Shared prevfolder As String 'temp
 Type File
     PlayerSprites As String
     TileSheet As String
+    ItemSheet as string
     HudSprites As String
     Shadows As String
 End Type
@@ -100,6 +103,7 @@ End Type
 Type Texture
     PlayerSprites As Long
     TileSheet As Long
+    ItemSheet as long
     HudSprites As Long
     Shadows As Long
 End Type

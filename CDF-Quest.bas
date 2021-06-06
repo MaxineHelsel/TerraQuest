@@ -35,6 +35,8 @@ Do
     ZOOM
     SetLighting
     HUD
+    If Flag.InventoryOpen = 1 Then InventoryUI
+    UseItem
     DEV
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -48,12 +50,35 @@ Loop
 
 Error 102
 
+Sub InventoryUI
+
+End Sub
+
+Sub UseItem
+
+End Sub
+
+Sub INTER
+    Select Case KeyPressed
+        Case -15616
+            Flag.DebugMode = Flag.DebugMode + 1
+        Case -15104
+            Flag.HudDisplay = Flag.HudDisplay + 1
+        Case -101
+            Flag.InventoryOpen = Flag.InventoryOpen + 1
+
+
+    End Select
+End Sub
+
+
+
 Sub SetLighting
     Dim i As Byte
     Dim ii As Byte
     For i = 0 To 30
         For ii = 0 To 40
-            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * GlobalLightLevel, 16)-(16 * GlobalLightLevel + 15, 31)
+            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * (GlobalLightLevel - LocalLightLevel(ii, i)), 16)-(16 * (GlobalLightLevel - LocalLightLevel(ii, i)) + 15, 31)
         Next
     Next
 End Sub
@@ -89,49 +114,52 @@ Sub HUD
         'Hotbar
         For hbpos = 0 To 5
             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), CameraPositionY + 68 - 16 - hboffset)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), CameraPositionY + 68 - hboffset), Texture.HudSprites, , (0, 32)-(31, 63)
+            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(1, hbpos + 1, 1), Inventory(1, hbpos + 1, 2))-(Inventory(1, hbpos + 1, 1) + 15, Inventory(1, hbpos + 1, 2) + 15)
         Next
 
+
         Select Case GameMode
-            Case 1
-                For hbpos = 0 To 5
-                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
-                Next
 
+            '     Case 0
+            '        For hbpos = 0 To 5
+            '           PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
+            '      Next
+            '
+            '
+            '
+            ' If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
 
-
-                If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
-
-                If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
-
-                If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
-
-                If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
-
-                If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
-
-                If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
-
-                Select Case KeyPressed
-                    Case 33
-                        Inventory(1, 1) = Inventory(1, 1) + 1
-                        If Inventory(1, 1) > 4 Then Inventory(1, 1) = 0
-                    Case 64
-                        Inventory(1, 2) = Inventory(1, 2) + 1
-                        If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
-                    Case 35
-                        Inventory(1, 3) = Inventory(1, 3) + 1
-                        If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
-                    Case 36
-                        Inventory(1, 4) = Inventory(1, 4) + 1
-                        If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
-                    Case 37
-                        Inventory(1, 5) = Inventory(1, 5) + 1
-                        If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
-                    Case 94
-                        Inventory(1, 6) = Inventory(1, 6) + 1
-                        If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
-
-                End Select
+            '   If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
+            '
+            '   If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
+            '
+            '   If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
+            '
+            '   If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
+            '
+            '   If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
+            '
+            '   Select Case KeyPressed
+            '       Case 33
+            '           Inventory(1, 1) = Inventory(1, 1) + 1
+            '           If Inventory(1, 1) > 5 Then Inventory(1, 1) = 0
+            '       Case 64
+            '           Inventory(1, 2) = Inventory(1, 2) + 1
+            '           If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
+            '       Case 35
+            '           Inventory(1, 3) = Inventory(1, 3) + 1
+            '           If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
+            '       Case 36
+            '           Inventory(1, 4) = Inventory(1, 4) + 1
+            '           If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
+            '       Case 37
+            '           Inventory(1, 5) = Inventory(1, 5) + 1
+            '           If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
+            '       Case 94
+            '           Inventory(1, 6) = Inventory(1, 6) + 1
+            '           If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
+            '
+            '        End Select
 
         End Select
 
@@ -166,6 +194,7 @@ Sub DEV
         If Flag.FullCam = 1 Then ENDPRINT "Full Camera Enabled"
         If Flag.NoClip = 1 Then ENDPRINT "No Clip Enabled"
         If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
+        If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
 
 
         Locate 1, 1
@@ -178,11 +207,11 @@ Sub DEV
         Print "Gamemode: ";
         Select Case GameMode
             Case 0
-                Print "Debug Mode"
+                Print "Legacy Map Editor"
             Case 1
-                Print "Map Editor"
+                Print "Creative"
             Case 2
-                Print "Explorer"
+                Print "Survival"
             Case 3
                 Print "Combat"
             Case 4
@@ -364,15 +393,6 @@ Sub CastShadow
 End Sub
 
 
-Sub INTER
-    Select Case KeyPressed
-        Case -15616
-            Flag.DebugMode = Flag.DebugMode + 1
-        Case -15104
-            Flag.HudDisplay = Flag.HudDisplay + 1
-    End Select
-End Sub
-
 
 Sub INITIALIZE
 
@@ -398,6 +418,7 @@ Sub INITIALIZE
 
     Texture.PlayerSprites = LoadImage(File.PlayerSprites)
     Texture.TileSheet = LoadImage(File.TileSheet)
+    Texture.ItemSheet = LoadImage(File.ItemSheet)
     Texture.HudSprites = LoadImage(File.HudSprites)
     Texture.Shadows = LoadImage(File.Shadows)
 

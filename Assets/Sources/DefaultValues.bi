@@ -13,6 +13,7 @@ Settings.TickRate = 1
 'File name locations
 File.PlayerSprites = "Assets\Sprites\Entities\character.png"
 File.TileSheet = "Assets\Sprites\Tiles\Tiles.png"
+File.ItemSheet = "Assets\Sprites\Items\Items.png
 File.HudSprites = "Assets\Sprites\Other\HUD.png"
 File.Shadows = "Assets\Sprites\Other\Shadows.png"
 
