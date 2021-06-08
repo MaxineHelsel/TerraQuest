@@ -44,7 +44,8 @@ Dim Shared KeyPressed As Long
 
 Dim Shared GameMode As Byte
 
-Dim Shared Inventory(4, 6,9) As Integer
+Dim Shared Inventory(3, 5,9) As Integer
+dim shared CreativeInventory(2,5,9,1)
 
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
@@ -65,6 +66,7 @@ Dim Shared Flag.NoClip As Unsigned Bit
 Dim Shared Flag.FrameRateLock As Unsigned Bit
 Dim Shared Flag.HudDisplay As Unsigned Bit
 dim shared Flag.InventoryOpen as unsigned bit
+dim shared Flag.CastShadows as unsigned bit
 Dim Shared bgdraw As Unsigned Bit
 
 

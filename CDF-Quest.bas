@@ -15,6 +15,7 @@ Title "CDF-Quest"
 
 '$include: 'Assets\Sources\InventoryIndex.bi'
 
+'$include: 'Assets\Sources\CreativeInventory.bi'
 
 INITIALIZE
 
@@ -35,7 +36,6 @@ Do
     ZOOM
     SetLighting
     HUD
-    If Flag.InventoryOpen = 1 Then InventoryUI
     UseItem
     DEV
     KeyPressed = KeyHit
@@ -55,7 +55,8 @@ Sub InventoryUI
 End Sub
 
 Sub UseItem
-
+    If Flag.InventoryOpen = 0 Then
+    End If
 End Sub
 
 Sub INTER
@@ -85,7 +86,6 @@ End Sub
 
 
 
-
 Sub HUD
     If Flag.HudDisplay = 0 Then
         Dim tmpheal As Byte
@@ -96,6 +96,10 @@ Sub HUD
         Dim invrow As Byte
         Dim invoffset As Byte
         Dim invheight As Byte
+        Static CreativePage As Byte
+        Static ItemSelectX As Byte
+        Static ItemSelectY As Byte
+
         invoffset = 1
         invheight = 5
         hboffset = 1
@@ -104,8 +108,8 @@ Sub HUD
 
         tmpheal = Player.health
 
+        'Health Display
         While tmpheal > 0
-
             If tmpheal <= 8 Then
                 PutImage (CameraPositionX + 88 - 16, CameraPositionY - 52 + (token - 1) * 16)-(CameraPositionX + 88, CameraPositionY - 52 + 16 + (token - 1) * 16), Texture.HudSprites, , ((tmpheal - 1) * 32, 0)-((tmpheal - 1) * 32 + 31, 31)
             Else
@@ -115,36 +119,44 @@ Sub HUD
             token = token + 1
         Wend
 
-        'Hotbar
+
+        'Hotbar Display
         For hbpos = 0 To 5
             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), CameraPositionY + 68 - 16 - hboffset)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), CameraPositionY + 68 - hboffset), Texture.HudSprites, , (0, 32)-(31, 63)
-            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(1, hbpos + 1, 1), Inventory(1, hbpos + 1, 2))-(Inventory(1, hbpos + 1, 1) + 15, Inventory(1, hbpos + 1, 2) + 15)
+            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(0, hbpos, 1), Inventory(0, hbpos, 2))-(Inventory(0, hbpos, 1) + 15, Inventory(0, hbpos, 2) + 15)
         Next
 
 
+        'Inventory Display
         If Flag.InventoryOpen = 1 Then
+            For invrow = 0 To 2
+                For hbpos = 0 To 5
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
+                    If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                    Select Case GameMode
+                        Case 1
+                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (CreativeInventory(invrow, hbpos, 1, CreativePage), CreativeInventory(invrow, hbpos, 2, CreativePage))-(CreativeInventory(invrow, hbpos, 1, CreativePage) + 15, CreativeInventory(invrow, hbpos, 2, CreativePage) + 15)
+                        Case 2
+                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (Inventory(1, hbpos + 1, 1), Inventory(1, hbpos + 1, 2))-(Inventory(invrow + 2, hbpos + 1, 1) + 15, Inventory(invrow + 2, hbpos + 1, 2) + 15)
+                    End Select
+                Next
+            Next
 
-            Select Case GameMode
-                Case 1
-                    For invrow = 0 To 2
-                        For hbpos = 0 To 5
-                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
-                        Next
-                    Next
+            Select Case KeyPressed
+                Case 18432
+                    ItemSelectY = ItemSelectY + 1
+                Case 20480
+                    ItemSelectY = ItemSelectY - 1
+                Case 19200
+                    ItemSelectX = ItemSelectX - 1
+                Case 19712
+                    ItemSelectX = ItemSelectX + 1
+
 
             End Select
-
         End If
-
     End If
 
-
-    '     Case 0
-    '        For hbpos = 0 To 5
-    '           PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
-    '      Next
-    '
-    '
     '
     ' If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
 
@@ -211,6 +223,7 @@ Sub DEV
         If Flag.NoClip = 1 Then ENDPRINT "No Clip Enabled"
         If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
         If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
+        If Flag.CastShadows = 1 Then ENDPRINT "Shadows Disabled"
 
 
         Locate 1, 1
@@ -324,6 +337,8 @@ Sub DEV
 
                 Case "bgdraw"
                     bgdraw = bgdraw + 1
+                Case "shadowcast", "sh"
+                    Flag.CastShadows = Flag.CastShadows + 1
                 Case "update", "up"
                     UPDATEMAP
 
@@ -347,84 +362,60 @@ End Sub
 Sub SetMap
     Dim i As Byte
     Dim ii As Byte
-    Dim tileposx As Integer
-    Dim tileposy As Integer
     For i = 1 To 30
         For ii = 1 To 40
-            tileposx = GroundTile(ii, i) * 16
-            tileposy = 0
-            While tileposx >= 256
-                tileposx = tileposx - 256
-                tileposy = tileposy + 16
-            Wend
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
-
-
-            tileposx = WallTile(ii, i) * 16
-            tileposy = 0
-            While tileposx >= 256
-                tileposx = tileposx - 256
-                tileposy = tileposy + 16
-            Wend
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
-
-
-            tileposx = CeilingTile(ii, i) * 16
-            tileposy = 0
-            While tileposx >= 256
-                tileposx = tileposx - 256
-                tileposy = tileposy + 16
-            Wend
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
-
-
         Next
     Next
 End Sub
 
 Sub CastShadow
-    Dim i, ii As Byte
-    For i = 1 To 30
-        For ii = 1 To 40
+    If Flag.CastShadows = 0 Then
+        Dim i As Byte
+        Dim ii As Byte
+        For i = 1 To 30
+            For ii = 1 To 40
 
-            If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-            End If
-
-            If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-            End If
-
-            If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-            End If
-
-            If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-            End If
-
-            If TileData(ii, i, 3) = 1 Then
-
-                If TileData(ii, i + 1, 3) = 0 Then
+                If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
                 End If
 
-                If TileData(ii + 1, i, 3) = 0 Then
+                If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
                 End If
 
-                If TileData(ii - 1, i, 3) = 0 Then
+                If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
                 End If
 
-                If TileData(ii, i - 1, 3) = 0 Then
+                If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
                 End If
 
-            End If
+                If TileData(ii, i, 3) = 1 Then
 
+                    If TileData(ii, i + 1, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
+                    End If
+
+                    If TileData(ii + 1, i, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
+                    End If
+
+                    If TileData(ii - 1, i, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
+                    End If
+
+                    If TileData(ii, i - 1, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
+                    End If
+
+                End If
+            Next
         Next
-    Next
+    End If
 End Sub
 
 
