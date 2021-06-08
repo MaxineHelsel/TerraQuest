@@ -6,6 +6,8 @@ Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
 Title "CDF-Quest"
 
+'todo make the number of attributes a constant
+
 
 '$include: 'Assets\Sources\VariableDeclaration.bi'
 
@@ -143,6 +145,19 @@ Sub HUD
             Next
 
             Select Case KeyPressed
+
+                Case 49
+                    InvSwap 0, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 50
+                    InvSwap 1, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 51
+                    InvSwap 2, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 52
+                    InvSwap 3, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 53
+                    InvSwap 4, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 54
+                    InvSwap 5, 0, ItemSelectX, ItemSelectY, CreativePage
                 Case 18432
                     ItemSelectY = ItemSelectY + 1
                 Case 20480
@@ -152,53 +167,30 @@ Sub HUD
                 Case 19712
                     ItemSelectX = ItemSelectX + 1
 
-                Case 49
-
             End Select
+
+            If ItemSelectX > 5 Then ItemSelectX = 0
+            If ItemSelectX < 0 Then ItemSelectX = 5
+            If ItemSelectY > 2 Then ItemSelectY = 0
+            If ItemSelectY < 0 Then ItemSelectY = 2
+
         End If
     End If
-
-    '
-    ' If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
-
-    '   If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
-    '
-    '   If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
-    '
-    '   If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
-    '
-    '   If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
-    '
-    '   If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
-    '
-    '   Select Case KeyPressed
-    '       Case 33
-    '           Inventory(1, 1) = Inventory(1, 1) + 1
-    '           If Inventory(1, 1) > 5 Then Inventory(1, 1) = 0
-    '       Case 64
-    '           Inventory(1, 2) = Inventory(1, 2) + 1
-    '           If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
-    '       Case 35
-    '           Inventory(1, 3) = Inventory(1, 3) + 1
-    '           If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
-    '       Case 36
-    '           Inventory(1, 4) = Inventory(1, 4) + 1
-    '           If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
-    '       Case 37
-    '           Inventory(1, 5) = Inventory(1, 5) + 1
-    '           If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
-    '       Case 94
-    '           Inventory(1, 6) = Inventory(1, 6) + 1
-    '           If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
-    '
-    '        End Select
-
-
 End Sub
 
-Sub InvSwap (Slot, Mode)
-
-              end sub
+Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
+    'Dim Shared Inventory(3, 5,9) As Integer
+    'dim shared CreativeInventory(2,5,9,1)
+    Dim i
+    For i = 0 To 9
+        Select Case Mode
+            Case 0
+                Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
+            Case 1
+                Swap Inventory(ItemSelectY, ItemSelectX, i), Inventory(0, Slot, i)
+        End Select
+    Next
+End Sub
 
 
 

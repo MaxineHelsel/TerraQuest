@@ -44,7 +44,7 @@ Dim Shared KeyPressed As Long
 
 Dim Shared GameMode As Byte
 
-Dim Shared Inventory(3, 5,9) As Integer
+Dim Shared Inventory(3, 5,9)
 dim shared CreativeInventory(2,5,9,1)
 
 Dim Shared Game.Title As String
