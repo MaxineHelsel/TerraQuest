@@ -206,6 +206,7 @@ Sub DEV
         Dim dv As Single
         Dim dummystring As String
         Dim databit As Byte
+        Static RenderMode As Byte
 
 
 
@@ -215,6 +216,9 @@ Sub DEV
         ENDPRINT "Version: " + Game.Version
         ENDPRINT "Version Designation: " + Game.Designation
         ENDPRINT "Operating System: " + Game.HostOS
+        If RenderMode = 0 Then ENDPRINT "Render Mode: Software"
+        If RenderMode = 1 Then ENDPRINT "Render Mode: Hardware Exclusive"
+        If RenderMode = 2 Then ENDPRINT "Render Mode: Hardware"
         If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
         Print
         ENDPRINT "Flags:"
@@ -352,10 +356,10 @@ Sub DEV
                     Locate 28, 1: Input "Select Light Level  ", GlobalLightLevel
                 Case "rendermode", "rm"
                     Locate 28, 1: Print "         "
-                    Locate 28, 1: Input "Mode  ", databit
-                    If databit = 2 Then Flag.RenderOverride = 0
-                    If databit = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
-                    If databit = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
+                    Locate 28, 1: Input "Mode  ", RenderMode
+                    If RenderMode = 2 Then Flag.RenderOverride = 0
+                    If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
+                    If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
 
 
                 Case Else
@@ -464,12 +468,24 @@ Sub INITIALIZE
 End Sub
 
 Sub SwitchRender (mode As Byte)
+    Static FirstSkip As Byte
     If mode <> 0 And mode <> 1 Then Exit Sub
+
+    If FirstSkip = 1 Then
+        FreeImage Texture.PlayerSprites
+        FreeImage Texture.TileSheet
+        FreeImage Texture.ItemSheet
+        FreeImage Texture.HudSprites
+        FreeImage Texture.Shadows
+    End If
+
     Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
     Texture.TileSheet = LoadImage(File.TileSheet, mode + 32)
     Texture.ItemSheet = LoadImage(File.ItemSheet, mode + 32)
     Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)
     Texture.Shadows = LoadImage(File.Shadows, mode + 32)
+    FirstSkip = 1
+
 End Sub
 
 
