@@ -1,10 +1,20 @@
 # CDF-Quest
 
+# Controls
 
-# Updates
+- W A S D: Move
+
+- E: Open Inventory
+
+- Arrow Keys: Navigate Inventory
+
+- 1-6 (While in inventory) Swap selected item with hotbar
+
+- 1-6 (out of inventory) use item in hotbar
+
+
+# Update Information
 Updates are usually pushed in 2-3 stages:
-
-
 
 - Linux
 

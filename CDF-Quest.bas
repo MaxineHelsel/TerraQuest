@@ -4,6 +4,7 @@ On Error GoTo ERRORHANDLER
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
+DisplayOrder Hardware , Software
 Title "CDF-Quest"
 
 'todo make the number of attributes a constant
@@ -45,6 +46,7 @@ Do
     CurrentTick = CurrentTick + Settings.TickRate
     If Flag.ScreenRefreshSkip = 0 Then Display
     Flag.ScreenRefreshSkip = 0
+    If Flag.OpenCommand = 1 Then Flag.OpenCommand = 2
     Cls
 Loop
 
@@ -90,6 +92,7 @@ End Sub
 
 Sub HUD
     If Flag.HudDisplay = 0 Then
+
         Dim tmpheal As Byte
         Dim token As Byte
         Dim hboffset As Byte
@@ -198,6 +201,7 @@ End Sub
 Sub DEV
     If Flag.DebugMode = 1 Then
         PrintMode FillBackground
+        Color , RGBA(0, 0, 0, 128)
         Dim comin As String
         Dim dv As Single
         Dim dummystring As String
@@ -262,8 +266,12 @@ Sub DEV
         End Select
 
         If KeyDown(47) Then
-            KeyClear
+            Flag.OpenCommand = 1
+            If Flag.RenderOverride = 0 Then SwitchRender (0)
+        End If
 
+        If Flag.OpenCommand = 2 Then
+            KeyClear
             Locate 28, 1: Input "/", comin
             Select Case comin
                 Case "teleport", "tp"
@@ -290,14 +298,11 @@ Sub DEV
                 Case "exit"
                     System
                 Case "error"
-                    Locate 28, 1: Print "                              "
                     Locate 28, 1: Input "Simulate error number: ", dv
                     Error dv
                 Case "gamemode", "gm"
-                    Locate 28, 1: Print "                         "
                     Locate 28, 1: Input "Change Gamemode to: ", GameMode
                 Case "health"
-                    Locate 28, 1: Print "                      "
                     Locate 28, 1: Input "Set Health to: ", Player.health
                 Case "track", "tr"
                     Locate 28, 1: Print "                               "
@@ -345,12 +350,22 @@ Sub DEV
                 Case "lightlevel", "ll"
                     Locate 28, 1: Print "                    "
                     Locate 28, 1: Input "Select Light Level  ", GlobalLightLevel
+                Case "rendermode", "rm"
+                    Locate 28, 1: Print "         "
+                    Locate 28, 1: Input "Mode  ", databit
+                    If databit = 2 Then Flag.RenderOverride = 0
+                    If databit = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
+                    If databit = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
+
 
                 Case Else
             End Select
+            KeyClear
             Flag.ScreenRefreshSkip = 1
-
+            Flag.OpenCommand = 0
+            If Flag.RenderOverride = 0 Then SwitchRender (1)
         End If
+        Color , RGBA(0, 0, 0, 0)
         PrintMode KeepBackground
     End If
 End Sub
@@ -439,19 +454,22 @@ Sub INITIALIZE
 
     OSPROBE
 
-    Texture.PlayerSprites = LoadImage(File.PlayerSprites)
-    Texture.TileSheet = LoadImage(File.TileSheet)
-    Texture.ItemSheet = LoadImage(File.ItemSheet)
-    Texture.HudSprites = LoadImage(File.HudSprites)
-    Texture.Shadows = LoadImage(File.Shadows)
-
-
+    SwitchRender (DefaultRenderMode)
 
 
     WorldName = "Hub"
     LOADWORLD
 
 
+End Sub
+
+Sub SwitchRender (mode As Byte)
+    If mode <> 0 And mode <> 1 Then Exit Sub
+    Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
+    Texture.TileSheet = LoadImage(File.TileSheet, mode + 32)
+    Texture.ItemSheet = LoadImage(File.ItemSheet, mode + 32)
+    Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)
+    Texture.Shadows = LoadImage(File.Shadows, mode + 32)
 End Sub
 
 

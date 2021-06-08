@@ -43,6 +43,7 @@ Dim Shared CameraPositionY As Single
 Dim Shared KeyPressed As Long
 
 Dim Shared GameMode As Byte
+Dim Shared DefaultRenderMode as Byte
 
 Dim Shared Inventory(3, 5,9)
 dim shared CreativeInventory(2,5,9,1)
@@ -67,6 +68,8 @@ Dim Shared Flag.FrameRateLock As Unsigned Bit
 Dim Shared Flag.HudDisplay As Unsigned Bit
 dim shared Flag.InventoryOpen as unsigned bit
 dim shared Flag.CastShadows as unsigned bit
+dim shared Flag.OpenCommand as byte
+dim shared Flag.RenderOverride as unsigned bit
 Dim Shared bgdraw As Unsigned Bit
 
 
