@@ -61,11 +61,11 @@ End Sub
 
 Sub INTER
     Select Case KeyPressed
-        Case -15616
+        Case 15616
             Flag.DebugMode = Flag.DebugMode + 1
-        Case -15104
+        Case 15104
             Flag.HudDisplay = Flag.HudDisplay + 1
-        Case -101
+        Case 101
             Flag.InventoryOpen = Flag.InventoryOpen + 1
 
 
@@ -152,6 +152,7 @@ Sub HUD
                 Case 19712
                     ItemSelectX = ItemSelectX + 1
 
+                Case 49
 
             End Select
         End If
@@ -194,6 +195,10 @@ Sub HUD
 
 
 End Sub
+
+Sub InvSwap (Slot, Mode)
+
+              end sub
 
 
 
