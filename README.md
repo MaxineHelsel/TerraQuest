@@ -29,6 +29,28 @@ Windows comes second, because it does not require me to switch systems, as i can
 macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
 
 # ChangeLog
+### Alpha Version 17
+
+- Added Creative inventory
+
+- Added Hotbar use animation
+
+- Added Hardware accelerated graphics mode
+
+- Added /rendermode command
+
+mode 0: Sofware rendering
+
+mode 1: Hardware exclusive rendering
+
+mode 2: Hardware rendering 
+
+- Added /shadowcast command
+
+allows you to toggle shadows on or off
+
+- Made debug menu background translucent
+
 ### Alpha Version 16
 
 - Removed /theme command

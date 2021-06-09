@@ -39,7 +39,7 @@ Do
     ZOOM
     SetLighting
     HUD
-    UseItem
+    '    UseItem
     DEV
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -58,9 +58,11 @@ Sub InventoryUI
 
 End Sub
 
-Sub UseItem
-    If Flag.InventoryOpen = 0 Then
-    End If
+Sub UseItem (Slot)
+
+    Select Case Inventory(0, Slot, 0)
+
+    End Select
 End Sub
 
 Sub INTER
@@ -97,6 +99,8 @@ Sub HUD
         Dim token As Byte
         Dim hboffset As Byte
         Dim hbpos As Byte
+        Static hbhpos As Byte
+        Static FlashTimeout As Byte
         Dim hbitemsize As Single
         Dim invrow As Byte
         Dim invoffset As Byte
@@ -104,6 +108,7 @@ Sub HUD
         Static CreativePage As Byte
         Static ItemSelectX As Byte
         Static ItemSelectY As Byte
+        Static hbtimeout As Integer64
 
         invoffset = 1
         invheight = 5
@@ -178,7 +183,53 @@ Sub HUD
             If ItemSelectY < 0 Then ItemSelectY = 2
 
         End If
+
+        If Flag.InventoryOpen = 0 Then
+
+            If KeyDown(49) Then
+                UseItem 0
+                hbhpos = 0
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(50) Then
+                UseItem 1
+                hbhpos = 1
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(51) Then
+                UseItem 2
+                hbhpos = 2
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(52) Then
+                UseItem 3
+                hbhpos = 3
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(53) Then
+                UseItem 4
+                hbhpos = 4
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(54) Then
+                UseItem 5
+                hbhpos = 5
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If hbtimeout > CurrentTick And FlashTimeout > 0 Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbhpos), (CameraPositionY + 68 - 16 - hboffset))-(CameraPositionX - 72 + 16 + hboffset + (17 * hbhpos), (CameraPositionY + 68 - hboffset)), Texture.HudSprites, , (32, 32)-(63, 63) Else hbtimeout = CurrentTick + 3: FlashTimeout = FlashTimeout - 1
+            If FlashTimeout < 0 Then FlashTimeout = 0
+
+
+
+        End If
     End If
+
 End Sub
 
 Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
