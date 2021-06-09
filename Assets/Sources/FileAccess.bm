@@ -117,7 +117,7 @@ Sub LOADMAP (file As String)
     Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
-            For iiii = 0 To 8
+            For iiii = 0 To 9
                 Get #1, iii, TileData(ii, i, iiii)
                 iii = iii + 1
             Next
@@ -215,7 +215,7 @@ Sub SAVEMAP (headless)
     Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
-            For iiii = 0 To 8
+            For iiii = 0 To 9
                 Put #1, iii, TileData(ii, i, iiii)
                 iii = iii + 1
             Next

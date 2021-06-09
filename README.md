@@ -1,10 +1,28 @@
 # CDF-Quest
 
+# Download instructions
 
-# Updates
+- Click 'Branch' and choose which version you want
+
+- Click 'Code' and click download zip
+
+- Enjoy
+
+# Controls
+
+- W A S D: Move
+
+- E: Open Inventory
+
+- Arrow Keys: Navigate Inventory
+
+- 1-6 (While in inventory) Swap selected item with hotbar
+
+- 1-6 (out of inventory) use item in hotbar
+
+
+# Update Information
 Updates are usually pushed in 2-3 stages:
-
-
 
 - Linux
 
@@ -19,6 +37,36 @@ Windows comes second, because it does not require me to switch systems, as i can
 macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
 
 # ChangeLog
+### Alpha Version 17
+
+- Added basic world generation
+
+- Added /updatemap command
+
+this is to force a tile update on the entire loaded map
+
+- Added Creative inventory
+
+- Added Hotbar use animation
+
+- Added Hardware accelerated graphics mode
+
+- Added /rendermode command
+
+mode 0: Sofware rendering
+
+mode 1: Hardware exclusive rendering
+
+mode 2: Hardware rendering 
+
+- Added /shadowcast command
+
+allows you to toggle shadows on or off
+
+- Made debug menu background translucent
+
+- ...And probably more that I havent included here
+
 ### Alpha Version 16
 
 - Removed /theme command

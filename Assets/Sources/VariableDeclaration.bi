@@ -12,7 +12,7 @@ Dim Shared Debug As Debug
 Dim Shared GroundTile(41, 31) As Unsigned Integer
 Dim Shared WallTile(41, 31) As Unsigned Integer
 Dim Shared CeilingTile(41, 31) As Unsigned Integer
-Dim Shared TileData(41, 31, 8) As Unsigned Byte
+Dim Shared TileData(41, 31, 9) As Unsigned Byte
 Dim Shared SpawnPointX As Single
 Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
@@ -43,8 +43,10 @@ Dim Shared CameraPositionY As Single
 Dim Shared KeyPressed As Long
 
 Dim Shared GameMode As Byte
+Dim Shared DefaultRenderMode as Byte
 
-Dim Shared Inventory(4, 6,9) As Integer
+Dim Shared Inventory(3, 5,9)
+dim shared CreativeInventory(2,5,9,1)
 
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
@@ -65,6 +67,9 @@ Dim Shared Flag.NoClip As Unsigned Bit
 Dim Shared Flag.FrameRateLock As Unsigned Bit
 Dim Shared Flag.HudDisplay As Unsigned Bit
 dim shared Flag.InventoryOpen as unsigned bit
+dim shared Flag.CastShadows as unsigned bit
+dim shared Flag.OpenCommand as byte
+dim shared Flag.RenderOverride as unsigned bit
 Dim Shared bgdraw As Unsigned Bit
 
 

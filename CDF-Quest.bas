@@ -4,7 +4,10 @@ On Error GoTo ERRORHANDLER
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
+DisplayOrder Hardware , Software
 Title "CDF-Quest"
+
+'todo make the number of attributes a constant
 
 
 '$include: 'Assets\Sources\VariableDeclaration.bi'
@@ -15,9 +18,28 @@ Title "CDF-Quest"
 
 '$include: 'Assets\Sources\InventoryIndex.bi'
 
+'$include: 'Assets\Sources\CreativeInventory.bi'
+
+Dim ii, iii, iiii
+For ii = 0 To 3
+    For iii = 0 To 5
+        For iiii = 0 To 9
+            Inventory(ii, iii, iiii) = -1
+        Next
+    Next
+Next
 
 INITIALIZE
-
+'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
+CENTERPRINT "Temporary title screen"
+Print
+Dim InputString As String
+Input "(L)oad world, (C)reate new world: ", InputString
+If LCase$(InputString) = "l" Then
+    Input "World name"; WorldName
+    LOADWORLD
+End If
+If LCase$(InputString) = "c" Then NewWorld
 
 GoTo game
 Error 102
@@ -35,14 +57,14 @@ Do
     ZOOM
     SetLighting
     HUD
-    If Flag.InventoryOpen = 1 Then InventoryUI
-    UseItem
+    '    UseItem
     DEV
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
     If Flag.ScreenRefreshSkip = 0 Then Display
     Flag.ScreenRefreshSkip = 0
+    If Flag.OpenCommand = 1 Then Flag.OpenCommand = 2
     Cls
 Loop
 
@@ -54,17 +76,79 @@ Sub InventoryUI
 
 End Sub
 
-Sub UseItem
+Sub UpdateTile (TileX, TileY)
+    If TileIndexData(GroundTile(TileX, TileY), 0) = 1 Or TileIndexData(WallTile(TileX, TileY), 0) = 1 Then TileData(TileX, TileY, 0) = 1 Else TileData(TileX, TileY, 0) = 0
+    If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
+    If TileIndexData(GroundTile(TileX, TileY), 2) = 1 Or TileIndexData(WallTile(TileX, TileY), 2) = 1 Then TileData(TileX, TileY, 2) = 1 Else TileData(TileX, TileY, 2) = 0
+    If TileIndexData(GroundTile(TileX, TileY), 3) = 1 And TileIndexData(WallTile(TileX, TileY), 2) = 0 Then TileData(TileX, TileY, 3) = 1 Else TileData(TileX, TileY, 3) = 0
+    TileData(TileX, TileY, 4) = TileIndexData(GroundTile(TileX, TileY), 4)
+    TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
+    TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
+    TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
 
+End Sub
+
+Sub UseItem (Slot)
+    Dim FacingX As Integer
+    Dim FacingY As Integer
+    Select Case Player.facing
+        Case 0
+            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingY = Int((Player.y + 8 - 16) / 16) + 1
+        Case 1
+            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingY = Int((Player.y + 8 + 16) / 16) + 1
+        Case 2
+            FacingX = Int((Player.x + 8 - 16) / 16) + 1
+            FacingY = Int((Player.y + 8) / 16) + 1
+        Case 3
+            FacingX = Int((Player.x + 8 + 16) / 16) + 1
+            FacingY = Int((Player.y + 8) / 16) + 1
+    End Select
+
+    Select Case Inventory(0, Slot, 0)
+        Case 0
+            Select Case Inventory(0, Slot, 4)
+                Case 0
+                    GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                    UpdateTile FacingX, FacingY
+                Case 1
+                    WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                    UpdateTile FacingX, FacingY
+
+            End Select
+        Case 1
+            Select Case Inventory(0, Slot, 5)
+                Case 0
+                    If TileData(FacingX, FacingY, 4) <= 0 Then
+                        GroundTile(FacingX, FacingY) = 0
+                        UpdateTile FacingX, FacingY
+                    End If
+                    TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                Case 1
+                    If TileData(FacingX, FacingY, 5) <= 0 Then
+                        WallTile(FacingX, FacingY) = 1
+                        UpdateTile FacingX, FacingY
+                    End If
+                    TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6) + TileIndexData(WallTile(FacingX, FacingY), 5)
+
+            End Select
+
+    End Select
+    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
+        WallTile(FacingX, FacingY) = 1
+        UpdateTile FacingX, FacingY
+
+    End If
 End Sub
 
 Sub INTER
     Select Case KeyPressed
-        Case -15616
+        Case 15616
             Flag.DebugMode = Flag.DebugMode + 1
-        Case -15104
+        Case 15104
             Flag.HudDisplay = Flag.HudDisplay + 1
-        Case -101
+        Case 101
             Flag.InventoryOpen = Flag.InventoryOpen + 1
 
 
@@ -85,17 +169,24 @@ End Sub
 
 
 
-
 Sub HUD
     If Flag.HudDisplay = 0 Then
+
         Dim tmpheal As Byte
         Dim token As Byte
         Dim hboffset As Byte
         Dim hbpos As Byte
+        Static hbhpos As Byte
+        Static FlashTimeout As Byte
         Dim hbitemsize As Single
         Dim invrow As Byte
         Dim invoffset As Byte
         Dim invheight As Byte
+        Static CreativePage As Byte
+        Static ItemSelectX As Byte
+        Static ItemSelectY As Byte
+        Static hbtimeout As Integer64
+
         invoffset = 1
         invheight = 5
         hboffset = 1
@@ -104,8 +195,8 @@ Sub HUD
 
         tmpheal = Player.health
 
+        'Health Display
         While tmpheal > 0
-
             If tmpheal <= 8 Then
                 PutImage (CameraPositionX + 88 - 16, CameraPositionY - 52 + (token - 1) * 16)-(CameraPositionX + 88, CameraPositionY - 52 + 16 + (token - 1) * 16), Texture.HudSprites, , ((tmpheal - 1) * 32, 0)-((tmpheal - 1) * 32 + 31, 31)
             Else
@@ -115,72 +206,121 @@ Sub HUD
             token = token + 1
         Wend
 
-        'Hotbar
+
+        'Hotbar Display
         For hbpos = 0 To 5
             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), CameraPositionY + 68 - 16 - hboffset)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), CameraPositionY + 68 - hboffset), Texture.HudSprites, , (0, 32)-(31, 63)
-            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(1, hbpos + 1, 1), Inventory(1, hbpos + 1, 2))-(Inventory(1, hbpos + 1, 1) + 15, Inventory(1, hbpos + 1, 2) + 15)
+            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(0, hbpos, 1), Inventory(0, hbpos, 2))-(Inventory(0, hbpos, 1) + 15, Inventory(0, hbpos, 2) + 15)
         Next
 
 
+        'Inventory Display
         If Flag.InventoryOpen = 1 Then
+            For invrow = 0 To 2
+                For hbpos = 0 To 5
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
+                    If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                    Select Case GameMode
+                        Case 1
+                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (CreativeInventory(invrow, hbpos, 1, CreativePage), CreativeInventory(invrow, hbpos, 2, CreativePage))-(CreativeInventory(invrow, hbpos, 1, CreativePage) + 15, CreativeInventory(invrow, hbpos, 2, CreativePage) + 15)
+                        Case 2
+                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (Inventory(1, hbpos + 1, 1), Inventory(1, hbpos + 1, 2))-(Inventory(invrow + 2, hbpos + 1, 1) + 15, Inventory(invrow + 2, hbpos + 1, 2) + 15)
+                    End Select
+                Next
+            Next
 
-            Select Case GameMode
-                Case 1
-                    For invrow = 0 To 2
-                        For hbpos = 0 To 5
-                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
-                        Next
-                    Next
+            Select Case KeyPressed
+
+                Case 49
+                    InvSwap 0, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 50
+                    InvSwap 1, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 51
+                    InvSwap 2, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 52
+                    InvSwap 3, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 53
+                    InvSwap 4, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 54
+                    InvSwap 5, 0, ItemSelectX, ItemSelectY, CreativePage
+                Case 18432
+                    ItemSelectY = ItemSelectY + 1
+                Case 20480
+                    ItemSelectY = ItemSelectY - 1
+                Case 19200
+                    ItemSelectX = ItemSelectX - 1
+                Case 19712
+                    ItemSelectX = ItemSelectX + 1
 
             End Select
 
+            If ItemSelectX > 5 Then ItemSelectX = 0
+            If ItemSelectX < 0 Then ItemSelectX = 5
+            If ItemSelectY > 2 Then ItemSelectY = 0
+            If ItemSelectY < 0 Then ItemSelectY = 2
+
         End If
 
+        If Flag.InventoryOpen = 0 Then
+
+            If KeyDown(49) Then
+                UseItem 0
+                hbhpos = 0
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(50) Then
+                UseItem 1
+                hbhpos = 1
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(51) Then
+                UseItem 2
+                hbhpos = 2
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(52) Then
+                UseItem 3
+                hbhpos = 3
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(53) Then
+                UseItem 4
+                hbhpos = 4
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If KeyDown(54) Then
+                UseItem 5
+                hbhpos = 5
+                hbtimeout = CurrentTick + 10
+                FlashTimeout = 5
+            End If
+            If hbtimeout > CurrentTick And FlashTimeout > 0 Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbhpos), (CameraPositionY + 68 - 16 - hboffset))-(CameraPositionX - 72 + 16 + hboffset + (17 * hbhpos), (CameraPositionY + 68 - hboffset)), Texture.HudSprites, , (32, 32)-(63, 63) Else hbtimeout = CurrentTick + 3: FlashTimeout = FlashTimeout - 1
+            If FlashTimeout < 0 Then FlashTimeout = 0
+
+
+
+        End If
     End If
 
+End Sub
 
-    '     Case 0
-    '        For hbpos = 0 To 5
-    '           PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.TileSheet, , (Inventory(1, hbpos + 1) * 16, hbpos * 16)-(Inventory(1, hbpos + 1) * 16 + 15, hbpos * 16 + 15)
-    '      Next
-    '
-    '
-    '
-    ' If KeyDown(49) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 1)
-
-    '   If KeyDown(50) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 2) + 16
-    '
-    '   If KeyDown(51) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 3) + 32
-    '
-    '   If KeyDown(52) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 4) + 48
-    '
-    '   If KeyDown(53) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 5) + 64
-    '
-    '   If KeyDown(54) Then GroundTile(Int((Player.x + 8) \ 16) + 1, Int((Player.y + 8) \ 16) + 1) = Inventory(1, 6) + 80
-    '
-    '   Select Case KeyPressed
-    '       Case 33
-    '           Inventory(1, 1) = Inventory(1, 1) + 1
-    '           If Inventory(1, 1) > 5 Then Inventory(1, 1) = 0
-    '       Case 64
-    '           Inventory(1, 2) = Inventory(1, 2) + 1
-    '           If Inventory(1, 2) > 4 Then Inventory(1, 2) = 0
-    '       Case 35
-    '           Inventory(1, 3) = Inventory(1, 3) + 1
-    '           If Inventory(1, 3) > 3 Then Inventory(1, 3) = 0
-    '       Case 36
-    '           Inventory(1, 4) = Inventory(1, 4) + 1
-    '           If Inventory(1, 4) > 9 Then Inventory(1, 4) = 0
-    '       Case 37
-    '           Inventory(1, 5) = Inventory(1, 5) + 1
-    '           If Inventory(1, 5) > 4 Then Inventory(1, 5) = 0
-    '       Case 94
-    '           Inventory(1, 6) = Inventory(1, 6) + 1
-    '           If Inventory(1, 6) > 1 Then Inventory(1, 6) = 0
-    '
-    '        End Select
-
-
+Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
+    'Dim Shared Inventory(3, 5,9) As Integer
+    'dim shared CreativeInventory(2,5,9,1)
+    Dim i
+    For i = 0 To 9
+        Select Case Mode
+            Case 0
+                Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
+            Case 1
+                Swap Inventory(ItemSelectY, ItemSelectX, i), Inventory(0, Slot, i)
+        End Select
+    Next
 End Sub
 
 
@@ -189,11 +329,31 @@ End Sub
 Sub DEV
     If Flag.DebugMode = 1 Then
         PrintMode FillBackground
+        Color , RGBA(0, 0, 0, 128)
         Dim comin As String
         Dim dv As Single
         Dim dummystring As String
         Dim databit As Byte
+        Dim i, ii As Byte
+        Static RenderMode As Byte
+        Dim FacingX As Integer
+        Dim FacingY As Integer
 
+
+        Select Case Player.facing
+            Case 0
+                FacingX = Int((Player.x + 8) / 16) + 1
+                FacingY = Int((Player.y + 8 - 16) / 16) + 1
+            Case 1
+                FacingX = Int((Player.x + 8) / 16) + 1
+                FacingY = Int((Player.y + 8 + 16) / 16) + 1
+            Case 2
+                FacingX = Int((Player.x + 8 - 16) / 16) + 1
+                FacingY = Int((Player.y + 8) / 16) + 1
+            Case 3
+                FacingX = Int((Player.x + 8 + 16) / 16) + 1
+                FacingY = Int((Player.y + 8) / 16) + 1
+        End Select
 
 
         Locate 1, 1
@@ -202,7 +362,17 @@ Sub DEV
         ENDPRINT "Version: " + Game.Version
         ENDPRINT "Version Designation: " + Game.Designation
         ENDPRINT "Operating System: " + Game.HostOS
+        If RenderMode = 0 Then ENDPRINT "Render Mode: Software"
+        If RenderMode = 1 Then ENDPRINT "Render Mode: Hardware Exclusive"
+        If RenderMode = 2 Then ENDPRINT "Render Mode: Hardware"
         If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
+        Print
+        ENDPRINT "Facing tile data:"
+        For i = 0 To 9
+            dummystring = dummystring + Str$(TileData(FacingX, FacingY, i))
+        Next
+        ENDPRINT dummystring
+        ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
         Print
         ENDPRINT "Flags:"
         If Flag.StillCam = 1 Then ENDPRINT "Still Camera Enabled"
@@ -211,6 +381,7 @@ Sub DEV
         If Flag.NoClip = 1 Then ENDPRINT "No Clip Enabled"
         If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
         If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
+        If Flag.CastShadows = 1 Then ENDPRINT "Shadows Disabled"
 
 
         Locate 1, 1
@@ -252,8 +423,12 @@ Sub DEV
         End Select
 
         If KeyDown(47) Then
-            KeyClear
+            Flag.OpenCommand = 1
+            If Flag.RenderOverride = 0 Then SwitchRender (0)
+        End If
 
+        If Flag.OpenCommand = 2 Then
+            KeyClear
             Locate 28, 1: Input "/", comin
             Select Case comin
                 Case "teleport", "tp"
@@ -280,14 +455,11 @@ Sub DEV
                 Case "exit"
                     System
                 Case "error"
-                    Locate 28, 1: Print "                              "
                     Locate 28, 1: Input "Simulate error number: ", dv
                     Error dv
                 Case "gamemode", "gm"
-                    Locate 28, 1: Print "                         "
                     Locate 28, 1: Input "Change Gamemode to: ", GameMode
                 Case "health"
-                    Locate 28, 1: Print "                      "
                     Locate 28, 1: Input "Set Health to: ", Player.health
                 Case "track", "tr"
                     Locate 28, 1: Print "                               "
@@ -324,6 +496,8 @@ Sub DEV
 
                 Case "bgdraw"
                     bgdraw = bgdraw + 1
+                Case "shadowcast", "sh"
+                    Flag.CastShadows = Flag.CastShadows + 1
                 Case "update", "up"
                     UPDATEMAP
 
@@ -333,12 +507,26 @@ Sub DEV
                 Case "lightlevel", "ll"
                     Locate 28, 1: Print "                    "
                     Locate 28, 1: Input "Select Light Level  ", GlobalLightLevel
-
+                Case "rendermode", "rm"
+                    Locate 28, 1: Print "         "
+                    Locate 28, 1: Input "Mode  ", RenderMode
+                    If RenderMode = 2 Then Flag.RenderOverride = 0
+                    If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
+                    If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
+                Case "updatemap", "um"
+                    For i = 0 To 31
+                        For ii = 0 To 41
+                            UpdateTile ii, i
+                        Next
+                    Next
                 Case Else
             End Select
+            KeyClear
             Flag.ScreenRefreshSkip = 1
-
+            Flag.OpenCommand = 0
+            If Flag.RenderOverride = 0 Then SwitchRender (1)
         End If
+        Color , RGBA(0, 0, 0, 0)
         PrintMode KeepBackground
     End If
 End Sub
@@ -347,84 +535,60 @@ End Sub
 Sub SetMap
     Dim i As Byte
     Dim ii As Byte
-    Dim tileposx As Integer
-    Dim tileposy As Integer
     For i = 1 To 30
         For ii = 1 To 40
-            tileposx = GroundTile(ii, i) * 16
-            tileposy = 0
-            While tileposx >= 256
-                tileposx = tileposx - 256
-                tileposy = tileposy + 16
-            Wend
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
-
-
-            tileposx = WallTile(ii, i) * 16
-            tileposy = 0
-            While tileposx >= 256
-                tileposx = tileposx - 256
-                tileposy = tileposy + 16
-            Wend
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
-
-
-            tileposx = CeilingTile(ii, i) * 16
-            tileposy = 0
-            While tileposx >= 256
-                tileposx = tileposx - 256
-                tileposy = tileposy + 16
-            Wend
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
-
-
         Next
     Next
 End Sub
 
 Sub CastShadow
-    Dim i, ii As Byte
-    For i = 1 To 30
-        For ii = 1 To 40
+    If Flag.CastShadows = 0 Then
+        Dim i As Byte
+        Dim ii As Byte
+        For i = 1 To 30
+            For ii = 1 To 40
 
-            If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-            End If
-
-            If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-            End If
-
-            If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-            End If
-
-            If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-            End If
-
-            If TileData(ii, i, 3) = 1 Then
-
-                If TileData(ii, i + 1, 3) = 0 Then
+                If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
                 End If
 
-                If TileData(ii + 1, i, 3) = 0 Then
+                If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
                 End If
 
-                If TileData(ii - 1, i, 3) = 0 Then
+                If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
                 End If
 
-                If TileData(ii, i - 1, 3) = 0 Then
+                If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
                 End If
 
-            End If
+                If TileData(ii, i, 3) = 1 Then
 
+                    If TileData(ii, i + 1, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
+                    End If
+
+                    If TileData(ii + 1, i, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
+                    End If
+
+                    If TileData(ii - 1, i, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
+                    End If
+
+                    If TileData(ii, i - 1, 3) = 0 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
+                    End If
+
+                End If
+            Next
         Next
-    Next
+    End If
 End Sub
 
 
@@ -451,18 +615,29 @@ Sub INITIALIZE
 
     OSPROBE
 
-    Texture.PlayerSprites = LoadImage(File.PlayerSprites)
-    Texture.TileSheet = LoadImage(File.TileSheet)
-    Texture.ItemSheet = LoadImage(File.ItemSheet)
-    Texture.HudSprites = LoadImage(File.HudSprites)
-    Texture.Shadows = LoadImage(File.Shadows)
+    SwitchRender (DefaultRenderMode)
 
 
+End Sub
 
+Sub SwitchRender (mode As Byte)
+    Static FirstSkip As Byte
+    If mode <> 0 And mode <> 1 Then Exit Sub
 
-    WorldName = "Hub"
-    LOADWORLD
+    If FirstSkip = 1 Then
+        FreeImage Texture.PlayerSprites
+        FreeImage Texture.TileSheet
+        FreeImage Texture.ItemSheet
+        FreeImage Texture.HudSprites
+        FreeImage Texture.Shadows
+    End If
 
+    Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
+    Texture.TileSheet = LoadImage(File.TileSheet, mode + 32)
+    Texture.ItemSheet = LoadImage(File.ItemSheet, mode + 32)
+    Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)
+    Texture.Shadows = LoadImage(File.Shadows, mode + 32)
+    FirstSkip = 1
 
 End Sub
 
@@ -601,7 +776,7 @@ End Sub
 
 
 Sub NewWorld
-
+    Dim i, ii, iii
     Cls
     KeyClear
     AutoDisplay
@@ -610,6 +785,15 @@ Sub NewWorld
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
+    For i = 0 To 31
+        For ii = 0 To 41
+            GroundTile(ii, i) = 2
+            WallTile(ii, i) = 1
+            CeilingTile(ii, i) = 1
+            If CInt(Rnd * 10) = 5 Then WallTile(ii, i) = 5
+            UpdateTile ii, i
+        Next
+    Next
     SAVEMAP (0)
     LOADWORLD
 

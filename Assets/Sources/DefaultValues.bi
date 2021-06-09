@@ -3,7 +3,7 @@
 'Default variables that are required to be set on initial load
 Game.Title = "CDF-Quest"
 Game.Buildinfo = "Core Mechanic Test"
-Game.Version = "Alpha Version 16"
+Game.Version = "Alpha Version 17"
 Game.Designation = "Unstable"
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file
@@ -25,5 +25,9 @@ GameMode = 1
 Flag.DebugMode = 1
 Flag.NoClip = 0
 GlobalLightLevel = 13
+flag.renderoverride=1
+defaultrendermode=0
+
+
 
 
