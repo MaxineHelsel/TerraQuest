@@ -1,0 +1,112 @@
+name: Build Stable
+
+on:
+  push:
+    branches: [ stable ]
+  pull_request:
+    branches: [ stable ]
+
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: build
+        run: |
+          sudo apt-get install libglu1-mesa libxi-dev libxmu-dev libglu1-mesa-dev libasound2-dev
+          mkdir ~/build
+          cd ~/build
+          git clone https://github.com/MaxineHelsel/CDF-Quest
+          cd CDF-Quest
+          git checkout stable
+          cd ../
+          wget -O ~/build/qb64.tar.gz https://github.com/QB64Team/qb64/releases/download/v1.5/qb64_1.5_lnx.tar.gz
+          tar -xf ~/build/qb64.tar.gz
+          cd qb64
+          chmod +x ./qb64
+          ./qb64 -x /home/runner/build/CDF-Quest/CDF-Quest.bas -o /home/runner/build/CDF-Quest/CDF-Quest || cat ./internal/temp/compilelog.txt
+          cd ../CDF-Quest
+          rm -rf .git/
+          rm -rf .github/
+          cd ../
+          tar -czvf CDF-Quest-linux.tar.gz CDF-Quest
+      - uses: svenstaro/upload-release-action@v2
+        name: upload binaries to release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /home/runner/build/CDF-Quest-linux.tar.gz
+          asset_name: CDF-Quest-linux.tar.gz
+          tag: commit_${{ env.GITHUB_SHA }}
+          body: Branch stable commit ${{ env.GITHUB_SHA }} build.
+          overwrite: true
+          
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+      - name: build
+        run: |
+          C:
+          choco feature enable -n allowGlobalConfirmation
+          choco install wget          
+          choco install unzip
+          cd C:\Users\runneradmin
+          mkdir build
+          cd C:\Users\runneradmin\build\
+          git clone https://github.com/MaxineHelsel/CDF-Quest
+          cd C:\Users\runneradmin\build\
+          wget https://github.com/QB64Team/qb64/releases/download/v1.5/qb64_1.5_win_x64.zip -O C:\Users\runneradmin\build\qb64.zip
+          unzip C:\Users\runneradmin\build\qb64.zip
+          cd C:\Users\runneradmin\build\CDF-Quest
+          git checkout stable
+          attrib -h -r -s -a .\.git
+          Remove-Item C:\Users\runneradmin\build\CDF-Quest\.git -Recurse -Force
+          rm -rf .github/
+          cd C:\Users\runneradmin\build
+          dir
+          C:\Users\runneradmin\build\qb64\qb64.exe -x C:\Users\runneradmin\build\CDF-Quest\CDF-Quest.bas -o C:\Users\runneradmin\build\CDF-Quest\CDF-Quest.exe
+          7z a CDF-Quest-win.zip CDF-Quest
+          
+      - uses: svenstaro/upload-release-action@v2
+        name: upload binaries to release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: C:\Users\runneradmin\build\CDF-Quest-win.zip
+          asset_name: CDF-Quest-win.zip
+          tag: commit_${{ env.GITHUB_SHA }}
+          body: Branch stable commit ${{ env.GITHUB_SHA }} build.
+          overwrite: true
+          
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+      - name: build
+        run: |
+          mkdir ~/build
+          cd ~/build
+          git clone https://github.com/MaxineHelsel/CDF-Quest
+          cd CDF-Quest
+          git checkout stable
+          cd ../
+          wget -O ~/build/qb64.tar.gz https://github.com/QB64Team/qb64/releases/download/v1.5/qb64_1.5_macos.tar.gz
+          tar -xf ~/build/qb64.tar.gz
+          cd qb64
+          chmod +x ./qb64
+          ./qb64 -x /Users/runner/build/CDF-Quest/CDF-Quest.bas -o /Users/runner/build/CDF-Quest/CDF-Quest || cat ./internal/temp/compilelog.txt
+          cd ../CDF-Quest
+          rm -rf .git/
+          rm -rf .github/
+          cd ../
+          tar -czvf CDF-Quest-macos.tar.gz CDF-Quest
+      - uses: svenstaro/upload-release-action@v2
+        name: upload binaries to release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /Users/runner/build/CDF-Quest-macos.tar.gz
+          asset_name: CDF-Quest-macos.tar.gz
+          tag: commit_${{ env.GITHUB_SHA }}
+          body: Branch stable commit ${{ env.GITHUB_SHA }} build.
+          overwrite: true
