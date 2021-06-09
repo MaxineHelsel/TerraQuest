@@ -32,11 +32,11 @@ Next
 INITIALIZE
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
 CENTERPRINT "Temporary title screen"
-?
+Print
 Dim InputString As String
-Input "(L)oad world, (C)reate new world", InputString
+Input "(L)oad world, (C)reate new world: ", InputString
 If LCase$(InputString) = "l" Then
-    Input "World name", WorldName
+    Input "World name"; WorldName
     LOADWORLD
 End If
 If LCase$(InputString) = "c" Then NewWorld

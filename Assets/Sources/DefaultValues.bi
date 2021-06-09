@@ -2,8 +2,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "CDF-Quest"
-Game.Buildinfo = "Core Mechanic Test"
-Game.Version = "Alpha Version 17"
+Game.Buildinfo = "Creative Test"
+Game.Version = "Alpha Version 18"
 Game.Designation = "Edge"
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file
