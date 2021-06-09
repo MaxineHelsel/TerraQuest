@@ -2,22 +2,24 @@ Dim Shared TileIndex(1000, 9)
 Dim Shared TileIndexData(1000, 8)
 Dim Shared TileName(1000, 3) As String
 
-TileName(0, 0) = "Air" 'Name of the tile
+TileName(0, 0) = "Ground Air" 'Name of the tile
 TileName(0, 1) = "Pure nothingness" 'tooltip
 TileIndex(0, 0) = 0 'layer definition
 TileIndex(0, 1) = 0 'x position on tilesheet
 TileIndex(0, 2) = 0 'y position on tilesheet
-TileIndexData(0, 0) = 0 'collision
-TileIndexData(0, 1) = 1 'casts shadow
-TileIndexData(0, 2) = 1 'blocks shadow
+TileIndexData(0, 0) = 1 'collision
+TileIndexData(0, 1) = 0 'casts shadow
+TileIndexData(0, 2) = 0 'blocks shadow
 TileIndexData(0, 3) = 1 'has interior shadow
+TileIndexData(0, 4) = 0 'resistance
 
-TileName(1, 0) = "Background Dirt" 'Name of the tile
+
+TileName(1, 0) = "Air" 'Name of the tile
 TileName(1, 1) = "Placeholder" 'tooltip
-TileIndex(1, 0) = -1 'layer definition
-TileIndex(1, 1) = 16 'x position on tilesheet
+TileIndex(1, 0) = 0 'layer definition
+TileIndex(1, 1) = 0 'x position on tilesheet
 TileIndex(1, 2) = 0 'y position on tilesheet
-TileIndexData(1, 0) = 1 'collision
+TileIndexData(1, 0) = 0 'collision
 TileIndexData(1, 1) = 0 'casts shadow
 TileIndexData(1, 2) = 0 'blocks shadow
 

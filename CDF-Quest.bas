@@ -58,9 +58,49 @@ Sub InventoryUI
 
 End Sub
 
+Sub UpdateTile (TileX, TileY)
+    Dim i As Byte
+    For i = 0 To 4
+        If TileIndexData(GroundTile(TileX, TileY), i) = 1 Or TileIndexData(WallTile(TileX, TileY), i) = 1 Or TileIndexData(CeilingTile(TileX, TileY), i) = 1 Then TileData(TileX, TileY, i) = 1
+    Next
+    TileData(TileX, TileY, 4) = TileIndexData(GroundTile(TileX, TileY), 4)
+    TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
+    TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
+
+End Sub
+
 Sub UseItem (Slot)
+    Dim FacingX As Integer
+    Dim FacingY As Integer
+    Select Case Player.facing
+        Case 0
+            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingY = Int((Player.y + 8 - 16) / 16) + 1
+        Case 1
+            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingY = Int((Player.y + 8 + 16) / 16) + 1
+        Case 2
+            FacingX = Int((Player.x + 8 - 16) / 16) + 1
+            FacingY = Int((Player.y + 8) / 16) + 1
+        Case 3
+            FacingX = Int((Player.x + 8 + 16) / 16) + 1
+            FacingY = Int((Player.y + 8) / 16) + 1
+    End Select
 
     Select Case Inventory(0, Slot, 0)
+        Case 0
+
+        Case 1
+            Select Case Inventory(0, Slot, 5)
+                Case 0
+                    If TileData(FacingX, FacingY, 4) <= 0 Then
+                        GroundTile(FacingX, FacingY) = 0
+                        UpdateTile FacingX, FacingY
+                    End If
+                    TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                Case 1
+
+            End Select
 
     End Select
 End Sub

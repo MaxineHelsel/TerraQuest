@@ -9,7 +9,7 @@ ItemIndex(0, 2) = 0 'item texture y cord
 ItemIndex(0, 3) = 0 'tool max durabillity
 ItemIndex(0, 4) = 1 'tool current durrabillity
 ItemIndex(0, 5) = 0 'tool type
-ItemIndex(0, 6) = 100 'tool strength
+ItemIndex(0, 6) = 1000 'tool strength
 
 ItemName(1, 0) = "Creative Axe"
 ItemName(1, 1) = "Allows you to break wall tiles"
@@ -19,7 +19,7 @@ ItemIndex(1, 2) = 0 'item texture y cord
 ItemIndex(1, 3) = 0 'tool max durabillity
 ItemIndex(1, 4) = 1 'tool current durrabillity
 ItemIndex(1, 5) = 1 'tool type
-ItemIndex(1, 6) = 100 'tool strength
+ItemIndex(1, 6) = 1000 'tool strength
 
 
 ItemName(2, 0) = "Grass" 'Name of the Item

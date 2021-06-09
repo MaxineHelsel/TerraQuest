@@ -1,4 +1,9 @@
 TileData flags
 
 0 HasCollision
-1 GivesShadow
+1 castsShadow
+2 blocksshadow
+3 interiorshadow
+4 groundhealth
+5 wallhealth
+6 ceilinghealth
