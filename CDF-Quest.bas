@@ -20,8 +20,26 @@ Title "CDF-Quest"
 
 '$include: 'Assets\Sources\CreativeInventory.bi'
 
-INITIALIZE
+Dim ii, iii, iiii
+For ii = 0 To 3
+    For iii = 0 To 5
+        For iiii = 0 To 9
+            Inventory(ii, iii, iiii) = -1
+        Next
+    Next
+Next
 
+INITIALIZE
+'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
+CENTERPRINT "Temporary title screen"
+?
+Dim InputString As String
+Input "(L)oad world, (C)reate new world", InputString
+If LCase$(InputString) = "l" Then
+    Input "World name", WorldName
+    LOADWORLD
+End If
+If LCase$(InputString) = "c" Then NewWorld
 
 GoTo game
 Error 102
@@ -59,13 +77,14 @@ Sub InventoryUI
 End Sub
 
 Sub UpdateTile (TileX, TileY)
-    Dim i As Byte
-    For i = 0 To 4
-        If TileIndexData(GroundTile(TileX, TileY), i) = 1 Or TileIndexData(WallTile(TileX, TileY), i) = 1 Or TileIndexData(CeilingTile(TileX, TileY), i) = 1 Then TileData(TileX, TileY, i) = 1
-    Next
+    If TileIndexData(GroundTile(TileX, TileY), 0) = 1 Or TileIndexData(WallTile(TileX, TileY), 0) = 1 Then TileData(TileX, TileY, 0) = 1 Else TileData(TileX, TileY, 0) = 0
+    If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
+    If TileIndexData(GroundTile(TileX, TileY), 2) = 1 Or TileIndexData(WallTile(TileX, TileY), 2) = 1 Then TileData(TileX, TileY, 2) = 1 Else TileData(TileX, TileY, 2) = 0
+    If TileIndexData(GroundTile(TileX, TileY), 3) = 1 And TileIndexData(WallTile(TileX, TileY), 2) = 0 Then TileData(TileX, TileY, 3) = 1 Else TileData(TileX, TileY, 3) = 0
     TileData(TileX, TileY, 4) = TileIndexData(GroundTile(TileX, TileY), 4)
     TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
     TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
+    TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
 
 End Sub
 
@@ -89,7 +108,15 @@ Sub UseItem (Slot)
 
     Select Case Inventory(0, Slot, 0)
         Case 0
+            Select Case Inventory(0, Slot, 4)
+                Case 0
+                    GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                    UpdateTile FacingX, FacingY
+                Case 1
+                    WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                    UpdateTile FacingX, FacingY
 
+            End Select
         Case 1
             Select Case Inventory(0, Slot, 5)
                 Case 0
@@ -99,10 +126,20 @@ Sub UseItem (Slot)
                     End If
                     TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6) + TileIndexData(GroundTile(FacingX, FacingY), 4)
                 Case 1
+                    If TileData(FacingX, FacingY, 5) <= 0 Then
+                        WallTile(FacingX, FacingY) = 1
+                        UpdateTile FacingX, FacingY
+                    End If
+                    TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6) + TileIndexData(WallTile(FacingX, FacingY), 5)
 
             End Select
 
     End Select
+    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
+        WallTile(FacingX, FacingY) = 1
+        UpdateTile FacingX, FacingY
+
+    End If
 End Sub
 
 Sub INTER
@@ -297,8 +334,26 @@ Sub DEV
         Dim dv As Single
         Dim dummystring As String
         Dim databit As Byte
+        Dim i, ii As Byte
         Static RenderMode As Byte
+        Dim FacingX As Integer
+        Dim FacingY As Integer
 
+
+        Select Case Player.facing
+            Case 0
+                FacingX = Int((Player.x + 8) / 16) + 1
+                FacingY = Int((Player.y + 8 - 16) / 16) + 1
+            Case 1
+                FacingX = Int((Player.x + 8) / 16) + 1
+                FacingY = Int((Player.y + 8 + 16) / 16) + 1
+            Case 2
+                FacingX = Int((Player.x + 8 - 16) / 16) + 1
+                FacingY = Int((Player.y + 8) / 16) + 1
+            Case 3
+                FacingX = Int((Player.x + 8 + 16) / 16) + 1
+                FacingY = Int((Player.y + 8) / 16) + 1
+        End Select
 
 
         Locate 1, 1
@@ -311,6 +366,13 @@ Sub DEV
         If RenderMode = 1 Then ENDPRINT "Render Mode: Hardware Exclusive"
         If RenderMode = 2 Then ENDPRINT "Render Mode: Hardware"
         If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
+        Print
+        ENDPRINT "Facing tile data:"
+        For i = 0 To 9
+            dummystring = dummystring + Str$(TileData(FacingX, FacingY, i))
+        Next
+        ENDPRINT dummystring
+        ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
         Print
         ENDPRINT "Flags:"
         If Flag.StillCam = 1 Then ENDPRINT "Still Camera Enabled"
@@ -451,8 +513,12 @@ Sub DEV
                     If RenderMode = 2 Then Flag.RenderOverride = 0
                     If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
                     If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
-
-
+                Case "updatemap", "um"
+                    For i = 0 To 31
+                        For ii = 0 To 41
+                            UpdateTile ii, i
+                        Next
+                    Next
                 Case Else
             End Select
             KeyClear
@@ -550,10 +616,6 @@ Sub INITIALIZE
     OSPROBE
 
     SwitchRender (DefaultRenderMode)
-
-
-    WorldName = "Hub"
-    LOADWORLD
 
 
 End Sub
@@ -714,7 +776,7 @@ End Sub
 
 
 Sub NewWorld
-
+    Dim i, ii, iii
     Cls
     KeyClear
     AutoDisplay
@@ -723,6 +785,15 @@ Sub NewWorld
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
+    For i = 0 To 31
+        For ii = 0 To 41
+            GroundTile(ii, i) = 2
+            WallTile(ii, i) = 1
+            CeilingTile(ii, i) = 1
+            If CInt(Rnd * 10) = 5 Then WallTile(ii, i) = 5
+            UpdateTile ii, i
+        Next
+    Next
     SAVEMAP (0)
     LOADWORLD
 

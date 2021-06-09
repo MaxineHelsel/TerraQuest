@@ -1,5 +1,13 @@
 # CDF-Quest
 
+# Download instructions
+
+- Click 'Branch' and choose which version you want
+
+- Click 'Code' and click download zip
+
+- Enjoy
+
 # Controls
 
 - W A S D: Move
@@ -31,6 +39,12 @@ macOS comes last, because i have to switch to a different system and pull the al
 # ChangeLog
 ### Alpha Version 17
 
+- Added basic world generation
+
+- Added /updatemap command
+
+this is to force a tile update on the entire loaded map
+
 - Added Creative inventory
 
 - Added Hotbar use animation
@@ -50,6 +64,8 @@ mode 2: Hardware rendering
 allows you to toggle shadows on or off
 
 - Made debug menu background translucent
+
+- ...And probably more that I havent included here
 
 ### Alpha Version 16
 
