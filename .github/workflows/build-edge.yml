@@ -63,7 +63,7 @@ jobs:
           git checkout edge
           attrib -h -r -s -a .\.git
           Remove-Item C:\Users\runneradmin\build\CDF-Quest\.git -Recurse -Force
-          rm -rf .github/
+          Remove-Item C:\Users\runneradmin\build\CDF-Quest\.github -Recurse -Force
           cd C:\Users\runneradmin\build
           dir
           C:\Users\runneradmin\build\qb64\qb64.exe -x C:\Users\runneradmin\build\CDF-Quest\CDF-Quest.bas -o C:\Users\runneradmin\build\CDF-Quest\CDF-Quest.exe
