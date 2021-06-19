@@ -40,7 +40,12 @@ If LCase$(InputString) = "l" Then
     LOADWORLD
 End If
 If LCase$(InputString) = "c" Then NewWorld
-
+For i = 0 To 31
+    For ii = 0 To 41
+        UpdateTile ii, i
+    Next
+Next
+SpreadLight (1)
 GoTo game
 Error 102
 ERRORHANDLER: ERRORHANDLER
@@ -53,9 +58,9 @@ Do
     MOVE
     COLDET
     SPSET
+    SetLighting
     INTER
     ZOOM
-    SetLighting
     HUD
     DEV
     ChangeMap
@@ -66,6 +71,7 @@ Do
     If Flag.ScreenRefreshSkip = 0 Then Display
     Flag.ScreenRefreshSkip = 0
     If Flag.OpenCommand = 1 Then Flag.OpenCommand = 2
+
     Cls
 Loop
 
@@ -101,16 +107,17 @@ Sub ChangeMap
     Static TickDelay
     Static TotalDelay
     Static LightStep
+    Dim i, ii
     If LightStep < 12 Then
         Select Case Player.facing
             Case 0
-                If Player.y = 0 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.y <= 0 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 1
-                If Player.y = 480 - 16 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.y >= 480 - 16 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 2
-                If Player.x = 0 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.x <= 0 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 3
-                If Player.x = 640 - 16 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.x >= 640 - 16 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
 
 
         End Select
@@ -135,6 +142,13 @@ Sub ChangeMap
                 LOADMAP (SavedMap)
                 Player.x = 0
         End Select
+        For i = 0 To 31
+            For ii = 0 To 41
+                UpdateTile ii, i
+            Next
+        Next
+        SpreadLight (1)
+
         LightStep = 0
     End If
 
@@ -145,6 +159,7 @@ Sub ChangeMap
 End Sub
 
 Sub UpdateTile (TileX, TileY)
+    Dim i, ii
     If TileIndexData(GroundTile(TileX, TileY), 0) = 1 Or TileIndexData(WallTile(TileX, TileY), 0) = 1 Then TileData(TileX, TileY, 0) = 1 Else TileData(TileX, TileY, 0) = 0
     If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
     If TileIndexData(GroundTile(TileX, TileY), 2) = 1 Or TileIndexData(WallTile(TileX, TileY), 2) = 1 Then TileData(TileX, TileY, 2) = 1 Else TileData(TileX, TileY, 2) = 0
@@ -153,7 +168,70 @@ Sub UpdateTile (TileX, TileY)
     TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
     TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
     TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
+    For i = 1 To 30
+        For ii = 1 To 40
+            TileData(TileX, TileY, 8) = 0
+        Next
+    Next
 
+    If TileIndexData(GroundTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(GroundTile(TileX, TileY), 6)
+    If TileIndexData(WallTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(WallTile(TileX, TileY), 6)
+    If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
+
+End Sub
+'For i = TileData(TileX, TileY, 8) To 0 Step -1
+
+'Next
+
+Sub SpreadLight (updates)
+    Dim i, ii
+    For i = 1 To 30
+        For ii = 1 To 40
+            LocalLightLevel(ii, i) = TileData(ii, i, 8)
+        Next
+    Next
+    SpreadLight2 (updates)
+End Sub
+Sub SpreadLight2 (updates)
+    Dim i, ii, iii, iiii
+    Static UpdateLimit
+    If updates > 0 Then
+        updates = 0
+        For i = 1 To 30
+            For ii = 1 To 40
+                iiii = 1
+                iii = 0
+                For iii = 0 To 2
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+            Next
+        Next
+        For i = 1 To 30
+            For ii = 1 To 40
+
+                iiii = 0
+                iii = 1
+                For iiii = 0 To 2
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
+            Next
+        Next
+        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
+        If UpdateLimit > 100 Then updates = 0
+        ' Print updates, UpdateLimit
+        ' Display
+        ' Sleep
+
+        SpreadLight2 (updates)
+    Else
+        UpdateLimit = 0
+    End If
 End Sub
 
 Sub UseItem (Slot)
@@ -179,10 +257,13 @@ Sub UseItem (Slot)
             Select Case Inventory(0, Slot, 4)
                 Case 0
                     GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+
                     UpdateTile FacingX, FacingY
+                    SpreadLight (1)
                 Case 1
                     WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
                     UpdateTile FacingX, FacingY
+                    SpreadLight (1)
 
             End Select
         Case 1
@@ -191,12 +272,14 @@ Sub UseItem (Slot)
                     If TileData(FacingX, FacingY, 4) <= 0 Then
                         GroundTile(FacingX, FacingY) = 0
                         UpdateTile FacingX, FacingY
+                        SpreadLight (1)
                     End If
                     TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6) + TileIndexData(GroundTile(FacingX, FacingY), 4)
                 Case 1
                     If TileData(FacingX, FacingY, 5) <= 0 Then
                         WallTile(FacingX, FacingY) = 1
                         UpdateTile FacingX, FacingY
+                        SpreadLight (1)
                     End If
                     TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6) + TileIndexData(WallTile(FacingX, FacingY), 5)
 
@@ -206,6 +289,7 @@ Sub UseItem (Slot)
     If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
         WallTile(FacingX, FacingY) = 1
         UpdateTile FacingX, FacingY
+        SpreadLight (1)
 
     End If
 End Sub
@@ -229,12 +313,14 @@ Sub SetLighting
     Dim i As Byte
     Dim ii As Byte
     Dim TotalLightLevel
-    TotalLightLevel = (GlobalLightLevel - LocalLightLevel(ii, i) - OverlayLightLevel)
-    If TotalLightLevel > 12 Then TotalLightLevel = 12
-    If TotalLightLevel < 0 Then TotalLightLevel = 0
-    For i = 0 To 30
-        For ii = 0 To 40
-            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
+    For i = 0 To 31
+        For ii = 0 To 41
+            If GlobalLightLevel < LocalLightLevel(ii, i) Then TotalLightLevel = LocalLightLevel(ii, i) Else TotalLightLevel = GlobalLightLevel
+            TotalLightLevel = TotalLightLevel - OverlayLightLevel
+            If TotalLightLevel > 12 Then TotalLightLevel = 12
+            If TotalLightLevel < 0 Then TotalLightLevel = 0
+
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
         Next
     Next
 End Sub
@@ -464,6 +550,7 @@ Sub DEV
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
+
         Print "Gamemode: ";
         Select Case GameMode
             Case 0
@@ -591,6 +678,7 @@ Sub DEV
                             UpdateTile ii, i
                         Next
                     Next
+                    SpreadLight (1)
                 Case "tickrate", "tk"
                     Locate 28, 1: Print "          "
                     Locate 28, 1: Input "TickRate  ", Settings.TickRate
