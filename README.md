@@ -40,10 +40,19 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 ## Alpha Version 18
 
+### Day/Night Cycle
+
+The game will now cycle between day and night, 1 full day / night cycle is 24 minutes. this cycle is saved witht the map in the manifest file
+
 ### Infinate Worlds 
 
  You can now have (near) infinate worlds, the actual world size is 5.5\*10^20 x 7.3\*10^20 tiles
 
+### New Commands
+
+- /tickrate (/tk)
+
+Changes the tickrate
 
 ## Alpha Version 17
 

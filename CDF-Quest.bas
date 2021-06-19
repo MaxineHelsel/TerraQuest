@@ -59,6 +59,7 @@ Do
     HUD
     DEV
     ChangeMap
+    DayLightCycle
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
@@ -71,6 +72,26 @@ Loop
 
 
 Error 102
+
+Sub DayLightCycle
+    '86400
+    GameTime = GameTime + Settings.TickRate
+    If GameTime > 43200 Then GameTime = GameTime - 43200: TimeMode = TimeMode + 1
+    If TimeMode > 1 Then TimeMode = 0
+
+    Select Case TimeMode
+        Case 0
+            GlobalLightLevel = 12
+            If GameTime > 38200 Then
+                GlobalLightLevel = 12 - (((GameTime - 38200) / 1000)) * 2
+            End If
+        Case 1
+            GlobalLightLevel = 2
+            If GameTime > 38200 Then
+                GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
+            End If
+    End Select
+End Sub
 
 Sub InventoryUI
 
@@ -207,9 +228,13 @@ End Sub
 Sub SetLighting
     Dim i As Byte
     Dim ii As Byte
+    Dim TotalLightLevel
+    TotalLightLevel = (GlobalLightLevel - LocalLightLevel(ii, i) - OverlayLightLevel)
+    If TotalLightLevel > 12 Then TotalLightLevel = 12
+    If TotalLightLevel < 0 Then TotalLightLevel = 0
     For i = 0 To 30
         For ii = 0 To 40
-            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * (GlobalLightLevel - LocalLightLevel(ii, i) - OverlayLightLevel), 16)-(16 * (GlobalLightLevel - LocalLightLevel(ii, i) - OverlayLightLevel) + 15, 31)
+            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
         Next
     Next
 End Sub
@@ -437,6 +462,7 @@ Sub DEV
         Print "FPS:" + Str$(FRAMEPS) + " /" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
+        Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Gamemode: ";
         Select Case GameMode
@@ -565,6 +591,9 @@ Sub DEV
                             UpdateTile ii, i
                         Next
                     Next
+                Case "tickrate", "tk"
+                    Locate 28, 1: Print "          "
+                    Locate 28, 1: Input "TickRate  ", Settings.TickRate
                 Case Else
             End Select
             KeyClear
@@ -891,7 +920,7 @@ Sub LOADWORLD
 
     Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
 
-
+    Get #1, 1, GameTime
 
     Get #1, 3, mapversion
     If mapversion <> Game.Version Then
@@ -1006,7 +1035,8 @@ Sub SAVEMAP
 
     SavePointX = Player.x
     SavePointY = Player.y
-
+    If TimeMode = 1 Then GameTime = GameTime + 43200
+    Put #1, 1, GameTime
 
     Put #1, 3, Game.Version
 
@@ -1019,6 +1049,7 @@ Sub SAVEMAP
     Put #1, 11, SpawnMapX
     Put #1, 12, SpawnMapY
 
+    If TimeMode = 1 Then GameTime = GameTime - 43200
 
 
 

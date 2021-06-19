@@ -116,6 +116,30 @@ TileIndexData(8, 4) = 0 'resistance
 TileIndexData(8, 5) = 1 'is solid
 
 
+TileName(9, 0) = "Unlit Campfire" 'Name of the tile
+TileName(9, 1) = "Placeholder" 'tooltip
+TileIndex(9, 0) = 1 'layer definition
+TileIndex(9, 1) = 144 'x position on tilesheet
+TileIndex(9, 2) = 0 'y position on tilesheet
+TileIndexData(9, 0) = 1 'collision
+TileIndexData(9, 1) = 0 'casts shadow
+TileIndexData(9, 2) = 1 'blocks shadow
+TileIndexData(9, 3) = 0 'has interior shadow
+TileIndexData(9, 4) = 0 'resistance
+TileIndexData(9, 5) = 1 'is solid
+
+TileName(10, 0) = "Campfire" 'Name of the tile
+TileName(10, 1) = "Placeholder" 'tooltip
+TileIndex(10, 0) = 1 'layer definition
+TileIndex(10, 1) = 160 'x position on tilesheet
+TileIndex(10, 2) = 0 'y position on tilesheet
+TileIndexData(10, 0) = 1 'collision
+TileIndexData(10, 1) = 0 'casts shadow
+TileIndexData(10, 2) = 1 'blocks shadow
+TileIndexData(10, 3) = 0 'has interior shadow
+TileIndexData(10, 4) = 0 'resistance
+TileIndexData(10, 5) = 1 'is solid
+TileIndexData(10, 6) = 12 'light casts
 
 
 
