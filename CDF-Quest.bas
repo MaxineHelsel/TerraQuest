@@ -57,8 +57,8 @@ Do
     ZOOM
     SetLighting
     HUD
-    '    UseItem
     DEV
+    ChangeMap
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
@@ -74,6 +74,53 @@ Error 102
 
 Sub InventoryUI
 
+End Sub
+
+Sub ChangeMap
+    Static TickDelay
+    Static TotalDelay
+    Static LightStep
+    If LightStep < 12 Then
+        Select Case Player.facing
+            Case 0
+                If Player.y = 0 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+            Case 1
+                If Player.y = 480 - 16 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+            Case 2
+                If Player.x = 0 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+            Case 3
+                If Player.x = 640 - 16 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+
+
+        End Select
+        If TickDelay = 5 Then TickDelay = 0: LightStep = LightStep + 2
+    Else
+        SAVEMAP
+        Select Case Player.facing
+            Case 0
+                SavedMapY = SavedMapY - 1
+                LOADMAP (SavedMap)
+                Player.y = 480
+            Case 1
+                SavedMapY = SavedMapY + 1
+                LOADMAP (SavedMap)
+                Player.y = 0
+            Case 2
+                SavedMapX = SavedMapX - 1
+                LOADMAP (SavedMap)
+                Player.x = 640
+            Case 3
+                SavedMapX = SavedMapX + 1
+                LOADMAP (SavedMap)
+                Player.x = 0
+        End Select
+        LightStep = 0
+    End If
+
+    If Player.moving = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
+    OverlayLightLevel = LightStep
+
+    'Print Player.x; Player.y; Player.lasty; Player.moving; Player.facing; TickDelay; Settings.TickRate
 End Sub
 
 Sub UpdateTile (TileX, TileY)
@@ -162,7 +209,7 @@ Sub SetLighting
     Dim ii As Byte
     For i = 0 To 30
         For ii = 0 To 40
-            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * (GlobalLightLevel - LocalLightLevel(ii, i)), 16)-(16 * (GlobalLightLevel - LocalLightLevel(ii, i)) + 15, 31)
+            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * (GlobalLightLevel - LocalLightLevel(ii, i) - OverlayLightLevel), 16)-(16 * (GlobalLightLevel - LocalLightLevel(ii, i) - OverlayLightLevel) + 15, 31)
         Next
     Next
 End Sub
@@ -390,7 +437,7 @@ Sub DEV
         Print "FPS:" + Str$(FRAMEPS) + " /" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
-        Print "Light Level: (G:"; GlobalLightLevel; ", L: 0)"
+        Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Gamemode: ";
         Select Case GameMode
             Case 0
@@ -418,6 +465,7 @@ Sub DEV
                 Print "Motion:"; Player.moving
                 Print "Contacted Tile ID:"; Player.tile; "(" + Hex$(Player.tile) + ")"
                 Print "Facing Tile ID:"; Player.tilefacing; "(" + Hex$(Player.tilefacing) + ")"
+                Print Player.lastx; Player.lasty
             Case Else
                 Print "Unrecognized Tile or Entity"
         End Select
@@ -467,9 +515,7 @@ Sub DEV
                 Case "framerate-unlock", "fru"
                     Flag.FrameRateLock = Flag.FrameRateLock + 1
                 Case "save"
-                    SAVEMAP (0)
-                Case "save1"
-                    SAVEMAP (1)
+                    SAVEMAP
                 Case "load"
                     Locate 28, 1: Print "                                "
                     Locate 28, 1: Input "Name of Map File to load: ", map.filename
@@ -781,10 +827,19 @@ Sub NewWorld
     KeyClear
     AutoDisplay
     Input "World Name?", WorldName
+    'Input "World Seed?", WorldSeed
+    'Randomize WorldSeed
     SavedMapX = 0
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
+    GenerateMap
+    SAVEMAP
+    LOADWORLD
+End Sub
+
+Sub GenerateMap
+    Dim i, ii, iii
     For i = 0 To 31
         For ii = 0 To 41
             GroundTile(ii, i) = 2
@@ -794,10 +849,259 @@ Sub NewWorld
             UpdateTile ii, i
         Next
     Next
-    SAVEMAP (0)
-    LOADWORLD
+End Sub
+
+
+Sub SAVESETTINGS
+
+    Open "Assets\SaveData\Settings.cdf" As #1
+    Put #1, 1, Settings.FrameRate
+    Put #1, 2, Settings.TickRate
+    Close #1
 
 End Sub
+
+
+
+
+Sub LOADSETTINGS
+
+    Open "Assets\SaveData\Settings.cdf" As #1
+    Get #1, 1, Settings.FrameRate
+    Get #1, 2, Settings.TickRate
+    Close #1
+
+End Sub
+
+Function SavedMap$
+    SavedMap = Str$(SavedMapX) + Str$(SavedMapY)
+End Function
+
+Function SpawnMap$
+    SpawnMap = Str$(SpawnMapX) + Str$(SpawnMapY)
+End Function
+
+
+
+Sub LOADWORLD
+    Dim defaultmap As String
+
+    prevfolder = map.foldername
+
+
+    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+
+
+
+    Get #1, 3, mapversion
+    If mapversion <> Game.Version Then
+        Close #1
+        Error 103
+    End If
+
+    Get #1, 5, SpawnPointX
+    Get #1, 6, SpawnPointY
+    Get #1, 7, SavePointX
+    Get #1, 8, SavePointY
+    Get #1, 9, SavedMapX
+    Get #1, 10, SavedMapY
+    Get #1, 11, SpawnMapX
+    Get #1, 12, SpawnMapY
+
+    Player.x = SavePointX
+    Player.y = SavePointY
+
+    'GET #1, 4, map.protected
+    Close #1
+    LOADMAP (SavedMap)
+End Sub
+
+
+Sub LOADMAP (file As String)
+    Dim i, ii As Byte
+    Dim iii As Integer
+    Dim iiii As Byte
+
+    iii = 1
+
+
+    'TODO add error checking to see if map file exists
+
+    'TODO make this a sub with 2 parameters, 1
+    If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, GroundTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, WallTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, CeilingTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                For iiii = 0 To 9
+                    Get #1, iii, TileData(ii, i, iiii)
+                    iii = iii + 1
+                Next
+
+            Next
+        Next
+        Get #1, iii, map.name
+        Close #1
+        iii = 1
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\GlobalData.cdf" As #1
+        Close #1
+    Else
+        GenerateMap
+        SAVEMAP
+    End If
+
+End Sub
+
+
+Sub SAVEMAP
+    Dim i, ii, iiii As Byte
+    Dim iii As Integer
+    Dim defaultmap As String
+    Dim temppw As String
+    Dim new As Byte
+    iii = 1
+    'update this
+    If DirExists("Assets\Worlds\" + WorldName) = 0 Then
+        MkDir "Assets\Worlds\" + WorldName: new = 1
+        MkDir "Assets\Worlds\" + WorldName + "\Maps"
+    End If
+
+
+    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+    If new = 0 Then
+    End If
+
+
+    SavePointX = Player.x
+    SavePointY = Player.y
+
+
+    Put #1, 3, Game.Version
+
+    Put #1, 5, SpawnPointX
+    Put #1, 6, SpawnPointY
+    Put #1, 7, SavePointX
+    Put #1, 8, SavePointY
+    Put #1, 9, SavedMapX
+    Put #1, 10, SavedMapY
+    Put #1, 11, SpawnMapX
+    Put #1, 12, SpawnMapY
+
+
+
+
+    Close #1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-0.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, GroundTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-1.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, WallTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-2.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, CeilingTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            For iiii = 0 To 9
+                Put #1, iii, TileData(ii, i, iiii)
+                iii = iii + 1
+            Next
+        Next
+    Next
+    Put #1, iii, map.name
+    Close #1
+    iii = 1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + ".cdf" As #1: Close #1
+
+
+
+
+
+    badpw:
+End Sub
+
+Sub UPDATEMAP
+    Dim i, ii As Byte
+    Dim iii As Integer
+    iii = 1
+
+    If DirExists("Assets\Worlds\" + map.foldername) = 0 GoTo badpw
+    If DirExists("Assets\Worlds\" + map.foldername + "\Maps") = 0 GoTo badpw
+
+
+    Open "Assets\Worlds\" + map.foldername + "\Maps\" + map.filename + ".cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            '    PUT #1, iii, tile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Put #1, iii, map.name
+    Close #1
+    badpw:
+
+End Sub
+
+
+
 
 
 '$include: 'Assets\Sources\Initialization.bm'
