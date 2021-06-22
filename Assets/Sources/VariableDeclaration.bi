@@ -29,11 +29,14 @@ Dim Shared MapX As Integer64
 Dim Shared MapY As Integer64
 
 Dim Shared WorldName As String
+'dim shared WorldSeed as integer64
 
 Dim Shared GlobalLightLevel as byte
 dim shared LocalLightLevel(41,31) as byte
+dim shared OverlayLightLevel as byte
 
-
+                                         dim shared GameTime as long
+                                         dim shared TimeMode as byte
 
 Dim Shared CurrentTick As Unsigned Integer64
 

@@ -37,35 +37,68 @@ Windows comes second, because it does not require me to switch systems, as i can
 macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
 
 # ChangeLog
-### Alpha Version 17
 
-- Added basic world generation
+## Alpha Version 18
 
-- Added /updatemap command
+### Day/Night Cycle
 
-this is to force a tile update on the entire loaded map
+The game will now cycle between day and night, 1 full day / night cycle is 24 minutes. this cycle is saved witht the map in the manifest file
 
-- Added Creative inventory
+### Infinate Worlds 
 
-- Added Hotbar use animation
+ You can now have (near) infinate worlds, the actual world size is 5.5\*10^20 x 7.3\*10^20 tiles
 
-- Added Hardware accelerated graphics mode
+### New Items
 
-- Added /rendermode command
+- Campfire
 
-mode 0: Sofware rendering
+- Unlit Campfire 
 
-mode 1: Hardware exclusive rendering
+### New Commands
 
-mode 2: Hardware rendering 
+- /tickrate (/tk)
 
-- Added /shadowcast command
+Changes the tickrate
+
+## Alpha Version 17
+
+### Creative Inventory
+
+You now have a creative mode inventory, full of every tile that exists, and tools, at your disposal. Just press E.
+
+### World Generation
+
+Gone are the days of a developer made default world, you can now generate your own natural world, full of trees
+
+### GPU Rendering mode
+
+ CDF-Quest now has a hardware rendering option, this should increase framerate on most systems, however some users may experience choppyness, slight overlapping textures, and other odd visual bugs. Please report these as an issue on github
+
+You can toggle the render mode with the new /rendermode command
+
+- Mode 0: Software Rendering (Default)
+
+- Mode 1: Hardware Rendering Without Software Switching
+
+- Mode 2: Hardware Rendering With Software Switching
+
+### New Commands
+
+- /updatemap (/um)
+
+Forces a tile update on every tile of the loaded map
+
+- /rendermode (/rm)
+
+ Mode 0: Software Rendering (Default)
+
+ Mode 1: Hardware Rendering Without Software Switching
+
+ Mode 2: Hardware Rendering With Software Switching
+
+ - /shadowcast (/sh)
 
 allows you to toggle shadows on or off
-
-- Made debug menu background translucent
-
-- ...And probably more that I havent included here
 
 ### Alpha Version 16
 

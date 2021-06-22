@@ -20,14 +20,6 @@ Title "CDF-Quest"
 
 '$include: 'Assets\Sources\CreativeInventory.bi'
 
-Dim ii, iii, iiii
-For ii = 0 To 3
-    For iii = 0 To 5
-        For iiii = 0 To 9
-            Inventory(ii, iii, iiii) = -1
-        Next
-    Next
-Next
 
 INITIALIZE
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
@@ -40,7 +32,12 @@ If LCase$(InputString) = "l" Then
     LOADWORLD
 End If
 If LCase$(InputString) = "c" Then NewWorld
-
+For i = 0 To 31
+    For ii = 0 To 41
+        UpdateTile ii, i
+    Next
+Next
+SpreadLight (1)
 GoTo game
 Error 102
 ERRORHANDLER: ERRORHANDLER
@@ -53,18 +50,20 @@ Do
     MOVE
     COLDET
     SPSET
+    SetLighting
     INTER
     ZOOM
-    SetLighting
     HUD
-    '    UseItem
     DEV
+    ChangeMap
+    DayLightCycle
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
     If Flag.ScreenRefreshSkip = 0 Then Display
     Flag.ScreenRefreshSkip = 0
     If Flag.OpenCommand = 1 Then Flag.OpenCommand = 2
+
     Cls
 Loop
 
@@ -72,11 +71,87 @@ Loop
 
 Error 102
 
+Sub DayLightCycle
+    '86400
+    GameTime = GameTime + Settings.TickRate
+    If GameTime > 43200 Then GameTime = GameTime - 43200: TimeMode = TimeMode + 1
+    If TimeMode > 1 Then TimeMode = 0
+
+    Select Case TimeMode
+        Case 0
+            GlobalLightLevel = 12
+            If GameTime > 38200 Then
+                GlobalLightLevel = 12 - (((GameTime - 38200) / 1000)) * 2
+            End If
+        Case 1
+            GlobalLightLevel = 2
+            If GameTime > 38200 Then
+                GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
+            End If
+    End Select
+End Sub
+
 Sub InventoryUI
 
 End Sub
 
+Sub ChangeMap
+    Static TickDelay
+    Static TotalDelay
+    Static LightStep
+    Dim i, ii
+    If LightStep < 12 Then
+        Select Case Player.facing
+            Case 0
+                If Player.y <= 0 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+            Case 1
+                If Player.y >= 480 - 16 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+            Case 2
+                If Player.x <= 0 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+            Case 3
+                If Player.x >= 640 - 16 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+
+
+        End Select
+        If TickDelay = 5 Then TickDelay = 0: LightStep = LightStep + 2
+    Else
+        SAVEMAP
+        Select Case Player.facing
+            Case 0
+                SavedMapY = SavedMapY - 1
+                LOADMAP (SavedMap)
+                Player.y = 480
+            Case 1
+                SavedMapY = SavedMapY + 1
+                LOADMAP (SavedMap)
+                Player.y = 0
+            Case 2
+                SavedMapX = SavedMapX - 1
+                LOADMAP (SavedMap)
+                Player.x = 640
+            Case 3
+                SavedMapX = SavedMapX + 1
+                LOADMAP (SavedMap)
+                Player.x = 0
+        End Select
+        For i = 0 To 31
+            For ii = 0 To 41
+                UpdateTile ii, i
+            Next
+        Next
+        SpreadLight (1)
+
+        LightStep = 0
+    End If
+
+    If Player.moving = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
+    OverlayLightLevel = LightStep
+
+    'Print Player.x; Player.y; Player.lasty; Player.moving; Player.facing; TickDelay; Settings.TickRate
+End Sub
+
 Sub UpdateTile (TileX, TileY)
+    Dim i, ii
     If TileIndexData(GroundTile(TileX, TileY), 0) = 1 Or TileIndexData(WallTile(TileX, TileY), 0) = 1 Then TileData(TileX, TileY, 0) = 1 Else TileData(TileX, TileY, 0) = 0
     If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
     If TileIndexData(GroundTile(TileX, TileY), 2) = 1 Or TileIndexData(WallTile(TileX, TileY), 2) = 1 Then TileData(TileX, TileY, 2) = 1 Else TileData(TileX, TileY, 2) = 0
@@ -85,7 +160,66 @@ Sub UpdateTile (TileX, TileY)
     TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
     TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
     TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
+    For i = 1 To 30
+        For ii = 1 To 40
+            TileData(TileX, TileY, 8) = 0
+        Next
+    Next
 
+    If TileIndexData(GroundTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(GroundTile(TileX, TileY), 6)
+    If TileIndexData(WallTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(WallTile(TileX, TileY), 6)
+    If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
+
+End Sub
+'For i = TileData(TileX, TileY, 8) To 0 Step -1
+
+'Next
+
+Sub SpreadLight (updates)
+    Dim i, ii
+    For i = 1 To 30
+        For ii = 1 To 40
+            LocalLightLevel(ii, i) = TileData(ii, i, 8)
+        Next
+    Next
+    SpreadLight2 (updates)
+End Sub
+Sub SpreadLight2 (updates)
+    Dim i, ii, iii, iiii
+    Static UpdateLimit
+    If updates > 0 Then
+        updates = 0
+        For i = 1 To 30
+            For ii = 1 To 40
+                iiii = 1
+                iii = 0
+                For iii = 0 To 2
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+
+                iiii = 0
+                iii = 1
+                For iiii = 0 To 2
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
+            Next
+        Next
+        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
+        If UpdateLimit > 10 Then updates = 0
+        ' Print updates, UpdateLimit
+        ' Display
+        ' Sleep
+
+        SpreadLight2 (updates)
+    Else
+        UpdateLimit = 0
+    End If
 End Sub
 
 Sub UseItem (Slot)
@@ -111,10 +245,13 @@ Sub UseItem (Slot)
             Select Case Inventory(0, Slot, 4)
                 Case 0
                     GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+
                     UpdateTile FacingX, FacingY
+                    SpreadLight (1)
                 Case 1
                     WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
                     UpdateTile FacingX, FacingY
+                    SpreadLight (1)
 
             End Select
         Case 1
@@ -123,12 +260,14 @@ Sub UseItem (Slot)
                     If TileData(FacingX, FacingY, 4) <= 0 Then
                         GroundTile(FacingX, FacingY) = 0
                         UpdateTile FacingX, FacingY
+                        SpreadLight (1)
                     End If
                     TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6) + TileIndexData(GroundTile(FacingX, FacingY), 4)
                 Case 1
                     If TileData(FacingX, FacingY, 5) <= 0 Then
                         WallTile(FacingX, FacingY) = 1
                         UpdateTile FacingX, FacingY
+                        SpreadLight (1)
                     End If
                     TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6) + TileIndexData(WallTile(FacingX, FacingY), 5)
 
@@ -138,6 +277,7 @@ Sub UseItem (Slot)
     If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
         WallTile(FacingX, FacingY) = 1
         UpdateTile FacingX, FacingY
+        SpreadLight (1)
 
     End If
 End Sub
@@ -160,9 +300,15 @@ End Sub
 Sub SetLighting
     Dim i As Byte
     Dim ii As Byte
-    For i = 0 To 30
-        For ii = 0 To 40
-            PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.Shadows, , (16 * (GlobalLightLevel - LocalLightLevel(ii, i)), 16)-(16 * (GlobalLightLevel - LocalLightLevel(ii, i)) + 15, 31)
+    Dim TotalLightLevel
+    For i = 0 To 31
+        For ii = 0 To 41
+            If GlobalLightLevel < LocalLightLevel(ii, i) Then TotalLightLevel = LocalLightLevel(ii, i) Else TotalLightLevel = GlobalLightLevel
+            TotalLightLevel = TotalLightLevel - OverlayLightLevel
+            If TotalLightLevel > 12 Then TotalLightLevel = 12
+            If TotalLightLevel < 0 Then TotalLightLevel = 0
+
+            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
         Next
     Next
 End Sub
@@ -390,7 +536,9 @@ Sub DEV
         Print "FPS:" + Str$(FRAMEPS) + " /" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
-        Print "Light Level: (G:"; GlobalLightLevel; ", L: 0)"
+        Print "Current Time:"; GameTime + (TimeMode * 43200)
+        Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
+
         Print "Gamemode: ";
         Select Case GameMode
             Case 0
@@ -418,6 +566,7 @@ Sub DEV
                 Print "Motion:"; Player.moving
                 Print "Contacted Tile ID:"; Player.tile; "(" + Hex$(Player.tile) + ")"
                 Print "Facing Tile ID:"; Player.tilefacing; "(" + Hex$(Player.tilefacing) + ")"
+                Print Player.lastx; Player.lasty
             Case Else
                 Print "Unrecognized Tile or Entity"
         End Select
@@ -467,9 +616,7 @@ Sub DEV
                 Case "framerate-unlock", "fru"
                     Flag.FrameRateLock = Flag.FrameRateLock + 1
                 Case "save"
-                    SAVEMAP (0)
-                Case "save1"
-                    SAVEMAP (1)
+                    SAVEMAP
                 Case "load"
                     Locate 28, 1: Print "                                "
                     Locate 28, 1: Input "Name of Map File to load: ", map.filename
@@ -506,10 +653,10 @@ Sub DEV
 
                 Case "lightlevel", "ll"
                     Locate 28, 1: Print "                    "
-                    Locate 28, 1: Input "Select Light Level  ", GlobalLightLevel
+                    Locate 28, 1: Input "Select Light Level:  ", GlobalLightLevel
                 Case "rendermode", "rm"
                     Locate 28, 1: Print "         "
-                    Locate 28, 1: Input "Mode  ", RenderMode
+                    Locate 28, 1: Input "Mode:  ", RenderMode
                     If RenderMode = 2 Then Flag.RenderOverride = 0
                     If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
                     If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
@@ -519,6 +666,14 @@ Sub DEV
                             UpdateTile ii, i
                         Next
                     Next
+                    SpreadLight (1)
+                Case "tickrate", "tk"
+                    Locate 28, 1: Print "          "
+                    Locate 28, 1: Input "TickRate:  ", Settings.TickRate
+                Case "time"
+                    Locate 28, 1: Print "          "
+                    Locate 28, 1: Input "Set time:  ", GameTime
+
                 Case Else
             End Select
             KeyClear
@@ -781,10 +936,19 @@ Sub NewWorld
     KeyClear
     AutoDisplay
     Input "World Name?", WorldName
+    'Input "World Seed?", WorldSeed
+    'Randomize WorldSeed
     SavedMapX = 0
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
+    GenerateMap
+    SAVEMAP
+    LOADWORLD
+End Sub
+
+Sub GenerateMap
+    Dim i, ii, iii
     For i = 0 To 31
         For ii = 0 To 41
             GroundTile(ii, i) = 2
@@ -794,10 +958,261 @@ Sub NewWorld
             UpdateTile ii, i
         Next
     Next
-    SAVEMAP (0)
-    LOADWORLD
+End Sub
+
+
+Sub SAVESETTINGS
+
+    Open "Assets\SaveData\Settings.cdf" As #1
+    Put #1, 1, Settings.FrameRate
+    Put #1, 2, Settings.TickRate
+    Close #1
 
 End Sub
+
+
+
+
+Sub LOADSETTINGS
+
+    Open "Assets\SaveData\Settings.cdf" As #1
+    Get #1, 1, Settings.FrameRate
+    Get #1, 2, Settings.TickRate
+    Close #1
+
+End Sub
+
+Function SavedMap$
+    SavedMap = Str$(SavedMapX) + Str$(SavedMapY)
+End Function
+
+Function SpawnMap$
+    SpawnMap = Str$(SpawnMapX) + Str$(SpawnMapY)
+End Function
+
+
+
+Sub LOADWORLD
+    Dim defaultmap As String
+
+    prevfolder = map.foldername
+
+
+    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+
+    Get #1, 1, GameTime
+
+    Get #1, 3, mapversion
+    If mapversion <> Game.Version Then
+        Close #1
+        Error 103
+    End If
+
+    Get #1, 5, SpawnPointX
+    Get #1, 6, SpawnPointY
+    Get #1, 7, SavePointX
+    Get #1, 8, SavePointY
+    Get #1, 9, SavedMapX
+    Get #1, 10, SavedMapY
+    Get #1, 11, SpawnMapX
+    Get #1, 12, SpawnMapY
+
+    Player.x = SavePointX
+    Player.y = SavePointY
+
+    'GET #1, 4, map.protected
+    Close #1
+    LOADMAP (SavedMap)
+End Sub
+
+
+Sub LOADMAP (file As String)
+    Dim i, ii As Byte
+    Dim iii As Integer
+    Dim iiii As Byte
+
+    iii = 1
+
+
+    'TODO add error checking to see if map file exists
+
+    'TODO make this a sub with 2 parameters, 1
+    If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, GroundTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, WallTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, CeilingTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                For iiii = 0 To 9
+                    Get #1, iii, TileData(ii, i, iiii)
+                    iii = iii + 1
+                Next
+
+            Next
+        Next
+        Get #1, iii, map.name
+        Close #1
+        iii = 1
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\GlobalData.cdf" As #1
+        Close #1
+    Else
+        GenerateMap
+        SAVEMAP
+    End If
+
+End Sub
+
+
+Sub SAVEMAP
+    Dim i, ii, iiii As Byte
+    Dim iii As Integer
+    Dim defaultmap As String
+    Dim temppw As String
+    Dim new As Byte
+    iii = 1
+    'update this
+    If DirExists("Assets\Worlds\" + WorldName) = 0 Then
+        MkDir "Assets\Worlds\" + WorldName: new = 1
+        MkDir "Assets\Worlds\" + WorldName + "\Maps"
+    End If
+
+
+    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+    If new = 0 Then
+    End If
+
+
+    SavePointX = Player.x
+    SavePointY = Player.y
+    If TimeMode = 1 Then GameTime = GameTime + 43200
+    Put #1, 1, GameTime
+
+    Put #1, 3, Game.Version
+
+    Put #1, 5, SpawnPointX
+    Put #1, 6, SpawnPointY
+    Put #1, 7, SavePointX
+    Put #1, 8, SavePointY
+    Put #1, 9, SavedMapX
+    Put #1, 10, SavedMapY
+    Put #1, 11, SpawnMapX
+    Put #1, 12, SpawnMapY
+
+    If TimeMode = 1 Then GameTime = GameTime - 43200
+
+
+
+    Close #1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-0.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, GroundTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-1.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, WallTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-2.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, CeilingTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            For iiii = 0 To 9
+                Put #1, iii, TileData(ii, i, iiii)
+                iii = iii + 1
+            Next
+        Next
+    Next
+    Put #1, iii, map.name
+    Close #1
+    iii = 1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + ".cdf" As #1: Close #1
+
+
+
+
+
+    badpw:
+End Sub
+
+Sub UPDATEMAP
+    Dim i, ii As Byte
+    Dim iii As Integer
+    iii = 1
+
+    If DirExists("Assets\Worlds\" + map.foldername) = 0 GoTo badpw
+    If DirExists("Assets\Worlds\" + map.foldername + "\Maps") = 0 GoTo badpw
+
+
+    Open "Assets\Worlds\" + map.foldername + "\Maps\" + map.filename + ".cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            '    PUT #1, iii, tile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Put #1, iii, map.name
+    Close #1
+    badpw:
+
+End Sub
+
+
+
 
 
 '$include: 'Assets\Sources\Initialization.bm'

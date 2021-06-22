@@ -78,6 +78,33 @@ ItemIndex(8, 2) = 0 'y position on tilesheet
 ItemIndex(8, 3) = 8 'tile id
 ItemIndex(8, 4) = 1 'tile id
 
+ItemName(9, 0) = "Unlit Campfire" 'Name of the tile
+ItemName(9, 1) = "Placeholder" 'tooltip
+ItemIndex(9, 0) = 0 'item type
+ItemIndex(9, 1) = 160 'x position on tilesheet
+ItemIndex(9, 2) = 0 'y position on tilesheet
+ItemIndex(9, 3) = 9 'tile id
+ItemIndex(9, 4) = 1 'tile id
+
+ItemName(10, 0) = "Campfire" 'Name of the tile
+ItemName(10, 1) = "Placeholder" 'tooltip
+ItemIndex(10, 0) = 0 'item type
+ItemIndex(10, 1) = 176 'x position on tilesheet
+ItemIndex(10, 2) = 0 'y position on tilesheet
+ItemIndex(10, 3) = 10 'tile id
+ItemIndex(10, 4) = 1 'tile id
+
+ItemName(11, 0) = "Creative Pickaxe"
+ItemName(11, 1) = "Allows you to mine"
+ItemIndex(11, 0) = 1 'item type (1 means tool)
+ItemIndex(11, 1) = 192 'item texture x cord
+ItemIndex(11, 2) = 0 'item texture y cord
+ItemIndex(11, 3) = 0 'tool max durabillity
+ItemIndex(11, 4) = 1 'tool current durrabillity
+ItemIndex(11, 5) = 2 'tool type
+ItemIndex(11, 6) = 1000 'tool strength
+
+
 
 
 
