@@ -27,6 +27,14 @@ Flag.NoClip = 0
 GlobalLightLevel = 12
 flag.renderoverride=1
 defaultrendermode=0
+      Dim ii, iii, iiii
+For ii = 0 To 3
+    For iii = 0 To 5
+        For iiii = 0 To 9
+            Inventory(ii, iii, iiii) = -1
+        Next
+    Next
+Next
 
 
 

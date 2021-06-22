@@ -48,6 +48,12 @@ The game will now cycle between day and night, 1 full day / night cycle is 24 mi
 
  You can now have (near) infinate worlds, the actual world size is 5.5\*10^20 x 7.3\*10^20 tiles
 
+### New Items
+
+- Campfire
+
+- Unlit Campfire 
+
 ### New Commands
 
 - /tickrate (/tk)

@@ -20,14 +20,6 @@ Title "CDF-Quest"
 
 '$include: 'Assets\Sources\CreativeInventory.bi'
 
-Dim ii, iii, iiii
-For ii = 0 To 3
-    For iii = 0 To 5
-        For iiii = 0 To 9
-            Inventory(ii, iii, iiii) = -1
-        Next
-    Next
-Next
 
 INITIALIZE
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
@@ -207,10 +199,6 @@ Sub SpreadLight2 (updates)
 
                     If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
                 Next
-            Next
-        Next
-        For i = 1 To 30
-            For ii = 1 To 40
 
                 iiii = 0
                 iii = 1
@@ -223,7 +211,7 @@ Sub SpreadLight2 (updates)
             Next
         Next
         If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
-        If UpdateLimit > 100 Then updates = 0
+        If UpdateLimit > 10 Then updates = 0
         ' Print updates, UpdateLimit
         ' Display
         ' Sleep
@@ -665,10 +653,10 @@ Sub DEV
 
                 Case "lightlevel", "ll"
                     Locate 28, 1: Print "                    "
-                    Locate 28, 1: Input "Select Light Level  ", GlobalLightLevel
+                    Locate 28, 1: Input "Select Light Level:  ", GlobalLightLevel
                 Case "rendermode", "rm"
                     Locate 28, 1: Print "         "
-                    Locate 28, 1: Input "Mode  ", RenderMode
+                    Locate 28, 1: Input "Mode:  ", RenderMode
                     If RenderMode = 2 Then Flag.RenderOverride = 0
                     If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
                     If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
@@ -681,7 +669,11 @@ Sub DEV
                     SpreadLight (1)
                 Case "tickrate", "tk"
                     Locate 28, 1: Print "          "
-                    Locate 28, 1: Input "TickRate  ", Settings.TickRate
+                    Locate 28, 1: Input "TickRate:  ", Settings.TickRate
+                Case "time"
+                    Locate 28, 1: Print "          "
+                    Locate 28, 1: Input "Set time:  ", GameTime
+
                 Case Else
             End Select
             KeyClear
