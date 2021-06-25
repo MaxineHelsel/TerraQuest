@@ -12,7 +12,7 @@ Dim Shared Debug As Debug
 Dim Shared GroundTile(41, 31) As Unsigned Integer
 Dim Shared WallTile(41, 31) As Unsigned Integer
 Dim Shared CeilingTile(41, 31) As Unsigned Integer
-Dim Shared TileData(41, 31, 9) As Unsigned Byte
+Dim Shared TileData(41, 31, 9) As integer
 Dim Shared SpawnPointX As Single
 Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single

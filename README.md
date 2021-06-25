@@ -38,6 +38,12 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 # ChangeLog
 
+## Alpha Version 19
+
+### Other Notable Changes
+
+- Placing a tile where a tile already exists will no longer replace the existing tile
+
 ## Alpha Version 18
 
 ### Day/Night Cycle

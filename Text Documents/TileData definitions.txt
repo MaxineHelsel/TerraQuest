@@ -7,3 +7,4 @@ TileData flags
 4 groundhealth
 5 wallhealth
 6 ceilinghealth
+7 Light source strength
