@@ -34,11 +34,21 @@ Windows comes second, because it does not require me to switch systems, as i can
 
 - macOS
 
-macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
+macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, test, then re push.
 
 # ChangeLog
 
 ## Alpha Version 19
+
+### Better Inventory Management
+
+- Enter, select a stack of items and press enter again to swap them to a different inventory slot
+
+- Backslash, split a stack in half
+
+### Item stacking
+
+You can now stack certain items up to 100 in a stack 
 
 ### Other Notable Changes
 

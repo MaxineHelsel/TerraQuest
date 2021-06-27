@@ -42,7 +42,7 @@ GoTo game
 
 Error 102
 
-ErrorHandler: ErrorHandler
+ERRORHANDLER: ErrorHandler
 game:
 
 Do
@@ -73,10 +73,10 @@ Loop
 
 Error 102
 
-Sub EmptySlot (slot)
+Sub EmptySlot (slot, row)
     Dim i
     For i = 0 To 9
-        Inventory(0, slot, i) = -1
+        Inventory(row, slot, i) = -1
     Next
 End Sub
 
@@ -107,7 +107,6 @@ Sub PickUpItem (ItemID)
     PickedUp:
 End Sub
 
-
 Sub UseItem (Slot)
     Dim FacingX As Integer
     Dim FacingY As Integer
@@ -135,7 +134,7 @@ Sub UseItem (Slot)
                         TileData(FacingX, FacingY, 4) = 255
                         If GameMode <> 1 Then
                             Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot (Slot)
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
                         End If
                         UpdateTile FacingX, FacingY
                         SpreadLight (1)
@@ -146,7 +145,7 @@ Sub UseItem (Slot)
                         TileData(FacingX, FacingY, 5) = 255
                         If GameMode <> 1 Then
                             Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot (Slot)
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
                         End If
                         UpdateTile FacingX, FacingY
                         SpreadLight (1)
@@ -210,7 +209,7 @@ Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
             Case 0
                 Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
             Case 1
-                Swap Inventory(ItemSelectY + 1, ItemSelectX, i), Inventory(0, Slot, i)
+                Swap Inventory(ItemSelectY + 1, ItemSelectX, i), Inventory(CreativePage + 1, Slot, i)
         End Select
     Next
 End Sub
@@ -407,6 +406,22 @@ Sub SetLighting
     Next
 End Sub
 
+Sub NewStack (ItemID, StackNumber)
+    Dim i, ii, iii
+    For i = 0 To 3
+        For ii = 0 To 5
+            If Inventory(i, ii, 9) = -1 Then
+                For iii = 0 To 9
+                    Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
+                Next
+                Inventory(i, ii, 7) = StackNumber
+                GoTo Complete
+            End If
+        Next
+    Next
+    Complete:
+End Sub
+
 
 
 Sub HUD
@@ -425,8 +440,11 @@ Sub HUD
         Static CreativePage As Byte
         Static ItemSelectX As Byte
         Static ItemSelectY As Byte
+        Static ItemSelectedX As Byte
+        Static ItemSelectedY As Byte
         Static hbtimeout As Integer64
         Static adjustspace, adjustx, adjusty, invgap
+        Static CursorMode As Byte
         adjustx = 5
         adjusty = -45
         adjustspace = 68
@@ -471,8 +489,20 @@ Sub HUD
         If Flag.InventoryOpen = 1 Then
             For invrow = 0 To 2
                 For hbpos = 0 To 5
+
+                    'place background squares
                     PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
-                    If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+
+                    'place cursor
+                    Select Case CursorMode
+                        Case 0
+                            If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                        Case 1
+                            If invrow = ItemSelectedY And hbpos = ItemSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                            If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
+                    End Select
+
+                    'display inventory contents
                     Select Case GameMode
                         Case 1
                             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (CreativeInventory(invrow, hbpos, 1, CreativePage), CreativeInventory(invrow, hbpos, 2, CreativePage))-(CreativeInventory(invrow, hbpos, 1, CreativePage) + 15, CreativeInventory(invrow, hbpos, 2, CreativePage) + 15)
@@ -486,14 +516,43 @@ Sub HUD
                                     Next
                                 Next
                                 Color RGB(255, 255, 255)
-
                                 PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * invrow + 1) - invgap), Str$(Inventory(invrow + 1, hbpos, 7))
                             End If
                     End Select
                 Next
             Next
-
+            If GameMode = 2 Then CreativePage = -1
             Select Case KeyPressed
+
+                Case 92
+                    If Inventory(ItemSelectY + 1, ItemSelectX, 7) > 1 Then
+                        NewStack Inventory(ItemSelectY + 1, ItemSelectX, 9), Int(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
+                        Inventory(ItemSelectY + 1, ItemSelectX, 7) = Ceil(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
+                    End If
+                Case 13
+                    Select Case CursorMode
+                        Case 0
+                            CursorMode = 1
+                            ItemSelectedX = ItemSelectX
+                            ItemSelectedY = ItemSelectY
+                            Exit Select
+                        Case 1
+                            CursorMode = 0
+                            If ItemSelectX = ItemSelectedX And ItemSelectY = ItemSelectedY Then Exit Select
+                            If Inventory(ItemSelectY + 1, ItemSelectX, 9) = Inventory(ItemSelectedY + 1, ItemSelectedX, 9) Then
+                                Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) + Inventory(ItemSelectedY + 1, ItemSelectedX, 7)
+                                If Inventory(ItemSelectY + 1, ItemSelectX, 7) > Inventory(ItemSelectY + 1, ItemSelectX, 8) Then
+                                    Inventory(ItemSelectedY + 1, ItemSelectedX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) - Inventory(ItemSelectY + 1, ItemSelectX, 8)
+                                    Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 8)
+                                Else
+                                    EmptySlot ItemSelectedX, ItemSelectedY + 1
+                                End If
+                            Else
+                                InvSwap ItemSelectedX, GameMode - 1, ItemSelectX, ItemSelectY, ItemSelectedY
+                            End If
+                            Exit Select
+                    End Select
+
 
                 Case 49
                     InvSwap 0, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
@@ -626,8 +685,6 @@ Sub DEV
             Next
             ENDPRINT dummystring
             ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
-            ENDPRINT Str$(TileIndex(WallTile(FacingX, FacingY), 3))
-            ENDPRINT Str$(Inventory(0, 0, 9))
         End If
         Print
         ENDPRINT "Flags:"
@@ -1159,9 +1216,9 @@ Sub LOADWORLD
     Get #1, 12, SpawnMapY
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Inventory.cdf" As #1
-    total=1
+    total = 1
     While i < 4
-        Get #1, total, Inventory(i, ii, iii)
+        '   Get #1, total, Inventory(i, ii, iii)
         iii = iii + 1
         If iii > 9 Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
@@ -1286,7 +1343,7 @@ Sub SAVEMAP
     Open "Assets\Worlds\" + WorldName + "\Inventory.cdf" As #1
     total = 1
     While i < 4
-        Put #1, total, Inventory(i, ii, iii)
+        '    Put #1, total, Inventory(i, ii, iii)
         iii = iii + 1
         If iii > 9 Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
