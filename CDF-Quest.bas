@@ -73,12 +73,6 @@ Loop
 
 Error 102
 
-Sub EmptySlot (slot, row)
-    Dim i
-    For i = 0 To 9
-        Inventory(row, slot, i) = -1
-    Next
-End Sub
 
 Sub PickUpItem (ItemID)
     Dim i, ii, iii
@@ -214,30 +208,6 @@ Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
     Next
 End Sub
 
-Sub DayLightCycle
-    '86400
-    GameTime = GameTime + Settings.TickRate
-    If GameTime > 43200 Then GameTime = GameTime - 43200: TimeMode = TimeMode + 1
-    If TimeMode > 1 Then TimeMode = 0
-
-    Select Case TimeMode
-        Case 0
-            GlobalLightLevel = 12
-            If GameTime > 38200 Then
-                GlobalLightLevel = 12 - (((GameTime - 38200) / 1000)) * 2
-            End If
-        Case 1
-            GlobalLightLevel = 2
-            If GameTime > 38200 Then
-                GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
-            End If
-    End Select
-End Sub
-
-Sub InventoryUI
-
-End Sub
-
 
 Sub ChangeMap
     Static TickDelay
@@ -319,58 +289,10 @@ End Sub
 
 'Next
 
-Sub SpreadLight (updates)
-    Dim i, ii
-    For i = 1 To 30
-        For ii = 1 To 40
-            LocalLightLevel(ii, i) = TileData(ii, i, 8)
-        Next
-    Next
-    SpreadLight2 (updates)
-End Sub
-Sub SpreadLight2 (updates)
-    Dim i, ii, iii, iiii
-    Static UpdateLimit
-    If updates > 0 Then
-        updates = 0
-        For i = 1 To 30
-            For ii = 1 To 40
-                iiii = 1
-                iii = 0
-
-                For iii = 0 To 2
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-
-                iiii = 0
-                iii = 1
-                For iiii = 0 To 2
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
-            Next
-        Next
-        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
-        If UpdateLimit > 10 Then updates = 0
-        ' Print updates, UpdateLimit
-        ' Display
-        ' Sleep
-
-        SpreadLight2 (updates)
-    Else
-        UpdateLimit = 0
-    End If
-End Sub
-
-
 Sub Alert (img, message As String)
     Static timeout
     timeout = timeout + Settings.TickRate
-    Locate 27, 0
+    Locate 20, 0
     ENDPRINT message
     Alert img, message
 End Sub
@@ -389,22 +311,6 @@ Sub INTER
 End Sub
 
 
-
-Sub SetLighting
-    Dim i As Byte
-    Dim ii As Byte
-    Dim TotalLightLevel
-    For i = 0 To 31
-        For ii = 0 To 41
-            If GlobalLightLevel < LocalLightLevel(ii, i) Then TotalLightLevel = LocalLightLevel(ii, i) Else TotalLightLevel = GlobalLightLevel
-            TotalLightLevel = TotalLightLevel - OverlayLightLevel
-            If TotalLightLevel > 12 Then TotalLightLevel = 12
-            If TotalLightLevel < 0 Then TotalLightLevel = 0
-
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
-        Next
-    Next
-End Sub
 
 Sub NewStack (ItemID, StackNumber)
     Dim i, ii, iii
@@ -454,6 +360,8 @@ Sub HUD
         hboffset = 1
         token = 1
         hbitemsize = 2
+        If GameMode = 2 Then CreativePage = -1
+        If GameMode = 1 And CreativePage < 0 Then CreativePage = 0
 
         tmpheal = Player.health
 
@@ -521,7 +429,7 @@ Sub HUD
                     End Select
                 Next
             Next
-            If GameMode = 2 Then CreativePage = -1
+
             Select Case KeyPressed
 
                 Case 92
@@ -812,8 +720,6 @@ Sub DEV
                     bgdraw = bgdraw + 1
                 Case "shadowcast", "sh"
                     Flag.CastShadows = Flag.CastShadows + 1
-                Case "update", "up"
-                    UPDATEMAP
 
                 Case "new"
                     NewWorld
@@ -850,69 +756,6 @@ Sub DEV
         End If
         Color , RGBA(0, 0, 0, 0)
         PrintMode KeepBackground
-    End If
-End Sub
-
-
-Sub SetMap
-    Dim i As Byte
-    Dim ii As Byte
-    For i = 1 To 30
-        For ii = 1 To 40
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 5) / 32) * 16, 32)-((Int(TileData(ii, i, 5) / 32) * 16) + 15, 47)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
-        Next
-    Next
-End Sub
-
-Sub CastShadow
-    If Flag.CastShadows = 0 Then
-        Dim i As Byte
-        Dim ii As Byte
-        For i = 1 To 30
-            For ii = 1 To 40
-
-                If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-                End If
-
-                If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-                End If
-
-                If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-                End If
-
-                If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-                End If
-
-                If TileData(ii, i, 3) = 1 Then
-
-                    If TileData(ii, i + 1, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-                    End If
-
-                    If TileData(ii + 1, i, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-                    End If
-
-                    If TileData(ii - 1, i, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-                    End If
-
-                    If TileData(ii, i - 1, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-                    End If
-
-                End If
-            Next
-        Next
     End If
 End Sub
 
@@ -967,154 +810,6 @@ Sub SwitchRender (mode As Byte)
 End Sub
 
 
-Sub ErrorHandler
-    AutoDisplay
-    Cls
-    PLAYSOUND Sounds.error
-    Delay 0.5
-    KeyClear
-    Locate 1, 1
-    CENTERPRINT "CDF ERROR HANDLER"
-    Print "Error Code:"; Err
-    Locate 2, 1
-    ENDPRINT "Error Line:" + Str$(ErrorLine)
-    Print "--------------------------------------------------------------------------------"
-    Print
-    '       PRINT "--------------------------------------------------------------------------------"
-    Select Case Err
-        Case 100
-            Print "Assets folder is incomplete, this error can be triggered by one or more of the"
-            Print "following conditions:"
-            Print
-            Print
-            Print "     The assets folder is missing"
-            Print
-            Print "     Sub-directories in the Assets folder are missing"
-            Print
-            Print "     The contents of assets, or the directory itself is corrupted"
-            Print
-            Print "     You do not have proper permissions to access the assets directory"
-            Print
-            Print
-            Print "Make sure the entireity of the assets folder is present and accessible to your"
-            Print "user account and, if necessary, redownload the assets folder."
-            Print
-            Print "The assets folder, and its contents are necessary for the game to load, as it"
-            Print "contains all sprite and texture files, sounds and music, user saved data, and"
-            Print "world files. Without these, the game will not play correctly. It is advised to"
-            Print "not continue."
-            CONTPROMPT
-
-        Case 101
-            Print "This is a legacy error code, and should never be triggered in game, if it has"
-            Print "been triggered, not due to the /error command, please contact the developer"
-            CONTPROMPT
-
-        Case 102
-            Print "Invalid Code Position, This error occurs when the program flow enters an area"
-            Print "that it should not be, This is most likely a programming issue, and not an end"
-            Print "user issue."
-            Print ""
-            Print "There is no user solution to this issue, please file a bug report to the"
-            Print "developers, including the line number and what you were doing when it occured."
-            CONTPROMPT
-
-        Case 103
-            Print "This world was not made for this version of "; Game.Title; ". This means one of"
-            Print "the following cases is true:"
-            Print
-            Print
-            Print "     You are attempting to load an out of date world"
-            Print
-            Print "     You are attempting to load a world designed for a newer version of"
-            Print "     "; Game.Title
-            Print
-            Print "     Your world manifest is corrupted"
-            Print
-            Print
-            Print "Double check the world version and game version."
-            Print "World: ("; mapversion; ") Game: ("; Game.Version; ")"
-            Print
-            Print "If you are certain that this is a mistake, you may try to update the manifest"
-            Print "here. Note that this does not update old worlds, just broken manifest files"
-            Print "Otherwise you can try to load a different world. "; Game.Title; ""
-            Print "does not support loading out of version worlds."
-            Print
-            Print
-            CENTERPRINT "(U)pdate manifest, (R)eturn to existing map, (Q)uit to desktop."
-            Do
-                If KeyDown(113) Then System
-                If KeyDown(114) Then Exit Do
-                If KeyDown(117) Then
-                    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-                    Put #1, 3, Game.Version
-                    Close #1
-
-                    Exit Do
-
-                End If
-            Loop
-        Case 2
-            Print "Syntax error, READ attempted to read a number but could not parse the next"
-            Print "DATA item."
-            Print
-            CONTPROMPT
-        Case 3
-            Print "RETURN without GOSUB, The RETURN statement was encounted without first"
-            Print " executing a corresponding GOSUB."
-            Print
-            CONTPROMPT
-        Case 4
-            Print "Out of DATA, The READ statement has read past the end of a DATA block."
-            Print " Use RESTORE to change the current data item if necessary."
-            Print
-            CONTPROMPT
-
-        Case 9
-            Print "Subscript out of range, this error occurs when an array exceeds its bounds"
-            Print "This is most likely a programming error, please let the developer know."
-            Print
-            CONTPROMPT
-
-
-        Case Else
-            Print "Unrecognized error, contact developers"
-            CONTPROMPT
-
-    End Select
-
-    KeyClear
-    Cls
-    Resume Next
-End Sub
-
-Sub CONTPROMPT
-    Print
-    Print
-
-    CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop"
-    Do
-        If KeyDown(113) Then System
-        If KeyDown(105) Then Exit Do
-    Loop
-End Sub
-
-
-
-
-
-Sub SETBG
-    If bgdraw = 0 Then
-        Dim i As Byte
-        Dim ii As Byte
-        For i = 0 To 30
-            For ii = 0 To 40
-                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
-            Next
-        Next
-    End If
-End Sub
-
 
 
 
@@ -1148,297 +843,24 @@ Sub GenerateMap
             TileData(ii, i, 5) = 255
             CeilingTile(ii, i) = 1
             TileData(ii, i, 6) = 255
-
-
-            If CInt(Rnd * 10) = 5 Then WallTile(ii, i) = 5
+            If Ceil(Rnd * 10) = 5 Then WallTile(ii, i) = 5
             UpdateTile ii, i
         Next
     Next
 End Sub
 
-
-Sub SAVESETTINGS
-
-    Open "Assets\SaveData\Settings.cdf" As #1
-    Put #1, 1, Settings.FrameRate
-    Put #1, 2, Settings.TickRate
-    Close #1
+Sub fuck
+    '     int
+    '    cint
+    '   ceil
 
 End Sub
 
 
 
-
-Sub LOADSETTINGS
-
-    Open "Assets\SaveData\Settings.cdf" As #1
-    Get #1, 1, Settings.FrameRate
-    Get #1, 2, Settings.TickRate
-    Close #1
-
-End Sub
-
-Function SavedMap$
-    SavedMap = Str$(SavedMapX) + Str$(SavedMapY)
-End Function
-
-Function SpawnMap$
-    SpawnMap = Str$(SpawnMapX) + Str$(SpawnMapY)
-End Function
-
-
-
-Sub LOADWORLD
-    Dim defaultmap As String
-    Dim As Byte i, ii
-    Dim As Integer iii
-    Dim total
-    prevfolder = map.foldername
-
-
-    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-
-    Get #1, 1, GameTime
-
-    Get #1, 3, mapversion
-    If mapversion <> Game.Version Then
-        Close #1
-        Error 103
-    End If
-
-    Get #1, 5, SpawnPointX
-    Get #1, 6, SpawnPointY
-    Get #1, 7, SavePointX
-    Get #1, 8, SavePointY
-    Get #1, 9, SavedMapX
-    Get #1, 10, SavedMapY
-    Get #1, 11, SpawnMapX
-    Get #1, 12, SpawnMapY
-    Close #1
-    Open "Assets\Worlds\" + WorldName + "\Inventory.cdf" As #1
-    total = 1
-    While i < 4
-        '   Get #1, total, Inventory(i, ii, iii)
-        iii = iii + 1
-        If iii > 9 Then iii = 0: ii = ii + 1
-        If ii > 5 Then ii = 0: i = i + 1
-        total = total + 1
-    Wend
-    Cls
-    Print total
-    Display
-    Sleep
-
-    Player.x = SavePointX
-    Player.y = SavePointY
-
-    'GET #1, 4, map.protected
-    Close #1
-    LOADMAP (SavedMap)
-End Sub
-
-
-Sub LOADMAP (file As String)
-    Dim i, ii As Byte
-    Dim iii As Integer
-    Dim iiii As Byte
-
-    iii = 1
-
-
-    'TODO add error checking to see if map file exists
-
-    'TODO make this a sub with 2 parameters, 1
-    If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                Get #1, iii, GroundTile(ii, i)
-                iii = iii + 1
-            Next
-        Next
-        Close #1
-        iii = 1
-
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                Get #1, iii, WallTile(ii, i)
-                iii = iii + 1
-            Next
-        Next
-        Close #1
-        iii = 1
-
-
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                Get #1, iii, CeilingTile(ii, i)
-                iii = iii + 1
-            Next
-        Next
-        Close #1
-        iii = 1
-
-
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                For iiii = 0 To 9
-                    Get #1, iii, TileData(ii, i, iiii)
-                    iii = iii + 1
-                Next
-
-            Next
-        Next
-        Get #1, iii, map.name
-        Close #1
-        iii = 1
-
-    Else
-        GenerateMap
-        SAVEMAP
-    End If
-
-End Sub
-
-
-Sub SAVEMAP
-    Dim i, ii, iiii As Byte
-    Dim iii As Integer
-    Dim defaultmap As String
-    Dim temppw As String
-    Dim new As Byte
-    Dim total
-    iii = 1
-    'update this
-    If DirExists("Assets\Worlds\" + WorldName) = 0 Then
-        MkDir "Assets\Worlds\" + WorldName: new = 1
-        MkDir "Assets\Worlds\" + WorldName + "\Maps"
-    End If
-
-
-    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-    If new = 0 Then
-    End If
-
-
-    SavePointX = Player.x
-    SavePointY = Player.y
-    If TimeMode = 1 Then GameTime = GameTime + 43200
-    Put #1, 1, GameTime
-
-    Put #1, 3, Game.Version
-
-    Put #1, 5, SpawnPointX
-    Put #1, 6, SpawnPointY
-    Put #1, 7, SavePointX
-    Put #1, 8, SavePointY
-    Put #1, 9, SavedMapX
-    Put #1, 10, SavedMapY
-    Put #1, 11, SpawnMapX
-    Put #1, 12, SpawnMapY
-    Close #1
-    Open "Assets\Worlds\" + WorldName + "\Inventory.cdf" As #1
-    total = 1
-    While i < 4
-        '    Put #1, total, Inventory(i, ii, iii)
-        iii = iii + 1
-        If iii > 9 Then iii = 0: ii = ii + 1
-        If ii > 5 Then ii = 0: i = i + 1
-        total = total + 1
-    Wend
-    Cls
-    Print total
-    Display
-    Sleep
-    If TimeMode = 1 Then GameTime = GameTime - 43200
-
-
-
-    Close #1
-    iii = 1
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-0.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            Put #1, iii, GroundTile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Close #1
-    iii = 1
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-1.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            Put #1, iii, WallTile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Close #1
-    iii = 1
-
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-2.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            Put #1, iii, CeilingTile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Close #1
-    iii = 1
-
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            For iiii = 0 To 9
-                Put #1, iii, TileData(ii, i, iiii)
-                iii = iii + 1
-            Next
-        Next
-    Next
-    Put #1, iii, map.name
-    Close #1
-    iii = 1
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + ".cdf" As #1: Close #1
-
-
-
-
-
-    badpw:
-End Sub
-
-Sub UPDATEMAP
-    Dim i, ii As Byte
-    Dim iii As Integer
-    iii = 1
-
-    If DirExists("Assets\Worlds\" + map.foldername) = 0 GoTo badpw
-    If DirExists("Assets\Worlds\" + map.foldername + "\Maps") = 0 GoTo badpw
-
-
-    Open "Assets\Worlds\" + map.foldername + "\Maps\" + map.filename + ".cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            '    PUT #1, iii, tile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Put #1, iii, map.name
-    Close #1
-    badpw:
-
-End Sub
-
-
-
-
-
+'$include: 'Assets\Sources\InventoryManagement.bm'
+'$include: 'Assets\Sources\ShadowCast.bm'
+'$include: 'Assets\Sources\DayNightCycle.bm'
 '$include: 'Assets\Sources\Initialization.bm'
 '$include: 'Assets\Sources\FileAccess.bm'
 '$include: 'Assets\Sources\TextControl.bm'

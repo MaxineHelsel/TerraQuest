@@ -1,0 +1,7 @@
+Sub EmptySlot (slot, row)
+    Dim i
+    For i = 0 To 9
+        Inventory(row, slot, i) = -1
+    Next
+End Sub
+
