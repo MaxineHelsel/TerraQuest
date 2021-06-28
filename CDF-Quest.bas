@@ -4,7 +4,7 @@ On Error GoTo ERRORHANDLER
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
-DisplayOrder Hardware , Software
+DisplayOrder GLRender , Hardware , Software
 Title "CDF-Quest"
 
 'todo make the number of attributes a constant
@@ -608,7 +608,8 @@ Sub DEV
         Locate 1, 1
         Print Game.Title; " ("; Game.Buildinfo; ")"
         Print
-        Print "FPS:" + Str$(FRAMEPS) + " /" + Str$(CurrentTick)
+        If RenderMode = 0 Then Print "FPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
+        If RenderMode > 0 Then Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
         Print "Current Time:"; GameTime + (TimeMode * 43200)
@@ -760,6 +761,23 @@ Sub DEV
 End Sub
 
 
+
+
+Sub _GL
+    If Flag.RenderOverride <> 0 Then Exit Sub
+    OpenGLFPS
+End Sub
+Sub OpenGLFPS
+    Static ps As Byte
+    Static cs As Byte
+    Static frame As Integer
+    Static frps As Integer
+
+    ps = cs
+    cs = Val(Mid$(Time$, 7, 2))
+    If cs = ps Then frame = frame + 1 Else frps = frame: frame = 0
+    OGLFPS = frps + 1
+End Sub
 
 Sub INITIALIZE
 

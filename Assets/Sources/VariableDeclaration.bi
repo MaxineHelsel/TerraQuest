@@ -40,6 +40,8 @@ dim shared OverlayLightLevel as byte
 
 Dim Shared CurrentTick As Unsigned Integer64
 
+dim shared OGLFPS as single
+
 Dim Shared CameraPositionX As Single
 Dim Shared CameraPositionY As Single
 
