@@ -12,7 +12,7 @@ ItemIndex(0, 5) = 0 'tool type
 ItemIndex(0, 6) = 1000 'tool strength
 ItemIndex(0, 7) = 1 'current stack
 ItemIndex(0, 8) = 1 'max stack
-itemindex(0,9)=0'Item ID
+ItemIndex(0, 9) = 0 'Item ID
 
 ItemName(1, 0) = "Creative Axe"
 ItemName(1, 1) = "Allows you to break wall tiles"
@@ -25,7 +25,7 @@ ItemIndex(1, 5) = 1 'tool type
 ItemIndex(1, 6) = 1000 'tool strength
 ItemIndex(1, 7) = 1 'current stack
 ItemIndex(1, 8) = 1 'max stack
-itemindex(1,9)=1'Item ID
+ItemIndex(1, 9) = 1 'Item ID
 
 ItemName(2, 0) = "Grass" 'Name of the Item
 ItemName(2, 1) = "Placeholder" 'tooltip
@@ -36,7 +36,7 @@ ItemIndex(2, 3) = 2 'tile id
 ItemIndex(2, 4) = 0 'layer
 ItemIndex(2, 7) = 1 'current stack
 ItemIndex(2, 8) = 100 'max stack
-itemindex(2,9)=2'Item ID
+ItemIndex(2, 9) = 2 'Item ID
 
 
 ItemName(3, 0) = "Cut Grass" 'Name of the Item
@@ -48,7 +48,7 @@ ItemIndex(3, 3) = 3 'tile id
 ItemIndex(3, 4) = 0
 ItemIndex(3, 7) = 1 'current stack
 ItemIndex(3, 8) = 100 'max stack
-itemindex(3,9)=3'Item ID
+ItemIndex(3, 9) = 3 'Item ID
 
 
 ItemName(4, 0) = "Dirt" 'Name of the tile
@@ -60,7 +60,7 @@ ItemIndex(4, 3) = 4 'tile id
 ItemIndex(4, 4) = 0 'tile id
 ItemIndex(4, 7) = 1 'current stack
 ItemIndex(4, 8) = 100 'max stack
-itemindex(4,9)=4'Item ID
+ItemIndex(4, 9) = 4 'Item ID
 
 
 ItemName(5, 0) = "Bush" 'Name of the tile
@@ -72,7 +72,7 @@ ItemIndex(5, 3) = 5 'tile id
 ItemIndex(5, 4) = 1 'tile id
 ItemIndex(5, 7) = 1 'current stack
 ItemIndex(5, 8) = 100 'max stack
-itemindex(5,9)=5'Item ID
+ItemIndex(5, 9) = 5 'Item ID
 
 
 ItemName(6, 0) = "Chest" 'Name of the tile
@@ -84,7 +84,7 @@ ItemIndex(6, 3) = 6 'tile id
 ItemIndex(6, 4) = 1 'tile id
 ItemIndex(6, 7) = 1 'current stack
 ItemIndex(6, 8) = 100 'max stack
-itemindex(6,9)=6'Item ID
+ItemIndex(6, 9) = 6 'Item ID
 
 
 ItemName(7, 0) = "Stone Wall" 'Name of the tile
@@ -96,7 +96,7 @@ ItemIndex(7, 3) = 7 'tile id
 ItemIndex(7, 4) = 1 'tile id
 ItemIndex(7, 7) = 1 'current stack
 ItemIndex(7, 8) = 100 'max stack
-itemindex(7,9)=7'Item ID
+ItemIndex(7, 9) = 7 'Item ID
 
 
 ItemName(8, 0) = "Wood Wall" 'Name of the tile
@@ -108,7 +108,7 @@ ItemIndex(8, 3) = 8 'tile id
 ItemIndex(8, 4) = 1 'tile id
 ItemIndex(8, 7) = 1 'current stack
 ItemIndex(8, 8) = 100 'max stack
-itemindex(8,9)=8'Item ID
+ItemIndex(8, 9) = 8 'Item ID
 
 ItemName(9, 0) = "Unlit Campfire" 'Name of the tile
 ItemName(9, 1) = "Placeholder" 'tooltip
@@ -119,7 +119,7 @@ ItemIndex(9, 3) = 9 'tile id
 ItemIndex(9, 4) = 1 'tile id
 ItemIndex(9, 7) = 1 'current stack
 ItemIndex(9, 8) = 100 'max stack
-itemindex(9,9)=9'Item ID
+ItemIndex(9, 9) = 9 'Item ID
 
 ItemName(10, 0) = "Campfire" 'Name of the tile
 ItemName(10, 1) = "Placeholder" 'tooltip
@@ -130,7 +130,7 @@ ItemIndex(10, 3) = 10 'tile id
 ItemIndex(10, 4) = 1 'tile id
 ItemIndex(10, 7) = 1 'current stack
 ItemIndex(10, 8) = 100 'max stack
-itemindex(10,9)=10'Item ID
+ItemIndex(10, 9) = 10 'Item ID
 
 ItemName(11, 0) = "Creative Pickaxe"
 ItemName(11, 1) = "Allows you to mine"
@@ -143,7 +143,7 @@ ItemIndex(11, 5) = 2 'tool type
 ItemIndex(11, 6) = 1000 'tool strength
 ItemIndex(11, 7) = 1 'current stack
 ItemIndex(11, 8) = 1 'max stack
-itemindex(11,9)=11'Item ID
+ItemIndex(11, 9) = 11 'Item ID
 
 ItemName(12, 0) = "Creative Sword"
 ItemName(12, 1) = "Allows you to fight"
@@ -156,7 +156,7 @@ ItemIndex(12, 5) = 0 'swing delay
 ItemIndex(12, 6) = 1000 'attack strength
 ItemIndex(12, 7) = 1 'current stack
 ItemIndex(12, 8) = 1 'max stack
-itemindex(12,9)=12'Item ID
+ItemIndex(12, 9) = 12 'Item ID
 
 
 ItemName(15, 0) = "Wood Shovel"
@@ -170,7 +170,7 @@ ItemIndex(15, 5) = 0 'tool type
 ItemIndex(15, 6) = 32 'tool strength
 ItemIndex(15, 7) = 1 'current stack
 ItemIndex(15, 8) = 1 'max stack
-itemindex(15,9)=15'Item ID
+ItemIndex(15, 9) = 15 'Item ID
 
 ItemName(16, 0) = "Creative Axe"
 ItemName(16, 1) = "Allows you to break wall tiles"
@@ -183,7 +183,7 @@ ItemIndex(16, 5) = 1 'tool type
 ItemIndex(16, 6) = 32 'tool strength
 ItemIndex(16, 7) = 1 'current stack
 ItemIndex(16, 8) = 1 'max stack
-itemindex(16,9)=16'Item ID
+ItemIndex(16, 9) = 16 'Item ID
 
 ItemName(17, 0) = "Creative Pickaxe"
 ItemName(17, 1) = "Allows you to mine"
@@ -196,7 +196,7 @@ ItemIndex(17, 5) = 2 'tool type
 ItemIndex(17, 6) = 32 'tool strength
 ItemIndex(17, 7) = 1 'current stack
 ItemIndex(17, 8) = 1 'max stack
-itemindex(17,9)=17'Item ID
+ItemIndex(17, 9) = 17 'Item ID
 
 ItemName(18, 0) = "Creative Sword"
 ItemName(18, 1) = "Allows you to fight"
@@ -209,9 +209,19 @@ ItemIndex(18, 5) = .25 'swing delay
 ItemIndex(18, 6) = 2 'attack strength
 ItemIndex(18, 7) = 1 'current stack
 ItemIndex(18, 8) = 1 'max stack
-itemindex(18,9)=18'Item ID
+ItemIndex(18, 9) = 18 'Item ID
 
 
-
-
+ItemName(19, 0) = "Wood"
+ItemName(19, 1) = "Crafting Material"
+ItemIndex(19, 0) = 3 'item type (1 means tool)
+ItemIndex(19, 1) = 64 'item texture x cord
+ItemIndex(19, 2) = 16 'item texture y cord
+ItemIndex(19, 3) = 1 'crafting ID
+ItemIndex(19, 4) = 0 'minimum table
+ItemIndex(19, 5) = 0 '
+ItemIndex(19, 6) = 0 '
+ItemIndex(19, 7) = 1 'current stack
+ItemIndex(19, 8) = 100 'max stack
+ItemIndex(19, 9) = 18 'Item ID
 

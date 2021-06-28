@@ -1,5 +1,6 @@
 Dim Shared TileIndex(1000, 9)
 Dim Shared TileIndexData(1000, 8)
+Dim Shared ContainerData(1000, 3)
 Dim Shared TileName(1000, 3) As String
 
 TileName(0, 0) = "Ground Air" 'Name of the tile
@@ -93,6 +94,9 @@ TileIndexData(6, 2) = 1 'blocks shadow
 TileIndexData(6, 3) = 0 'has interior shadow
 TileIndexData(6, 4) = 25 'resistance
 TileIndexData(6, 5) = 0 'is solid
+TileIndexData(6, 7) = 1 'is container
+ContainerData(6, 0) = 18 'number of slots
+ContainerData(6, 1) = 1 'dissapears on empty
 
 
 TileName(7, 0) = "Stone Wall" 'Name of the tile
@@ -150,7 +154,22 @@ TileIndexData(10, 4) = 15 'resistance
 TileIndexData(10, 5) = 0 'is solid
 TileIndexData(10, 6) = 12 'light casts
 
-
+TileName(11, 0) = "Ground Item" 'Name of the tile
+TileName(11, 1) = "Placeholder" 'tooltip
+TileIndex(11, 0) = 1 'layer definition
+TileIndex(11, 1) = 176 'x position on tilesheet
+TileIndex(11, 2) = 0 'y position on tilesheet
+TileIndex(11, 3) = -1 'itemid
+TileIndexData(11, 0) = 0 'collision
+TileIndexData(11, 1) = 0 'casts shadow
+TileIndexData(11, 2) = 0 'blocks shadow
+TileIndexData(11, 3) = 0 'has interior shadow
+TileIndexData(11, 4) = 0 'resistance
+TileIndexData(11, 5) = 0 'is solid
+TileIndexData(11, 6) = 0 'light casts
+TileIndexData(11, 7) = 1 'is container
+ContainerData(11, 0) = 18 'number of slots
+ContainerData(11, 1) = 1 'dissapears on empty
 
 
 

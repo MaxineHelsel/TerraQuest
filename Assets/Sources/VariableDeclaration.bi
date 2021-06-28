@@ -18,6 +18,7 @@ Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
 
+                                 dim shared Container(20,9)
 
 
 Dim Shared SavedMapX As Integer64

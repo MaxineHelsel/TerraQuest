@@ -1,3 +1,4 @@
+
 Sub SAVESETTINGS
 
     Open "Assets\SaveData\Settings.cdf" As #1
@@ -54,25 +55,33 @@ Sub LOADWORLD
     Get #1, 11, SpawnMapX
     Get #1, 12, SpawnMapY
     Close #1
-    Open "Assets\Worlds\" + WorldName + "\Inventory.cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
+    i = 0
+    ii = 0
+    iii = 0
+
     While i < 4
-        '   Get #1, total, Inventory(i, ii, iii)
+        Get #1, total, Inventory(i, ii, iii)
         iii = iii + 1
         If iii > 9 Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
         total = total + 1
     Wend
-    Cls
-    Print total
-    Display
-    Sleep
+    Get #1, total, GameMode: total = total + 1
+    Get #1, total, Player.facing: total = total + 1
+    Get #1, total, Player.level: total = total + 1
+    Get #1, total, Player.health: total = total + 1
+    Get #1, total, Player.points: total = total + 1
+    Get #1, total, Player.experience: total = total + 1
+    Get #1, total, Player.gold: total = total + 1
+    Close #1
 
     Player.x = SavePointX
     Player.y = SavePointY
 
     'GET #1, 4, map.protected
-    Close #1
+
     LOADMAP (SavedMap)
 End Sub
 
@@ -157,6 +166,7 @@ Sub SAVEMAP
     If DirExists("Assets\Worlds\" + WorldName) = 0 Then
         MkDir "Assets\Worlds\" + WorldName: new = 1
         MkDir "Assets\Worlds\" + WorldName + "\Maps"
+                MkDir "Assets\Worlds\" + WorldName + "\Containers"
     End If
 
 
@@ -181,22 +191,27 @@ Sub SAVEMAP
     Put #1, 11, SpawnMapX
     Put #1, 12, SpawnMapY
     Close #1
-    Open "Assets\Worlds\" + WorldName + "\Inventory.cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
+    i = 0
+    ii = 0
+    iii = 0
+
     While i < 4
-        '    Put #1, total, Inventory(i, ii, iii)
+        Put #1, total, Inventory(i, ii, iii)
         iii = iii + 1
         If iii > 9 Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
         total = total + 1
     Wend
-    Cls
-    Print total
-    Display
-    Sleep
     If TimeMode = 1 Then GameTime = GameTime - 43200
-
-
+    Put #1, total, GameMode: total = total + 1
+    Put #1, total, Player.facing: total = total + 1
+    Put #1, total, Player.level: total = total + 1
+    Put #1, total, Player.health: total = total + 1
+    Put #1, total, Player.points: total = total + 1
+    Put #1, total, Player.experience: total = total + 1
+    Put #1, total, Player.gold: total = total + 1
 
     Close #1
     iii = 1
@@ -253,5 +268,7 @@ Sub SAVEMAP
 
     badpw:
 End Sub
+
+
 
 

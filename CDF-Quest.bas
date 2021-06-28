@@ -4,7 +4,7 @@ On Error GoTo ERRORHANDLER
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
-DisplayOrder GLRender , Hardware , Software
+DisplayOrder Hardware , Software
 Title "CDF-Quest"
 
 'todo make the number of attributes a constant
@@ -43,6 +43,7 @@ GoTo game
 Error 102
 
 ERRORHANDLER: ErrorHandler
+DisplayOrder GLRender , Hardware , Software
 game:
 
 Do
@@ -64,8 +65,11 @@ Do
     CurrentTick = CurrentTick + Settings.TickRate
     If Flag.ScreenRefreshSkip = 0 Then Display
     Flag.ScreenRefreshSkip = 0
-    If Flag.OpenCommand = 1 Then Flag.OpenCommand = 2
-
+    If Flag.OpenCommand = 1 Then
+        DisplayOrder Hardware , Software
+        Flag.OpenCommand = 2
+    End If
+    If Flag.OpenCommand = 0 Then DisplayOrder GLRender , Hardware , Software
     Cls
 Loop
 
@@ -100,25 +104,42 @@ Sub PickUpItem (ItemID)
     Alert 0, "Could not pick up item, Inventory full."
     PickedUp:
 End Sub
-
-Sub UseItem (Slot)
-    Dim FacingX As Integer
-    Dim FacingY As Integer
+Function FacingX
     Select Case Player.facing
         Case 0
             FacingX = Int((Player.x + 8) / 16) + 1
-            FacingY = Int((Player.y + 8 - 16) / 16) + 1
+
         Case 1
             FacingX = Int((Player.x + 8) / 16) + 1
-            FacingY = Int((Player.y + 8 + 16) / 16) + 1
+
         Case 2
             FacingX = Int((Player.x + 8 - 16) / 16) + 1
-            FacingY = Int((Player.y + 8) / 16) + 1
+
         Case 3
             FacingX = Int((Player.x + 8 + 16) / 16) + 1
+
+    End Select
+
+End Function
+
+Function FacingY
+    Select Case Player.facing
+        Case 0
+
+            FacingY = Int((Player.y + 8 - 16) / 16) + 1
+        Case 1
+
+            FacingY = Int((Player.y + 8 + 16) / 16) + 1
+        Case 2
+
+            FacingY = Int((Player.y + 8) / 16) + 1
+        Case 3
+
             FacingY = Int((Player.y + 8) / 16) + 1
     End Select
 
+End Function
+Sub UseItem (Slot)
     Select Case Inventory(0, Slot, 0)
         Case 0 'Block placing
             Select Case Inventory(0, Slot, 4)
@@ -292,9 +313,9 @@ End Sub
 Sub Alert (img, message As String)
     Static timeout
     timeout = timeout + Settings.TickRate
-    Locate 20, 0
+    Locate 20, 1
     ENDPRINT message
-    Alert img, message
+    If timeout < 60 * 5 Then Alert img, message Else timeout = 0
 End Sub
 
 Sub INTER
@@ -395,6 +416,28 @@ Sub HUD
 
         'Inventory Display
         If Flag.InventoryOpen = 1 Then
+            If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
+                OpenContainer SavedMapX, SavedMapY, FacingX, FacingY
+                hbpos = 0
+                invrow = 0
+                For i = 0 To Container(18, 0)
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (Container(i, 1), Container(i, 2))-(Container(i, 1) + 15, Container(i, 2) + 15)
+                    If Inventory(invrow + 1, hbpos, 7) > 1 Then
+                        Color RGB(0, 0, 0)
+                        For i = 0 To 2
+                            For ii = 0 To 2
+                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + i - 1, (480 - 16 + adjusty) - (adjustspace * invrow + 1) - invgap + ii - 1), Str$(Inventory(invrow + 1, hbpos, 7))
+                            Next
+                        Next
+                        Color RGB(255, 255, 255)
+                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * invrow + 1) - invgap), Str$(Inventory(invrow + 1, hbpos, 7))
+                    End If
+
+                    hbpos = hbpos + 1
+                    If hbpos > 5 Then invrow = invrow + 1: hbpos = 0
+                Next
+            End If
             For invrow = 0 To 2
                 For hbpos = 0 To 5
 
@@ -554,26 +597,6 @@ Sub DEV
         Dim databit As Byte
         Dim i, ii As Byte
         Static RenderMode As Byte
-        Dim FacingX As Integer
-        Dim FacingY As Integer
-
-
-        Select Case Player.facing
-            Case 0
-                FacingX = Int((Player.x + 8) / 16) + 1
-                FacingY = Int((Player.y + 8 - 16) / 16) + 1
-            Case 1
-                FacingX = Int((Player.x + 8) / 16) + 1
-                FacingY = Int((Player.y + 8 + 16) / 16) + 1
-            Case 2
-                FacingX = Int((Player.x + 8 - 16) / 16) + 1
-                FacingY = Int((Player.y + 8) / 16) + 1
-            Case 3
-                FacingX = Int((Player.x + 8 + 16) / 16) + 1
-                FacingY = Int((Player.y + 8) / 16) + 1
-        End Select
-
-
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
         Print
@@ -763,21 +786,6 @@ End Sub
 
 
 
-Sub _GL
-    If Flag.RenderOverride <> 0 Then Exit Sub
-    OpenGLFPS
-End Sub
-Sub OpenGLFPS
-    Static ps As Byte
-    Static cs As Byte
-    Static frame As Integer
-    Static frps As Integer
-
-    ps = cs
-    cs = Val(Mid$(Time$, 7, 2))
-    If cs = ps Then frame = frame + 1 Else frps = frame: frame = 0
-    OGLFPS = frps + 1
-End Sub
 
 Sub INITIALIZE
 
@@ -830,10 +838,6 @@ End Sub
 
 
 
-
-
-
-
 Sub NewWorld
     Dim i, ii, iii
     Cls
@@ -846,6 +850,7 @@ Sub NewWorld
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
+    SAVEMAP
     GenerateMap
     SAVEMAP
     LOADWORLD
@@ -862,18 +867,77 @@ Sub GenerateMap
             CeilingTile(ii, i) = 1
             TileData(ii, i, 6) = 255
             If Ceil(Rnd * 10) = 5 Then WallTile(ii, i) = 5
+            If Ceil(Rnd * 100) = 50 Then
+                WallTile(ii, i) = 11
+                NewContainer SavedMapX, SavedMapY, ii, i
+                OpenContainer SavedMapX, SavedMapY, ii, i
+                For iii = 0 To 9
+                    Container(0, iii) = ItemIndex(19, iii)
+                Next
+                Container(0, 7) = Ceil(Rnd * 3)
+
+
+            End If
             UpdateTile ii, i
         Next
     Next
 End Sub
 
-Sub fuck
-    '     int
-    '    cint
-    '   ceil
-
+Sub NewContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim containertype
+    containertype = WallTile(Tilex, Tiley)
+    empty = -1
+    total = 1
+    If DirExists("Assets\Worlds\" + WorldName + "\Containers") = 0 Then MkDir "Assets\Worlds\" + WorldName + "\Containers"
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Put #1, total, ContainerData(containertype, 0): total = total + 1
+    Put #1, total, ContainerData(containertype, 1): total = total + 1
+    For i = 0 To ContainerData(containertype, 0)
+        For ii = 0 To 9
+            Put #1, total, empty: total = total + 1
+        Next
+    Next
+    Close #1
 End Sub
 
+Sub OpenContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim ContainerSize
+    Dim ContainerBreak
+    empty = -1
+    total = 1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Get #1, total, Container(18, 0): total = total + 1
+    Get #1, total, Container(19, 0): total = total + 1
+    For i = 0 To ContainerSize
+        For ii = 0 To 9
+            Get #1, total, Container(i, ii): total = total + 1
+        Next
+    Next
+    Close #1
+End Sub
+
+Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim ContainerSize
+    Dim ContainerBreak
+    empty = -1
+    total = 1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Put #1, total, Container(18, 0): total = total + 1
+    Put #1, total, Container(19, 0): total = total + 1
+    For i = 0 To ContainerSize
+        For ii = 0 To 9
+            Put #1, total, Container(i, ii): total = total + 1
+        Next
+    Next
+    Close #1
+
+End Sub
 
 
 '$include: 'Assets\Sources\InventoryManagement.bm'
