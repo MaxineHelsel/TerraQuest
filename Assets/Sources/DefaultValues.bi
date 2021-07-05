@@ -2,7 +2,7 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "CDF-Quest"
-Game.Buildinfo = "Creative Test"
+Game.Buildinfo = "Survival Test"
 Game.Version = "Alpha Version 20"
 Game.Designation = "Edge"
 
@@ -21,11 +21,11 @@ Sounds.error = "Assets\Sounds\error.wav"
 
 'Debug values that are only set here for testing purposes
 Player.health = 8
-GameMode = 1
-Flag.DebugMode = 1
+GameMode = 2
+Flag.DebugMode =0
 Flag.NoClip = 0
 GlobalLightLevel = 12
-flag.renderoverride=1
+flag.renderoverride=0
 defaultrendermode=0
       Dim ii, iii, iiii
 For ii = 0 To 3

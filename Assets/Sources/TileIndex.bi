@@ -95,7 +95,7 @@ TileIndexData(6, 3) = 0 'has interior shadow
 TileIndexData(6, 4) = 25 'resistance
 TileIndexData(6, 5) = 0 'is solid
 TileIndexData(6, 7) = 1 'is container
-ContainerData(6, 0) = 18 'number of slots
+ContainerData(6, 0) = 11 'number of slots  -1
 ContainerData(6, 1) = 1 'dissapears on empty
 
 
@@ -168,7 +168,7 @@ TileIndexData(11, 4) = 0 'resistance
 TileIndexData(11, 5) = 0 'is solid
 TileIndexData(11, 6) = 0 'light casts
 TileIndexData(11, 7) = 1 'is container
-ContainerData(11, 0) = 18 'number of slots
+ContainerData(11, 0) = 0 'number of slots -1
 ContainerData(11, 1) = 1 'dissapears on empty
 
 

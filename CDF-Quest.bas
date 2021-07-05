@@ -1,6 +1,6 @@
 $NoPrefix
 Option Explicit
-On Error GoTo ERRORHANDLER
+'On Error GoTo ERRORHANDLE
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
@@ -42,7 +42,7 @@ GoTo game
 
 Error 102
 
-ERRORHANDLER: ErrorHandler
+ERRORHANDLE: ErrorHandler
 DisplayOrder GLRender , Hardware , Software
 game:
 
@@ -79,6 +79,7 @@ Error 102
 
 
 Sub PickUpItem (ItemID)
+    If ItemID = -1 Then Exit Sub
     Dim i, ii, iii
     For i = 0 To 3
         For ii = 0 To 5
@@ -353,7 +354,7 @@ End Sub
 
 Sub HUD
     If Flag.HudDisplay = 0 Then
-        Dim i, ii
+        Dim i, ii, iii
         Dim tmpheal As Byte
         Dim token As Byte
         Dim hboffset As Byte
@@ -372,6 +373,12 @@ Sub HUD
         Static hbtimeout As Integer64
         Static adjustspace, adjustx, adjusty, invgap
         Static CursorMode As Byte
+        Static ContainerOpened As Byte
+        Static ContainerParams(4) As Single
+        Static ActiveCursor As Byte
+        Static ContainerItem As Byte
+        Static SwapInitiated As Byte
+        Static ContainerSelected As Byte
         adjustx = 5
         adjusty = -45
         adjustspace = 68
@@ -416,27 +423,66 @@ Sub HUD
 
         'Inventory Display
         If Flag.InventoryOpen = 1 Then
+            If ContainerOpened = 1 Then
+                If ContainerParams(0) <> SavedMapX Or ContainerParams(1) <> SavedMapY Or ContainerParams(2) <> FacingX Or ContainerParams(3) <> FacingY Then
+                    'make check for if container is empty, and if it is set to delete on empty, then if it is, delete it
+                    CloseContainer ContainerParams(0), ContainerParams(1), ContainerParams(2), ContainerParams(3)
+                    ContainerOpened = 0
+                End If
+            End If
             If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
-                OpenContainer SavedMapX, SavedMapY, FacingX, FacingY
+                If ContainerOpened = 0 Then
+                    OpenContainer SavedMapX, SavedMapY, FacingX, FacingY
+                    ContainerParams(0) = SavedMapX
+                    ContainerParams(1) = SavedMapY
+                    ContainerParams(2) = FacingX
+                    ContainerParams(3) = FacingY
+                    ContainerOpened = 1
+                End If
                 hbpos = 0
                 invrow = 0
                 For i = 0 To Container(18, 0)
-                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
-                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (Container(i, 1), Container(i, 2))-(Container(i, 1) + 15, Container(i, 2) + 15)
-                    If Inventory(invrow + 1, hbpos, 7) > 1 Then
+                    'background
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (0, 32)-(31, 63)
+                    'cursor
+                    If ActiveCursor = 1 Then
+                        Select Case CursorMode
+                            Case 0
+                                If invrow = Int(ContainerItem / 6) And hbpos = ContainerItem Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                            Case 1
+                                If SwapInitiated = 1 Then
+                                    If invrow = Int(ContainerSelected / 6) And hbpos = ContainerSelected Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                                End If
+                                If invrow = Int(ContainerItem / 6) And hbpos = ContainerItem Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
+
+                        End Select
+                    End If
+                    If ActiveCursor = 0 Then
+                        If CursorMode = 1 Then
+                            If SwapInitiated = 1 Then
+                                If invrow = Int(ContainerSelected / 6) And hbpos = ContainerSelected Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                            End If
+                        End If
+                    End If
+                    'item image
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.ItemSheet, , (Container(i, 1), Container(i, 2))-(Container(i, 1) + 15, Container(i, 2) + 15)
+                    'item quanity
+                    If Container(i, 7) > 1 Then
                         Color RGB(0, 0, 0)
-                        For i = 0 To 2
+                        For iii = 0 To 2
                             For ii = 0 To 2
-                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + i - 1, (480 - 16 + adjusty) - (adjustspace * invrow + 1) - invgap + ii - 1), Str$(Inventory(invrow + 1, hbpos, 7))
+                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + iii - 1, (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap + ii - 1), Str$(Container(i, 7))
                             Next
                         Next
                         Color RGB(255, 255, 255)
-                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * invrow + 1) - invgap), Str$(Inventory(invrow + 1, hbpos, 7))
+                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap), Str$(Container(i, 7))
                     End If
 
                     hbpos = hbpos + 1
                     If hbpos > 5 Then invrow = invrow + 1: hbpos = 0
                 Next
+            Else
+
             End If
             For invrow = 0 To 2
                 For hbpos = 0 To 5
@@ -445,14 +491,24 @@ Sub HUD
                     PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
 
                     'place cursor
-                    Select Case CursorMode
-                        Case 0
-                            If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
-                        Case 1
-                            If invrow = ItemSelectedY And hbpos = ItemSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
-                            If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
-                    End Select
-
+                    If ActiveCursor = 0 Then
+                        Select Case CursorMode
+                            Case 0
+                                If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                            Case 1
+                                If SwapInitiated = 0 Then
+                                    If invrow = ItemSelectedY And hbpos = ItemSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                                End If
+                                If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
+                        End Select
+                    End If
+                    If ActiveCursor = 1 Then
+                        If CursorMode = 1 Then
+                            If SwapInitiated = 0 Then
+                                If invrow = ItemSelectedY And hbpos = ItemSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                            End If
+                        End If
+                    End If
                     'display inventory contents
                     Select Case GameMode
                         Case 1
@@ -474,65 +530,126 @@ Sub HUD
             Next
 
             Select Case KeyPressed
-
-                Case 92
-                    If Inventory(ItemSelectY + 1, ItemSelectX, 7) > 1 Then
-                        NewStack Inventory(ItemSelectY + 1, ItemSelectX, 9), Int(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
-                        Inventory(ItemSelectY + 1, ItemSelectX, 7) = Ceil(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
-                    End If
-                Case 13
-                    Select Case CursorMode
-                        Case 0
-                            CursorMode = 1
-                            ItemSelectedX = ItemSelectX
-                            ItemSelectedY = ItemSelectY
-                            Exit Select
-                        Case 1
-                            CursorMode = 0
-                            If ItemSelectX = ItemSelectedX And ItemSelectY = ItemSelectedY Then Exit Select
-                            If Inventory(ItemSelectY + 1, ItemSelectX, 9) = Inventory(ItemSelectedY + 1, ItemSelectedX, 9) Then
-                                Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) + Inventory(ItemSelectedY + 1, ItemSelectedX, 7)
-                                If Inventory(ItemSelectY + 1, ItemSelectX, 7) > Inventory(ItemSelectY + 1, ItemSelectX, 8) Then
-                                    Inventory(ItemSelectedY + 1, ItemSelectedX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) - Inventory(ItemSelectY + 1, ItemSelectX, 8)
-                                    Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 8)
-                                Else
-                                    EmptySlot ItemSelectedX, ItemSelectedY + 1
-                                End If
-                            Else
-                                InvSwap ItemSelectedX, GameMode - 1, ItemSelectX, ItemSelectY, ItemSelectedY
-                            End If
-                            Exit Select
-                    End Select
-
-
-                Case 49
-                    InvSwap 0, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
-                Case 50
-                    InvSwap 1, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
-                Case 51
-                    InvSwap 2, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
-                Case 52
-                    InvSwap 3, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
-                Case 53
-                    InvSwap 4, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
-                Case 54
-                    InvSwap 5, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
-                Case 18432
-                    ItemSelectY = ItemSelectY + 1
-                Case 20480
-                    ItemSelectY = ItemSelectY - 1
-                Case 19200
-                    ItemSelectX = ItemSelectX - 1
-                Case 19712
-                    ItemSelectX = ItemSelectX + 1
+                Case 9
+                    ActiveCursor = ActiveCursor + 1
+                    If ActiveCursor > 1 Then ActiveCursor = 0
 
             End Select
+            If ActiveCursor = 0 Then
+                Select Case KeyPressed
+                    Case 92
+                        If Inventory(ItemSelectY + 1, ItemSelectX, 7) > 1 Then
+                            NewStack Inventory(ItemSelectY + 1, ItemSelectX, 9), Int(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
+                            Inventory(ItemSelectY + 1, ItemSelectX, 7) = Ceil(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
+                        End If
+                    Case 13
+                        Select Case CursorMode
+                            Case 0
+                                CursorMode = 1
+                                ItemSelectedX = ItemSelectX
+                                ItemSelectedY = ItemSelectY
+                                SwapInitiated = 0
+                                Exit Select
+                            Case 1
+                                CursorMode = 0
+                                If SwapInitiated = 0 Then
+                                    If ItemSelectX = ItemSelectedX And ItemSelectY = ItemSelectedY Then Exit Select
+                                    If Inventory(ItemSelectY + 1, ItemSelectX, 9) = Inventory(ItemSelectedY + 1, ItemSelectedX, 9) Then
+                                        Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) + Inventory(ItemSelectedY + 1, ItemSelectedX, 7)
+                                        If Inventory(ItemSelectY + 1, ItemSelectX, 7) > Inventory(ItemSelectY + 1, ItemSelectX, 8) Then
+                                            Inventory(ItemSelectedY + 1, ItemSelectedX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) - Inventory(ItemSelectY + 1, ItemSelectX, 8)
+                                            Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 8)
+                                        Else
+                                            EmptySlot ItemSelectedX, ItemSelectedY + 1
+                                        End If
+                                    Else
+                                        InvSwap ItemSelectedX, GameMode - 1, ItemSelectX, ItemSelectY, ItemSelectedY
+                                    End If
+                                    Exit Select
+                                End If
+                                If SwapInitiated = 1 Then
 
-            If ItemSelectX > 5 Then ItemSelectX = 0
-            If ItemSelectX < 0 Then ItemSelectX = 5
-            If ItemSelectY > 2 Then ItemSelectY = 0
-            If ItemSelectY < 0 Then ItemSelectY = 2
+                                    ConSwap ContainerSelected, ItemSelectX, ItemSelectY + 1, 1
+                                End If
 
+                        End Select
+                    Case 49
+                        InvSwap 0, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 50
+                        InvSwap 1, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 51
+                        InvSwap 2, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 52
+                        InvSwap 3, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 53
+                        InvSwap 4, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 54
+                        InvSwap 5, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 18432
+                        ItemSelectY = ItemSelectY + 1
+                    Case 20480
+                        ItemSelectY = ItemSelectY - 1
+                    Case 19200
+                        ItemSelectX = ItemSelectX - 1
+                    Case 19712
+                        ItemSelectX = ItemSelectX + 1
+
+                End Select
+
+                If ItemSelectX > 5 Then ItemSelectX = 0
+                If ItemSelectX < 0 Then ItemSelectX = 5
+                If ItemSelectY > 2 Then ItemSelectY = 0
+                If ItemSelectY < 0 Then ItemSelectY = 2
+            End If
+            If ActiveCursor = 1 Then
+                Select Case KeyPressed
+                    Case 92
+                        'alert cannot split in container
+                    Case 13
+                        Select Case CursorMode
+                            Case 0
+                                CursorMode = 1
+                                ContainerSelected = ContainerItem
+                                SwapInitiated = 1
+                                Exit Select
+
+                            Case 1
+                                CursorMode = 0
+                                If SwapInitiated = 1 Then
+                                    If ContainerItem = ContainerSelected Then Exit Select
+                                    If Container(ContainerItem, 9) = Container(ContainerSelected, 9) Then
+                                        Container(ContainerItem, 7) = Container(ContainerItem, 7) + Container(ContainerSelected, 7)
+                                        If Container(ContainerItem, 7) > Container(ContainerItem, 8) Then
+                                            Container(ContainerSelected, 7) = Container(ContainerItem, 7) - Container(ContainerItem, 8)
+                                            Container(ContainerItem, 7) = Container(ContainerItem, 8)
+                                        Else
+                                            EmptyContainerSlot ContainerItem
+                                        End If
+                                    Else
+                                        ConSwap ContainerItem, ContainerSelected, 0, 0
+                                    End If
+                                End If
+                                If SwapInitiated = 0 Then
+                                    ConSwap ContainerItem, ItemSelectedX, ItemSelectedY + 1, 1
+                                End If
+                                Exit Select
+                        End Select
+                    Case 18432
+
+                        ContainerItem = ContainerItem + 6
+                    Case 20480
+
+                        ContainerItem = ContainerItem - 6
+                    Case 19200
+                        ContainerItem = ContainerItem - 1
+                    Case 19712
+                        ContainerItem = ContainerItem + 1
+
+                End Select
+                If ContainerItem < 0 Then ContainerItem = Container(18, 0)
+                If ContainerItem > Container(18, 0) Then ContainerItem = 0
+
+            End If
         End If
 
         If Flag.InventoryOpen = 0 Then
@@ -583,6 +700,26 @@ Sub HUD
 
 End Sub
 
+Sub ConSwap (ContainerItem, ContainerSelected, InventoryY, Mode)
+    'Dim Shared Inventory(3, 5,9) As Integer
+    'dim shared CreativeInventory(2,5,9,1)
+    Dim i
+    For i = 0 To 9
+        Select Case Mode
+            Case 0
+                Swap Container(ContainerItem, i), Container(ContainerSelected, i)
+            Case 1
+                Swap Container(ContainerItem, i), Inventory(InventoryY, ContainerSelected, i)
+        End Select
+    Next
+End Sub
+
+Sub EmptyContainerSlot (slot)
+    Dim i
+    For i = 0 To 9
+        Container(slot, i) = -1
+    Next
+End Sub
 
 
 
@@ -875,7 +1012,7 @@ Sub GenerateMap
                     Container(0, iii) = ItemIndex(19, iii)
                 Next
                 Container(0, 7) = Ceil(Rnd * 3)
-
+                CloseContainer SavedMapX, SavedMapY, ii, i
 
             End If
             UpdateTile ii, i
@@ -938,6 +1075,140 @@ Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
     Close #1
 
 End Sub
+
+
+Sub ErrorHandler
+    AutoDisplay
+    Cls
+    PLAYSOUND Sounds.error
+    Delay 0.5
+    KeyClear
+    Locate 1, 1
+    CENTERPRINT "CDF ERROR HANDLER"
+    Print "Error Code:"; Err
+    Locate 2, 1
+    ENDPRINT "Error Line:" + Str$(ErrorLine)
+    Print "--------------------------------------------------------------------------------"
+    Print
+    '       PRINT "--------------------------------------------------------------------------------"
+    Select Case Err
+        Case 100
+            Print "Assets folder is incomplete, this error can be triggered by one or more of the"
+            Print "following conditions:"
+            Print
+            Print
+            Print "     The assets folder is missing"
+            Print
+            Print "     Sub-directories in the Assets folder are missing"
+            Print
+            Print "     The contents of assets, or the directory itself is corrupted"
+            Print
+            Print "     You do not have proper permissions to access the assets directory"
+            Print
+            Print
+            Print "Make sure the entireity of the assets folder is present and accessible to your"
+            Print "user account and, if necessary, redownload the assets folder."
+            Print
+            Print "The assets folder, and its contents are necessary for the game to load, as it"
+            Print "contains all sprite and texture files, sounds and music, user saved data, and"
+            Print "world files. Without these, the game will not play correctly. It is advised to"
+            Print "not continue."
+            CONTPROMPT
+
+        Case 101
+            Print "This is a legacy error code, and should never be triggered in game, if it has"
+            Print "been triggered, not due to the /error command, please contact the developer"
+            CONTPROMPT
+
+        Case 102
+            Print "Invalid Code Position, This error occurs when the program flow enters an area"
+            Print "that it should not be, This is most likely a programming issue, and not an end"
+            Print "user issue."
+            Print ""
+            Print "There is no user solution to this issue, please file a bug report to the"
+            Print "developers, including the line number and what you were doing when it occured."
+            CONTPROMPT
+
+        Case 103
+            Print "This world was not made for this version of "; Game.Title; ". This means one of"
+            Print "the following cases is true:"
+            Print
+            Print
+            Print "     You are attempting to load an out of date world"
+            Print
+            Print "     You are attempting to load a world designed for a newer version of"
+            Print "     "; Game.Title
+            Print
+            Print "     Your world manifest is corrupted"
+            Print
+            Print
+            Print "Double check the world version and game version."
+            Print "World: ("; mapversion; ") Game: ("; Game.Version; ")"
+            Print
+            Print "If you are certain that this is a mistake, you may try to update the manifest"
+            Print "here. Note that this does not update old worlds, just broken manifest files"
+            Print "Otherwise you can try to load a different world. "; Game.Title; ""
+            Print "does not support loading out of version worlds."
+            Print
+            Print
+            CENTERPRINT "(U)pdate manifest, (R)eturn to existing map, (Q)uit to desktop."
+            Do
+                If KeyDown(113) Then System
+                If KeyDown(114) Then Exit Do
+                If KeyDown(117) Then
+                    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+                    Put #1, 3, Game.Version
+                    Close #1
+
+                    Exit Do
+
+                End If
+            Loop
+        Case 2
+            Print "Syntax error, READ attempted to read a number but could not parse the next"
+            Print "DATA item."
+            Print
+            CONTPROMPT
+        Case 3
+            Print "RETURN without GOSUB, The RETURN statement was encounted without first"
+            Print " executing a corresponding GOSUB."
+            Print
+            CONTPROMPT
+        Case 4
+            Print "Out of DATA, The READ statement has read past the end of a DATA block."
+            Print " Use RESTORE to change the current data item if necessary."
+            Print
+            CONTPROMPT
+
+        Case 9
+            Print "Subscript out of range, this error occurs when an array exceeds its bounds"
+            Print "This is most likely a programming error, please let the developer know."
+            Print
+            CONTPROMPT
+
+
+        Case Else
+            Print "Unrecognized error, contact developers"
+            CONTPROMPT
+
+    End Select
+
+    KeyClear
+    Cls
+    Resume Next
+End Sub
+
+Sub CONTPROMPT
+    Print
+    Print
+
+    CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop"
+    Do
+        If KeyDown(113) Then System
+        If KeyDown(105) Then Exit Do
+    Loop
+End Sub
+
 
 
 '$include: 'Assets\Sources\InventoryManagement.bm'
