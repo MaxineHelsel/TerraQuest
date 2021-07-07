@@ -38,6 +38,18 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 # ChangeLog
 
+## Alpha Version 20
+
+### Containers
+
+Containers allow you to store items outside of your inventory, such as in a chest. Items on the ground such as fallen wood will be in a special ground item container that dissapears when empty
+
+### New Items
+
+- Ground item and Chest have functionality now
+
+- Raw wood, a crafting ingredient (crafting does not exist yet
+
 ## Alpha Version 19
 
 ### Better Inventory Management
@@ -58,7 +70,7 @@ You can now stack certain items up to 100 in a stack
 
 ### Day/Night Cycle
 
-The game will now cycle between day and night, 1 full day / night cycle is 24 minutes. this cycle is saved witht the map in the manifest file
+The game will now cycle between day and night, 1 full day / night cycle is 24 minutes. this cycle is saved with the map in the manifest file
 
 ### Infinate Worlds 
 
