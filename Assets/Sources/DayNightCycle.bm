@@ -1,0 +1,20 @@
+Sub DayLightCycle
+    '86400
+    GameTime = GameTime + Settings.TickRate
+    If GameTime > 43200 Then GameTime = GameTime - 43200: TimeMode = TimeMode + 1
+    If TimeMode > 1 Then TimeMode = 0
+
+    Select Case TimeMode
+        Case 0
+            GlobalLightLevel = 12
+            If GameTime > 38200 Then
+                GlobalLightLevel = 12 - (((GameTime - 38200) / 1000)) * 2
+            End If
+        Case 1
+            GlobalLightLevel = 2
+            If GameTime > 38200 Then
+                GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
+            End If
+    End Select
+End Sub
+ 

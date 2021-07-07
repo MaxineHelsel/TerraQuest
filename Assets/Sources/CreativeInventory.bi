@@ -13,6 +13,11 @@ For i = 0 To 9
     CreativeInventory(1, 4, i, 0) = ItemIndex(10, i)
     CreativeInventory(1, 5, i, 0) = ItemIndex(11, i)
     CreativeInventory(2, 0, i, 0) = ItemIndex(12, i)
+    CreativeInventory(2, 1, i, 0) = ItemIndex(15, i)
+    CreativeInventory(2, 2, i, 0) = ItemIndex(16, i)
+    CreativeInventory(2, 3, i, 0) = ItemIndex(17, i)
+    CreativeInventory(2, 4, i, 0) = ItemIndex(18, i)
+    CreativeInventory(2, 5, i, 0) = ItemIndex(19, i)
 Next
 
  

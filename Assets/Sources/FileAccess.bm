@@ -1,1 +1,274 @@
 
+Sub SAVESETTINGS
+
+    Open "Assets\SaveData\Settings.cdf" As #1
+    Put #1, 1, Settings.FrameRate
+    Put #1, 2, Settings.TickRate
+    Close #1
+
+End Sub
+
+
+
+
+Sub LOADSETTINGS
+
+    Open "Assets\SaveData\Settings.cdf" As #1
+    Get #1, 1, Settings.FrameRate
+    Get #1, 2, Settings.TickRate
+    Close #1
+
+End Sub
+
+Function SavedMap$
+    SavedMap = Str$(SavedMapX) + Str$(SavedMapY)
+End Function
+
+Function SpawnMap$
+    SpawnMap = Str$(SpawnMapX) + Str$(SpawnMapY)
+End Function
+
+Sub LOADWORLD
+    Dim defaultmap As String
+    Dim As Byte i, ii
+    Dim As Integer iii
+    Dim total
+    prevfolder = map.foldername
+
+
+    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+
+    Get #1, 1, GameTime
+
+    Get #1, 3, mapversion
+    If mapversion <> Game.Version Then
+        Close #1
+        Error 103
+    End If
+
+    Get #1, 5, SpawnPointX
+    Get #1, 6, SpawnPointY
+    Get #1, 7, SavePointX
+    Get #1, 8, SavePointY
+    Get #1, 9, SavedMapX
+    Get #1, 10, SavedMapY
+    Get #1, 11, SpawnMapX
+    Get #1, 12, SpawnMapY
+    Close #1
+    Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
+    total = 1
+    i = 0
+    ii = 0
+    iii = 0
+
+    While i < 4
+        Get #1, total, Inventory(i, ii, iii)
+        iii = iii + 1
+        If iii > 9 Then iii = 0: ii = ii + 1
+        If ii > 5 Then ii = 0: i = i + 1
+        total = total + 1
+    Wend
+    Get #1, total, GameMode: total = total + 1
+    Get #1, total, Player.facing: total = total + 1
+    Get #1, total, Player.level: total = total + 1
+    Get #1, total, Player.health: total = total + 1
+    Get #1, total, Player.points: total = total + 1
+    Get #1, total, Player.experience: total = total + 1
+    Get #1, total, Player.gold: total = total + 1
+    Close #1
+
+    Player.x = SavePointX
+    Player.y = SavePointY
+
+    'GET #1, 4, map.protected
+
+    LOADMAP (SavedMap)
+End Sub
+
+
+Sub LOADMAP (file As String)
+    Dim i, ii As Byte
+    Dim iii As Integer
+    Dim iiii As Byte
+
+    iii = 1
+
+
+    'TODO add error checking to see if map file exists
+
+    'TODO make this a sub with 2 parameters, 1
+    If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, GroundTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, WallTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                Get #1, iii, CeilingTile(ii, i)
+                iii = iii + 1
+            Next
+        Next
+        Close #1
+        iii = 1
+
+
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
+        For i = 1 To 30
+            For ii = 1 To 40
+                For iiii = 0 To 9
+                    Get #1, iii, TileData(ii, i, iiii)
+                    iii = iii + 1
+                Next
+
+            Next
+        Next
+        Get #1, iii, map.name
+        Close #1
+        iii = 1
+
+    Else
+        GenerateMap
+        SAVEMAP
+    End If
+
+End Sub
+
+
+
+
+Sub SAVEMAP
+    Dim i, ii, iiii As Byte
+    Dim iii As Integer
+    Dim defaultmap As String
+    Dim temppw As String
+    Dim new As Byte
+    Dim total
+    iii = 1
+    'update this
+    If DirExists("Assets\Worlds\" + WorldName) = 0 Then
+        MkDir "Assets\Worlds\" + WorldName: new = 1
+        MkDir "Assets\Worlds\" + WorldName + "\Maps"
+                MkDir "Assets\Worlds\" + WorldName + "\Containers"
+    End If
+
+
+    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+    If new = 0 Then
+    End If
+
+
+    SavePointX = Player.x
+    SavePointY = Player.y
+    If TimeMode = 1 Then GameTime = GameTime + 43200
+    Put #1, 1, GameTime
+
+    Put #1, 3, Game.Version
+
+    Put #1, 5, SpawnPointX
+    Put #1, 6, SpawnPointY
+    Put #1, 7, SavePointX
+    Put #1, 8, SavePointY
+    Put #1, 9, SavedMapX
+    Put #1, 10, SavedMapY
+    Put #1, 11, SpawnMapX
+    Put #1, 12, SpawnMapY
+    Close #1
+    Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
+    total = 1
+    i = 0
+    ii = 0
+    iii = 0
+
+    While i < 4
+        Put #1, total, Inventory(i, ii, iii)
+        iii = iii + 1
+        If iii > 9 Then iii = 0: ii = ii + 1
+        If ii > 5 Then ii = 0: i = i + 1
+        total = total + 1
+    Wend
+    If TimeMode = 1 Then GameTime = GameTime - 43200
+    Put #1, total, GameMode: total = total + 1
+    Put #1, total, Player.facing: total = total + 1
+    Put #1, total, Player.level: total = total + 1
+    Put #1, total, Player.health: total = total + 1
+    Put #1, total, Player.points: total = total + 1
+    Put #1, total, Player.experience: total = total + 1
+    Put #1, total, Player.gold: total = total + 1
+
+    Close #1
+    iii = 1
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-0.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, GroundTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-1.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, WallTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-2.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            Put #1, iii, CeilingTile(ii, i)
+            iii = iii + 1
+        Next
+    Next
+    Close #1
+    iii = 1
+
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
+    For i = 1 To 30
+        For ii = 1 To 40
+            For iiii = 0 To 9
+                Put #1, iii, TileData(ii, i, iiii)
+                iii = iii + 1
+            Next
+        Next
+    Next
+    Put #1, iii, map.name
+    Close #1
+    iii = 1
+
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + ".cdf" As #1: Close #1
+
+
+
+
+
+    badpw:
+End Sub
+
+
+
+

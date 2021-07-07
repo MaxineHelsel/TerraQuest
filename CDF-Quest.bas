@@ -1,6 +1,6 @@
 $NoPrefix
 Option Explicit
-On Error GoTo ERRORHANDLER
+'On Error GoTo ERRORHANDLE
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
@@ -39,8 +39,11 @@ For i = 0 To 31
 Next
 SpreadLight (1)
 GoTo game
+
 Error 102
-ERRORHANDLER: ERRORHANDLER
+
+ERRORHANDLE: ErrorHandler
+DisplayOrder GLRender , Hardware , Software
 game:
 
 Do
@@ -52,8 +55,8 @@ Do
     SPSET
     SetLighting
     INTER
-    ZOOM
     HUD
+    ZOOM
     DEV
     ChangeMap
     DayLightCycle
@@ -62,8 +65,11 @@ Do
     CurrentTick = CurrentTick + Settings.TickRate
     If Flag.ScreenRefreshSkip = 0 Then Display
     Flag.ScreenRefreshSkip = 0
-    If Flag.OpenCommand = 1 Then Flag.OpenCommand = 2
-
+    If Flag.OpenCommand = 1 Then
+        DisplayOrder Hardware , Software
+        Flag.OpenCommand = 2
+    End If
+    If Flag.OpenCommand = 0 Then DisplayOrder GLRender , Hardware , Software
     Cls
 Loop
 
@@ -71,29 +77,162 @@ Loop
 
 Error 102
 
-Sub DayLightCycle
-    '86400
-    GameTime = GameTime + Settings.TickRate
-    If GameTime > 43200 Then GameTime = GameTime - 43200: TimeMode = TimeMode + 1
-    If TimeMode > 1 Then TimeMode = 0
 
-    Select Case TimeMode
+Sub PickUpItem (ItemID)
+    If ItemID = -1 Then Exit Sub
+    Dim i, ii, iii
+    For i = 0 To 3
+        For ii = 0 To 5
+            If Inventory(i, ii, 9) = ItemID Then
+                Inventory(i, ii, 7) = Inventory(i, ii, 7) + 1
+                If Inventory(i, ii, 7) > Inventory(i, ii, 8) Then Inventory(i, ii, 7) = Inventory(i, ii, 8): GoTo FullStack
+                GoTo PickedUp
+                FullStack:
+            End If
+        Next
+    Next
+    NewStack:
+    For i = 0 To 3
+        For ii = 0 To 5
+            If Inventory(i, ii, 9) = -1 Then
+                For iii = 0 To 9
+                    Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
+                Next
+                GoTo PickedUp
+            End If
+        Next
+    Next
+    Alert 0, "Could not pick up item, Inventory full."
+    PickedUp:
+End Sub
+Function FacingX
+    Select Case Player.facing
         Case 0
-            GlobalLightLevel = 12
-            If GameTime > 38200 Then
-                GlobalLightLevel = 12 - (((GameTime - 38200) / 1000)) * 2
-            End If
+            FacingX = Int((Player.x + 8) / 16) + 1
+
         Case 1
-            GlobalLightLevel = 2
-            If GameTime > 38200 Then
-                GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
-            End If
+            FacingX = Int((Player.x + 8) / 16) + 1
+
+        Case 2
+            FacingX = Int((Player.x + 8 - 16) / 16) + 1
+
+        Case 3
+            FacingX = Int((Player.x + 8 + 16) / 16) + 1
+
     End Select
+
+End Function
+
+Function FacingY
+    Select Case Player.facing
+        Case 0
+
+            FacingY = Int((Player.y + 8 - 16) / 16) + 1
+        Case 1
+
+            FacingY = Int((Player.y + 8 + 16) / 16) + 1
+        Case 2
+
+            FacingY = Int((Player.y + 8) / 16) + 1
+        Case 3
+
+            FacingY = Int((Player.y + 8) / 16) + 1
+    End Select
+
+End Function
+Sub UseItem (Slot)
+    Select Case Inventory(0, Slot, 0)
+        Case 0 'Block placing
+            Select Case Inventory(0, Slot, 4)
+                Case 0
+                    If GroundTile(FacingX, FacingY) = 0 Then
+                        GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        TileData(FacingX, FacingY, 4) = 255
+                        If GameMode <> 1 Then
+                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                        End If
+                        UpdateTile FacingX, FacingY
+                        SpreadLight (1)
+                    End If
+                Case 1
+                    If WallTile(FacingX, FacingY) = 1 Then
+                        WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
+                            NewContainer SavedMapX, SavedMapY, FacingX, FacingY
+                        End If
+                        TileData(FacingX, FacingY, 5) = 255
+                        If GameMode <> 1 Then
+                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                        End If
+                        UpdateTile FacingX, FacingY
+                        SpreadLight (1)
+                    End If
+            End Select
+        Case 1 'Tools
+            Select Case Inventory(0, Slot, 5)
+                Case 0
+                    If GroundTile(FacingX, FacingY) <> 0 Then
+                        If TileData(FacingX, FacingY, 4) <= 0 Then
+                            If GameMode <> 1 Then
+                                PickUpItem (TileIndex(GroundTile(FacingX, FacingY), 3))
+                            End If
+                            GroundTile(FacingX, FacingY) = 0
+                            TileData(FacingX, FacingY, 4) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                        TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                        If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
+                        If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
+                    End If
+                Case 1
+                    If WallTile(FacingX, FacingY) <> 1 Then
+                        If TileData(FacingX, FacingY, 5) <= 0 Then
+                            If GameMode <> 1 Then
+                                PickUpItem (TileIndex(WallTile(FacingX, FacingY), 3))
+                            End If
+                            WallTile(FacingX, FacingY) = 1
+                            TileData(FacingX, FacingY, 5) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
+                        TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                        If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
+                        If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
+                    End If
+
+            End Select
+
+    End Select
+    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
+        WallTile(FacingX, FacingY) = 1
+        UpdateTile FacingX, FacingY
+        SpreadLight (1)
+
+    End If
 End Sub
 
-Sub InventoryUI
 
+Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
+    'Dim Shared Inventory(3, 5,9) As Integer
+    'dim shared CreativeInventory(2,5,9,1)
+    Dim i
+    For i = 0 To 9
+        Select Case Mode
+            Case 0
+                Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
+            Case 1
+                Swap Inventory(ItemSelectY + 1, ItemSelectX, i), Inventory(CreativePage + 1, Slot, i)
+        End Select
+    Next
 End Sub
+
 
 Sub ChangeMap
     Static TickDelay
@@ -156,9 +295,9 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
     If TileIndexData(GroundTile(TileX, TileY), 2) = 1 Or TileIndexData(WallTile(TileX, TileY), 2) = 1 Then TileData(TileX, TileY, 2) = 1 Else TileData(TileX, TileY, 2) = 0
     If TileIndexData(GroundTile(TileX, TileY), 3) = 1 And TileIndexData(WallTile(TileX, TileY), 2) = 0 Then TileData(TileX, TileY, 3) = 1 Else TileData(TileX, TileY, 3) = 0
-    TileData(TileX, TileY, 4) = TileIndexData(GroundTile(TileX, TileY), 4)
-    TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
-    TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
+    '  TileData(TileX, TileY, 4) = TileIndexData(GroundTile(TileX, TileY), 4)
+    '  TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
+    '  TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
     TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
     For i = 1 To 30
         For ii = 1 To 40
@@ -175,111 +314,12 @@ End Sub
 
 'Next
 
-Sub SpreadLight (updates)
-    Dim i, ii
-    For i = 1 To 30
-        For ii = 1 To 40
-            LocalLightLevel(ii, i) = TileData(ii, i, 8)
-        Next
-    Next
-    SpreadLight2 (updates)
-End Sub
-Sub SpreadLight2 (updates)
-    Dim i, ii, iii, iiii
-    Static UpdateLimit
-    If updates > 0 Then
-        updates = 0
-        For i = 1 To 30
-            For ii = 1 To 40
-                iiii = 1
-                iii = 0
-                For iii = 0 To 2
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-
-                iiii = 0
-                iii = 1
-                For iiii = 0 To 2
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
-            Next
-        Next
-        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
-        If UpdateLimit > 10 Then updates = 0
-        ' Print updates, UpdateLimit
-        ' Display
-        ' Sleep
-
-        SpreadLight2 (updates)
-    Else
-        UpdateLimit = 0
-    End If
-End Sub
-
-Sub UseItem (Slot)
-    Dim FacingX As Integer
-    Dim FacingY As Integer
-    Select Case Player.facing
-        Case 0
-            FacingX = Int((Player.x + 8) / 16) + 1
-            FacingY = Int((Player.y + 8 - 16) / 16) + 1
-        Case 1
-            FacingX = Int((Player.x + 8) / 16) + 1
-            FacingY = Int((Player.y + 8 + 16) / 16) + 1
-        Case 2
-            FacingX = Int((Player.x + 8 - 16) / 16) + 1
-            FacingY = Int((Player.y + 8) / 16) + 1
-        Case 3
-            FacingX = Int((Player.x + 8 + 16) / 16) + 1
-            FacingY = Int((Player.y + 8) / 16) + 1
-    End Select
-
-    Select Case Inventory(0, Slot, 0)
-        Case 0
-            Select Case Inventory(0, Slot, 4)
-                Case 0
-                    GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
-
-                    UpdateTile FacingX, FacingY
-                    SpreadLight (1)
-                Case 1
-                    WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
-                    UpdateTile FacingX, FacingY
-                    SpreadLight (1)
-
-            End Select
-        Case 1
-            Select Case Inventory(0, Slot, 5)
-                Case 0
-                    If TileData(FacingX, FacingY, 4) <= 0 Then
-                        GroundTile(FacingX, FacingY) = 0
-                        UpdateTile FacingX, FacingY
-                        SpreadLight (1)
-                    End If
-                    TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6) + TileIndexData(GroundTile(FacingX, FacingY), 4)
-                Case 1
-                    If TileData(FacingX, FacingY, 5) <= 0 Then
-                        WallTile(FacingX, FacingY) = 1
-                        UpdateTile FacingX, FacingY
-                        SpreadLight (1)
-                    End If
-                    TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6) + TileIndexData(WallTile(FacingX, FacingY), 5)
-
-            End Select
-
-    End Select
-    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
-        WallTile(FacingX, FacingY) = 1
-        UpdateTile FacingX, FacingY
-        SpreadLight (1)
-
-    End If
+Sub Alert (img, message As String)
+    Static timeout
+    timeout = timeout + Settings.TickRate
+    Locate 20, 1
+    ENDPRINT message
+    If timeout < 60 * 5 Then Alert img, message Else timeout = 0
 End Sub
 
 Sub INTER
@@ -297,27 +337,27 @@ End Sub
 
 
 
-Sub SetLighting
-    Dim i As Byte
-    Dim ii As Byte
-    Dim TotalLightLevel
-    For i = 0 To 31
-        For ii = 0 To 41
-            If GlobalLightLevel < LocalLightLevel(ii, i) Then TotalLightLevel = LocalLightLevel(ii, i) Else TotalLightLevel = GlobalLightLevel
-            TotalLightLevel = TotalLightLevel - OverlayLightLevel
-            If TotalLightLevel > 12 Then TotalLightLevel = 12
-            If TotalLightLevel < 0 Then TotalLightLevel = 0
-
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
+Sub NewStack (ItemID, StackNumber)
+    Dim i, ii, iii
+    For i = 0 To 3
+        For ii = 0 To 5
+            If Inventory(i, ii, 9) = -1 Then
+                For iii = 0 To 9
+                    Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
+                Next
+                Inventory(i, ii, 7) = StackNumber
+                GoTo Complete
+            End If
         Next
     Next
+    Complete:
 End Sub
 
 
 
 Sub HUD
     If Flag.HudDisplay = 0 Then
-
+        Dim i, ii, iii
         Dim tmpheal As Byte
         Dim token As Byte
         Dim hboffset As Byte
@@ -331,13 +371,28 @@ Sub HUD
         Static CreativePage As Byte
         Static ItemSelectX As Byte
         Static ItemSelectY As Byte
+        Static ItemSelectedX As Byte
+        Static ItemSelectedY As Byte
         Static hbtimeout As Integer64
-
+        Static adjustspace, adjustx, adjusty, invgap
+        Static CursorMode As Byte
+        Static ContainerOpened As Byte
+        Static ContainerParams(4) As Single
+        Static ActiveCursor As Byte
+        Static ContainerItem As Byte
+        Static SwapInitiated As Byte
+        Static ContainerSelected As Byte
+        adjustx = 5
+        adjusty = -45
+        adjustspace = 68
+        invgap = 83
         invoffset = 1
         invheight = 5
         hboffset = 1
         token = 1
         hbitemsize = 2
+        If GameMode = 2 Then CreativePage = -1
+        If GameMode = 1 And CreativePage < 0 Then CreativePage = 0
 
         tmpheal = Player.health
 
@@ -352,59 +407,268 @@ Sub HUD
             token = token + 1
         Wend
 
-
         'Hotbar Display
         For hbpos = 0 To 5
             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), CameraPositionY + 68 - 16 - hboffset)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), CameraPositionY + 68 - hboffset), Texture.HudSprites, , (0, 32)-(31, 63)
             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(0, hbpos, 1), Inventory(0, hbpos, 2))-(Inventory(0, hbpos, 1) + 15, Inventory(0, hbpos, 2) + 15)
+            If Inventory(0, hbpos, 7) > 1 Then
+                Color RGB(0, 0, 0)
+                For i = 0 To 2
+                    For ii = 0 To 2
+                        PrintString ((0 + adjustx) + (adjustspace * hbpos) + i - 1, 480 - 16 + adjusty + ii - 1), Str$(Inventory(0, hbpos, 7))
+                    Next
+                Next
+                Color RGB(255, 255, 255)
+                PrintString ((0 + adjustx) + (adjustspace * hbpos), 480 - 16 + adjusty), Str$(Inventory(0, hbpos, 7))
+            End If
         Next
 
 
         'Inventory Display
         If Flag.InventoryOpen = 1 Then
+            If ContainerOpened = 1 Then
+                If ContainerParams(0) <> SavedMapX Or ContainerParams(1) <> SavedMapY Or ContainerParams(2) <> FacingX Or ContainerParams(3) <> FacingY Then
+                    'make check for if container is empty, and if it is set to delete on empty, then if it is, delete it
+                    CloseContainer ContainerParams(0), ContainerParams(1), ContainerParams(2), ContainerParams(3)
+                    ContainerOpened = 0
+                End If
+            End If
+            If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
+                If ContainerOpened = 0 Then
+                    OpenContainer SavedMapX, SavedMapY, FacingX, FacingY
+                    ContainerParams(0) = SavedMapX
+                    ContainerParams(1) = SavedMapY
+                    ContainerParams(2) = FacingX
+                    ContainerParams(3) = FacingY
+                    ContainerOpened = 1
+                End If
+                hbpos = 0
+                invrow = 0
+                Dim ContainerX
+                Dim ContainerY
+                Dim ContainerSelectedX
+                Dim ContainerSelectedY
+                ContainerX = ContainerItem
+                While ContainerX > 5
+                    ContainerX = ContainerX - 6
+                Wend
+                ContainerY = Int(ContainerItem / 6)
+
+                ContainerSelectedX = ContainerSelected
+                While ContainerSelectedX > 5
+                    ContainerSelectedX = ContainerSelectedX - 6
+                Wend
+                ContainerSelectedY = Int(ContainerSelected / 6)
+
+                For i = 0 To Container(18, 0)
+                    'background
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (0, 32)-(31, 63)
+                    'cursor
+                    If ActiveCursor = 1 Then
+                        Select Case CursorMode
+                            Case 0
+                                If invrow = ContainerY And hbpos = ContainerX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                            Case 1
+                                If SwapInitiated = 1 Then
+                                    If invrow = ContainerSelectedY And hbpos = ContainerSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                                End If
+                                If invrow = ContainerY And hbpos = ContainerX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
+
+                        End Select
+                    End If
+                    If ActiveCursor = 0 Then
+                        If CursorMode = 1 Then
+                            If SwapInitiated = 1 Then
+                                If invrow = ContainerSelectedY And hbpos = ContainerSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                            End If
+                        End If
+                    End If
+                    'item image
+                    PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.ItemSheet, , (Container(i, 1), Container(i, 2))-(Container(i, 1) + 15, Container(i, 2) + 15)
+                    'item quanity
+                    If Container(i, 7) > 1 Then
+                        Color RGB(0, 0, 0)
+                        For iii = 0 To 2
+                            For ii = 0 To 2
+                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + iii - 1, (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap + ii - 1), Str$(Container(i, 7))
+                            Next
+                        Next
+                        Color RGB(255, 255, 255)
+                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap), Str$(Container(i, 7))
+                    End If
+
+                    hbpos = hbpos + 1
+                    If hbpos > 5 Then invrow = invrow + 1: hbpos = 0
+                Next
+            Else
+
+            End If
             For invrow = 0 To 2
                 For hbpos = 0 To 5
+
+                    'place background squares
                     PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (0, 32)-(31, 63)
-                    If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+
+                    'place cursor
+                    If ActiveCursor = 0 Then
+                        Select Case CursorMode
+                            Case 0
+                                If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                            Case 1
+                                If SwapInitiated = 0 Then
+                                    If invrow = ItemSelectedY And hbpos = ItemSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                                End If
+                                If invrow = ItemSelectY And hbpos = ItemSelectX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
+                        End Select
+                    End If
+                    If ActiveCursor = 1 Then
+                        If CursorMode = 1 Then
+                            If SwapInitiated = 0 Then
+                                If invrow = ItemSelectedY And hbpos = ItemSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.HudSprites, , (32, 32)-(63, 63)
+                            End If
+                        End If
+                    End If
+                    'display inventory contents
                     Select Case GameMode
                         Case 1
                             PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (CreativeInventory(invrow, hbpos, 1, CreativePage), CreativeInventory(invrow, hbpos, 2, CreativePage))-(CreativeInventory(invrow, hbpos, 1, CreativePage) + 15, CreativeInventory(invrow, hbpos, 2, CreativePage) + 15)
                         Case 2
-                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (Inventory(1, hbpos + 1, 1), Inventory(1, hbpos + 1, 2))-(Inventory(invrow + 2, hbpos + 1, 1) + 15, Inventory(invrow + 2, hbpos + 1, 2) + 15)
+                            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, (CameraPositionY + 68 - 16 - hboffset + hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, (CameraPositionY + 68 - hboffset - hbitemsize) - (16 * (invrow + 1) + invoffset * invrow) - invheight), Texture.ItemSheet, , (Inventory(invrow + 1, hbpos, 1), Inventory(invrow + 1, hbpos, 2))-(Inventory(invrow + 1, hbpos, 1) + 15, Inventory(invrow + 1, hbpos, 2) + 15)
+                            If Inventory(invrow + 1, hbpos, 7) > 1 Then
+                                Color RGB(0, 0, 0)
+                                For i = 0 To 2
+                                    For ii = 0 To 2
+                                        PrintString ((0 + adjustx) + (adjustspace * hbpos) + i - 1, (480 - 16 + adjusty) - (adjustspace * invrow + 1) - invgap + ii - 1), Str$(Inventory(invrow + 1, hbpos, 7))
+                                    Next
+                                Next
+                                Color RGB(255, 255, 255)
+                                PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * invrow + 1) - invgap), Str$(Inventory(invrow + 1, hbpos, 7))
+                            End If
                     End Select
                 Next
             Next
 
             Select Case KeyPressed
-
-                Case 49
-                    InvSwap 0, 0, ItemSelectX, ItemSelectY, CreativePage
-                Case 50
-                    InvSwap 1, 0, ItemSelectX, ItemSelectY, CreativePage
-                Case 51
-                    InvSwap 2, 0, ItemSelectX, ItemSelectY, CreativePage
-                Case 52
-                    InvSwap 3, 0, ItemSelectX, ItemSelectY, CreativePage
-                Case 53
-                    InvSwap 4, 0, ItemSelectX, ItemSelectY, CreativePage
-                Case 54
-                    InvSwap 5, 0, ItemSelectX, ItemSelectY, CreativePage
-                Case 18432
-                    ItemSelectY = ItemSelectY + 1
-                Case 20480
-                    ItemSelectY = ItemSelectY - 1
-                Case 19200
-                    ItemSelectX = ItemSelectX - 1
-                Case 19712
-                    ItemSelectX = ItemSelectX + 1
+                Case 9
+                    ActiveCursor = ActiveCursor + 1
+                    If ActiveCursor > 1 Then ActiveCursor = 0
 
             End Select
+            If ActiveCursor = 0 Then
+                Select Case KeyPressed
+                    Case 92
+                        If Inventory(ItemSelectY + 1, ItemSelectX, 7) > 1 Then
+                            NewStack Inventory(ItemSelectY + 1, ItemSelectX, 9), Int(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
+                            Inventory(ItemSelectY + 1, ItemSelectX, 7) = Ceil(Inventory(ItemSelectY + 1, ItemSelectX, 7) / 2)
+                        End If
+                    Case 13
+                        Select Case CursorMode
+                            Case 0
+                                CursorMode = 1
+                                ItemSelectedX = ItemSelectX
+                                ItemSelectedY = ItemSelectY
+                                SwapInitiated = 0
+                                Exit Select
+                            Case 1
+                                CursorMode = 0
+                                If SwapInitiated = 0 Then
+                                    If ItemSelectX = ItemSelectedX And ItemSelectY = ItemSelectedY Then Exit Select
+                                    If Inventory(ItemSelectY + 1, ItemSelectX, 9) = Inventory(ItemSelectedY + 1, ItemSelectedX, 9) Then
+                                        Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) + Inventory(ItemSelectedY + 1, ItemSelectedX, 7)
+                                        If Inventory(ItemSelectY + 1, ItemSelectX, 7) > Inventory(ItemSelectY + 1, ItemSelectX, 8) Then
+                                            Inventory(ItemSelectedY + 1, ItemSelectedX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 7) - Inventory(ItemSelectY + 1, ItemSelectX, 8)
+                                            Inventory(ItemSelectY + 1, ItemSelectX, 7) = Inventory(ItemSelectY + 1, ItemSelectX, 8)
+                                        Else
+                                            EmptySlot ItemSelectedX, ItemSelectedY + 1
+                                        End If
+                                    Else
+                                        InvSwap ItemSelectedX, GameMode - 1, ItemSelectX, ItemSelectY, ItemSelectedY
+                                    End If
+                                    Exit Select
+                                End If
+                                If SwapInitiated = 1 Then
 
-            If ItemSelectX > 5 Then ItemSelectX = 0
-            If ItemSelectX < 0 Then ItemSelectX = 5
-            If ItemSelectY > 2 Then ItemSelectY = 0
-            If ItemSelectY < 0 Then ItemSelectY = 2
+                                    ConSwap ContainerSelected, ItemSelectX, ItemSelectY + 1, 1
+                                End If
 
+                        End Select
+                    Case 49
+                        InvSwap 0, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 50
+                        InvSwap 1, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 51
+                        InvSwap 2, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 52
+                        InvSwap 3, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 53
+                        InvSwap 4, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 54
+                        InvSwap 5, GameMode - 1, ItemSelectX, ItemSelectY, CreativePage
+                    Case 18432
+                        ItemSelectY = ItemSelectY + 1
+                    Case 20480
+                        ItemSelectY = ItemSelectY - 1
+                    Case 19200
+                        ItemSelectX = ItemSelectX - 1
+                    Case 19712
+                        ItemSelectX = ItemSelectX + 1
+
+                End Select
+
+                If ItemSelectX > 5 Then ItemSelectX = 0
+                If ItemSelectX < 0 Then ItemSelectX = 5
+                If ItemSelectY > 2 Then ItemSelectY = 0
+                If ItemSelectY < 0 Then ItemSelectY = 2
+            End If
+            If ActiveCursor = 1 Then
+                Select Case KeyPressed
+                    Case 92
+                        'alert cannot split in container
+                    Case 13
+                        Select Case CursorMode
+                            Case 0
+                                CursorMode = 1
+                                ContainerSelected = ContainerItem
+                                SwapInitiated = 1
+                                Exit Select
+
+                            Case 1
+                                CursorMode = 0
+                                If SwapInitiated = 1 Then
+                                    If ContainerItem = ContainerSelected Then Exit Select
+                                    If Container(ContainerItem, 9) = Container(ContainerSelected, 9) Then
+                                        Container(ContainerItem, 7) = Container(ContainerItem, 7) + Container(ContainerSelected, 7)
+                                        If Container(ContainerItem, 7) > Container(ContainerItem, 8) Then
+                                            Container(ContainerSelected, 7) = Container(ContainerItem, 7) - Container(ContainerItem, 8)
+                                            Container(ContainerItem, 7) = Container(ContainerItem, 8)
+                                        Else
+                                            EmptyContainerSlot ContainerItem
+                                        End If
+                                    Else
+                                        ConSwap ContainerItem, ContainerSelected, 0, 0
+                                    End If
+                                End If
+                                If SwapInitiated = 0 Then
+                                    ConSwap ContainerItem, ItemSelectedX, ItemSelectedY + 1, 1
+                                End If
+                                Exit Select
+                        End Select
+                    Case 18432
+
+                        ContainerItem = ContainerItem + 6
+                    Case 20480
+
+                        ContainerItem = ContainerItem - 6
+                    Case 19200
+                        ContainerItem = ContainerItem - 1
+                    Case 19712
+                        ContainerItem = ContainerItem + 1
+
+                End Select
+                If ContainerItem < 0 Then ContainerItem = Container(18, 0)
+                If ContainerItem > Container(18, 0) Then ContainerItem = 0
+
+            End If
         End If
 
         If Flag.InventoryOpen = 0 Then
@@ -455,17 +719,24 @@ Sub HUD
 
 End Sub
 
-Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
+Sub ConSwap (ContainerItem, ContainerSelected, InventoryY, Mode)
     'Dim Shared Inventory(3, 5,9) As Integer
     'dim shared CreativeInventory(2,5,9,1)
     Dim i
     For i = 0 To 9
         Select Case Mode
             Case 0
-                Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
+                Swap Container(ContainerItem, i), Container(ContainerSelected, i)
             Case 1
-                Swap Inventory(ItemSelectY, ItemSelectX, i), Inventory(0, Slot, i)
+                Swap Container(ContainerItem, i), Inventory(InventoryY, ContainerSelected, i)
         End Select
+    Next
+End Sub
+
+Sub EmptyContainerSlot (slot)
+    Dim i
+    For i = 0 To 9
+        Container(slot, i) = -1
     Next
 End Sub
 
@@ -482,26 +753,6 @@ Sub DEV
         Dim databit As Byte
         Dim i, ii As Byte
         Static RenderMode As Byte
-        Dim FacingX As Integer
-        Dim FacingY As Integer
-
-
-        Select Case Player.facing
-            Case 0
-                FacingX = Int((Player.x + 8) / 16) + 1
-                FacingY = Int((Player.y + 8 - 16) / 16) + 1
-            Case 1
-                FacingX = Int((Player.x + 8) / 16) + 1
-                FacingY = Int((Player.y + 8 + 16) / 16) + 1
-            Case 2
-                FacingX = Int((Player.x + 8 - 16) / 16) + 1
-                FacingY = Int((Player.y + 8) / 16) + 1
-            Case 3
-                FacingX = Int((Player.x + 8 + 16) / 16) + 1
-                FacingY = Int((Player.y + 8) / 16) + 1
-        End Select
-
-
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
         Print
@@ -514,11 +765,14 @@ Sub DEV
         If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
         Print
         ENDPRINT "Facing tile data:"
-        For i = 0 To 9
-            dummystring = dummystring + Str$(TileData(FacingX, FacingY, i))
-        Next
-        ENDPRINT dummystring
-        ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
+        If Player.x >= 0 And Player.x <= 640 - 16 And Player.y >= 0 And Player.y <= 480 - 16 Then
+
+            For i = 0 To 9
+                dummystring = dummystring + Str$(TileData(FacingX, FacingY, i))
+            Next
+            ENDPRINT dummystring
+            ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
+        End If
         Print
         ENDPRINT "Flags:"
         If Flag.StillCam = 1 Then ENDPRINT "Still Camera Enabled"
@@ -533,7 +787,8 @@ Sub DEV
         Locate 1, 1
         Print Game.Title; " ("; Game.Buildinfo; ")"
         Print
-        Print "FPS:" + Str$(FRAMEPS) + " /" + Str$(CurrentTick)
+        If RenderMode = 0 Then Print "FPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
+        If RenderMode > 0 Then Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
         Print "Current Time:"; GameTime + (TimeMode * 43200)
@@ -564,8 +819,8 @@ Sub DEV
                 Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.moving
-                Print "Contacted Tile ID:"; Player.tile; "(" + Hex$(Player.tile) + ")"
-                Print "Facing Tile ID:"; Player.tilefacing; "(" + Hex$(Player.tilefacing) + ")"
+                ' Print "Contacted Tile ID:"; Player.tile; "(" + Hex$(Player.tile) + ")"
+                ' Print "Facing Tile ID:"; Player.tilefacing; "(" + Hex$(Player.tilefacing) + ")"
                 Print Player.lastx; Player.lasty
             Case Else
                 Print "Unrecognized Tile or Entity"
@@ -645,8 +900,6 @@ Sub DEV
                     bgdraw = bgdraw + 1
                 Case "shadowcast", "sh"
                     Flag.CastShadows = Flag.CastShadows + 1
-                Case "update", "up"
-                    UPDATEMAP
 
                 Case "new"
                     NewWorld
@@ -687,64 +940,6 @@ Sub DEV
 End Sub
 
 
-Sub SetMap
-    Dim i As Byte
-    Dim ii As Byte
-    For i = 1 To 30
-        For ii = 1 To 40
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
-        Next
-    Next
-End Sub
-
-Sub CastShadow
-    If Flag.CastShadows = 0 Then
-        Dim i As Byte
-        Dim ii As Byte
-        For i = 1 To 30
-            For ii = 1 To 40
-
-                If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-                End If
-
-                If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-                End If
-
-                If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-                End If
-
-                If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-                End If
-
-                If TileData(ii, i, 3) = 1 Then
-
-                    If TileData(ii, i + 1, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-                    End If
-
-                    If TileData(ii + 1, i, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-                    End If
-
-                    If TileData(ii - 1, i, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-                    End If
-
-                    If TileData(ii, i - 1, 3) = 0 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-                    End If
-
-                End If
-            Next
-        Next
-    End If
-End Sub
 
 
 
@@ -758,7 +953,7 @@ Sub INITIALIZE
         If DirExists("Assets\Sprites\Tiles") = 0 Then Error 100
         If DirExists("Assets\Music") = 0 Then Error 100
         If DirExists("Assets\Sounds") = 0 Then Error 100
-        If DirExists("Assets\Worlds") = 0 Then Error 100
+        If DirExists("Assets\Worlds") = 0 Then MkDir "Assets\Worlds"
         If DirExists("Assets\SaveData") = 0 Then MkDir "Assets\SaveData": new = 1
     Else Error 100
     End If
@@ -797,7 +992,111 @@ Sub SwitchRender (mode As Byte)
 End Sub
 
 
-Sub ERRORHANDLER
+
+
+Sub NewWorld
+    Dim i, ii, iii
+    Cls
+    KeyClear
+    AutoDisplay
+    Input "World Name?", WorldName
+    'Input "World Seed?", WorldSeed
+    'Randomize WorldSeed
+    SavedMapX = 0
+    SavedMapY = 0
+    Player.x = 320
+    Player.y = 200
+    SAVEMAP
+    GenerateMap
+    SAVEMAP
+    LOADWORLD
+End Sub
+
+Sub GenerateMap
+    Dim i, ii, iii
+    For i = 0 To 31
+        For ii = 0 To 41
+            GroundTile(ii, i) = 2
+            TileData(ii, i, 4) = 255
+            WallTile(ii, i) = 1
+            TileData(ii, i, 5) = 255
+            CeilingTile(ii, i) = 1
+            TileData(ii, i, 6) = 255
+            If Ceil(Rnd * 10) = 5 Then WallTile(ii, i) = 5
+            If Ceil(Rnd * 100) = 50 Then
+                WallTile(ii, i) = 11
+                NewContainer SavedMapX, SavedMapY, ii, i
+                OpenContainer SavedMapX, SavedMapY, ii, i
+                For iii = 0 To 9
+                    Container(0, iii) = ItemIndex(19, iii)
+                Next
+                Container(0, 7) = Ceil(Rnd * 3)
+                CloseContainer SavedMapX, SavedMapY, ii, i
+
+            End If
+            UpdateTile ii, i
+        Next
+    Next
+End Sub
+
+Sub NewContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim containertype
+    containertype = WallTile(Tilex, Tiley)
+    empty = -1
+    total = 1
+    If DirExists("Assets\Worlds\" + WorldName + "\Containers") = 0 Then MkDir "Assets\Worlds\" + WorldName + "\Containers"
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Put #1, total, ContainerData(containertype, 0): total = total + 1
+    Put #1, total, ContainerData(containertype, 1): total = total + 1
+    For i = 0 To ContainerData(containertype, 0)
+        For ii = 0 To 9
+            Put #1, total, empty: total = total + 1
+        Next
+    Next
+    Close #1
+End Sub
+
+Sub OpenContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim ContainerSize
+    Dim ContainerBreak
+    empty = -1
+    total = 1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Get #1, total, Container(18, 0): total = total + 1
+    Get #1, total, Container(19, 0): total = total + 1
+    For i = 0 To ContainerSize
+        For ii = 0 To 9
+            Get #1, total, Container(i, ii): total = total + 1
+        Next
+    Next
+    Close #1
+End Sub
+
+Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim ContainerSize
+    Dim ContainerBreak
+    empty = -1
+    total = 1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Put #1, total, Container(18, 0): total = total + 1
+    Put #1, total, Container(19, 0): total = total + 1
+    For i = 0 To ContainerSize
+        For ii = 0 To 9
+            Put #1, total, Container(i, ii): total = total + 1
+        Next
+    Next
+    Close #1
+
+End Sub
+
+
+Sub ErrorHandler
     AutoDisplay
     Cls
     PLAYSOUND Sounds.error
@@ -884,6 +1183,27 @@ Sub ERRORHANDLER
 
                 End If
             Loop
+        Case 2
+            Print "Syntax error, READ attempted to read a number but could not parse the next"
+            Print "DATA item."
+            Print
+            CONTPROMPT
+        Case 3
+            Print "RETURN without GOSUB, The RETURN statement was encounted without first"
+            Print " executing a corresponding GOSUB."
+            Print
+            CONTPROMPT
+        Case 4
+            Print "Out of DATA, The READ statement has read past the end of a DATA block."
+            Print " Use RESTORE to change the current data item if necessary."
+            Print
+            CONTPROMPT
+
+        Case 9
+            Print "Subscript out of range, this error occurs when an array exceeds its bounds"
+            Print "This is most likely a programming error, please let the developer know."
+            Print
+            CONTPROMPT
 
 
         Case Else
@@ -910,311 +1230,9 @@ End Sub
 
 
 
-
-
-Sub SETBG
-    If bgdraw = 0 Then
-        Dim i As Byte
-        Dim ii As Byte
-        For i = 0 To 30
-            For ii = 0 To 40
-                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
-            Next
-        Next
-    End If
-End Sub
-
-
-
-
-
-
-
-Sub NewWorld
-    Dim i, ii, iii
-    Cls
-    KeyClear
-    AutoDisplay
-    Input "World Name?", WorldName
-    'Input "World Seed?", WorldSeed
-    'Randomize WorldSeed
-    SavedMapX = 0
-    SavedMapY = 0
-    Player.x = 320
-    Player.y = 200
-    GenerateMap
-    SAVEMAP
-    LOADWORLD
-End Sub
-
-Sub GenerateMap
-    Dim i, ii, iii
-    For i = 0 To 31
-        For ii = 0 To 41
-            GroundTile(ii, i) = 2
-            WallTile(ii, i) = 1
-            CeilingTile(ii, i) = 1
-            If CInt(Rnd * 10) = 5 Then WallTile(ii, i) = 5
-            UpdateTile ii, i
-        Next
-    Next
-End Sub
-
-
-Sub SAVESETTINGS
-
-    Open "Assets\SaveData\Settings.cdf" As #1
-    Put #1, 1, Settings.FrameRate
-    Put #1, 2, Settings.TickRate
-    Close #1
-
-End Sub
-
-
-
-
-Sub LOADSETTINGS
-
-    Open "Assets\SaveData\Settings.cdf" As #1
-    Get #1, 1, Settings.FrameRate
-    Get #1, 2, Settings.TickRate
-    Close #1
-
-End Sub
-
-Function SavedMap$
-    SavedMap = Str$(SavedMapX) + Str$(SavedMapY)
-End Function
-
-Function SpawnMap$
-    SpawnMap = Str$(SpawnMapX) + Str$(SpawnMapY)
-End Function
-
-
-
-Sub LOADWORLD
-    Dim defaultmap As String
-
-    prevfolder = map.foldername
-
-
-    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-
-    Get #1, 1, GameTime
-
-    Get #1, 3, mapversion
-    If mapversion <> Game.Version Then
-        Close #1
-        Error 103
-    End If
-
-    Get #1, 5, SpawnPointX
-    Get #1, 6, SpawnPointY
-    Get #1, 7, SavePointX
-    Get #1, 8, SavePointY
-    Get #1, 9, SavedMapX
-    Get #1, 10, SavedMapY
-    Get #1, 11, SpawnMapX
-    Get #1, 12, SpawnMapY
-
-    Player.x = SavePointX
-    Player.y = SavePointY
-
-    'GET #1, 4, map.protected
-    Close #1
-    LOADMAP (SavedMap)
-End Sub
-
-
-Sub LOADMAP (file As String)
-    Dim i, ii As Byte
-    Dim iii As Integer
-    Dim iiii As Byte
-
-    iii = 1
-
-
-    'TODO add error checking to see if map file exists
-
-    'TODO make this a sub with 2 parameters, 1
-    If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                Get #1, iii, GroundTile(ii, i)
-                iii = iii + 1
-            Next
-        Next
-        Close #1
-        iii = 1
-
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                Get #1, iii, WallTile(ii, i)
-                iii = iii + 1
-            Next
-        Next
-        Close #1
-        iii = 1
-
-
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                Get #1, iii, CeilingTile(ii, i)
-                iii = iii + 1
-            Next
-        Next
-        Close #1
-        iii = 1
-
-
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
-                For iiii = 0 To 9
-                    Get #1, iii, TileData(ii, i, iiii)
-                    iii = iii + 1
-                Next
-
-            Next
-        Next
-        Get #1, iii, map.name
-        Close #1
-        iii = 1
-
-        Open "Assets\Worlds\" + WorldName + "\Maps\GlobalData.cdf" As #1
-        Close #1
-    Else
-        GenerateMap
-        SAVEMAP
-    End If
-
-End Sub
-
-
-Sub SAVEMAP
-    Dim i, ii, iiii As Byte
-    Dim iii As Integer
-    Dim defaultmap As String
-    Dim temppw As String
-    Dim new As Byte
-    iii = 1
-    'update this
-    If DirExists("Assets\Worlds\" + WorldName) = 0 Then
-        MkDir "Assets\Worlds\" + WorldName: new = 1
-        MkDir "Assets\Worlds\" + WorldName + "\Maps"
-    End If
-
-
-    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-    If new = 0 Then
-    End If
-
-
-    SavePointX = Player.x
-    SavePointY = Player.y
-    If TimeMode = 1 Then GameTime = GameTime + 43200
-    Put #1, 1, GameTime
-
-    Put #1, 3, Game.Version
-
-    Put #1, 5, SpawnPointX
-    Put #1, 6, SpawnPointY
-    Put #1, 7, SavePointX
-    Put #1, 8, SavePointY
-    Put #1, 9, SavedMapX
-    Put #1, 10, SavedMapY
-    Put #1, 11, SpawnMapX
-    Put #1, 12, SpawnMapY
-
-    If TimeMode = 1 Then GameTime = GameTime - 43200
-
-
-
-    Close #1
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-0.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            Put #1, iii, GroundTile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Close #1
-    iii = 1
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-1.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            Put #1, iii, WallTile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Close #1
-    iii = 1
-
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-2.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            Put #1, iii, CeilingTile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Close #1
-    iii = 1
-
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            For iiii = 0 To 9
-                Put #1, iii, TileData(ii, i, iiii)
-                iii = iii + 1
-            Next
-        Next
-    Next
-    Put #1, iii, map.name
-    Close #1
-    iii = 1
-
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + ".cdf" As #1: Close #1
-
-
-
-
-
-    badpw:
-End Sub
-
-Sub UPDATEMAP
-    Dim i, ii As Byte
-    Dim iii As Integer
-    iii = 1
-
-    If DirExists("Assets\Worlds\" + map.foldername) = 0 GoTo badpw
-    If DirExists("Assets\Worlds\" + map.foldername + "\Maps") = 0 GoTo badpw
-
-
-    Open "Assets\Worlds\" + map.foldername + "\Maps\" + map.filename + ".cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
-            '    PUT #1, iii, tile(ii, i)
-            iii = iii + 1
-        Next
-    Next
-    Put #1, iii, map.name
-    Close #1
-    badpw:
-
-End Sub
-
-
-
-
-
+'$include: 'Assets\Sources\InventoryManagement.bm'
+'$include: 'Assets\Sources\ShadowCast.bm'
+'$include: 'Assets\Sources\DayNightCycle.bm'
 '$include: 'Assets\Sources\Initialization.bm'
 '$include: 'Assets\Sources\FileAccess.bm'
 '$include: 'Assets\Sources\TextControl.bm'

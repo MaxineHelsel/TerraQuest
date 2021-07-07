@@ -34,15 +34,43 @@ Windows comes second, because it does not require me to switch systems, as i can
 
 - macOS
 
-macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, then re push.
+macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, test, then re push.
 
 # ChangeLog
+
+## Alpha Version 20
+
+### Containers
+
+Containers allow you to store items outside of your inventory, such as in a chest. Items on the ground such as fallen wood will be in a special ground item container that dissapears when empty
+
+### New Items
+
+- Ground item and Chest have functionality now
+
+- Raw wood, a crafting ingredient (crafting does not exist yet
+
+## Alpha Version 19
+
+### Better Inventory Management
+
+- Enter, select a stack of items and press enter again to swap them to a different inventory slot
+
+- Backslash, split a stack in half
+
+### Item stacking
+
+You can now stack certain items up to 100 in a stack 
+
+### Other Notable Changes
+
+- Placing a tile where a tile already exists will no longer replace the existing tile
 
 ## Alpha Version 18
 
 ### Day/Night Cycle
 
-The game will now cycle between day and night, 1 full day / night cycle is 24 minutes. this cycle is saved witht the map in the manifest file
+The game will now cycle between day and night, 1 full day / night cycle is 24 minutes. this cycle is saved with the map in the manifest file
 
 ### Infinate Worlds 
 

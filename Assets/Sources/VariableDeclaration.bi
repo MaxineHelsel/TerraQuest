@@ -12,12 +12,13 @@ Dim Shared Debug As Debug
 Dim Shared GroundTile(41, 31) As Unsigned Integer
 Dim Shared WallTile(41, 31) As Unsigned Integer
 Dim Shared CeilingTile(41, 31) As Unsigned Integer
-Dim Shared TileData(41, 31, 9) As Unsigned Byte
+Dim Shared TileData(41, 31, 9) As integer
 Dim Shared SpawnPointX As Single
 Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
 
+                                 dim shared Container(20,9)
 
 
 Dim Shared SavedMapX As Integer64
@@ -39,6 +40,8 @@ dim shared OverlayLightLevel as byte
                                          dim shared TimeMode as byte
 
 Dim Shared CurrentTick As Unsigned Integer64
+
+dim shared OGLFPS as single
 
 Dim Shared CameraPositionX As Single
 Dim Shared CameraPositionY As Single
