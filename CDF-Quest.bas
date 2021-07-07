@@ -158,6 +158,9 @@ Sub UseItem (Slot)
                 Case 1
                     If WallTile(FacingX, FacingY) = 1 Then
                         WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
+                            NewContainer SavedMapX, SavedMapY, FacingX, FacingY
+                        End If
                         TileData(FacingX, FacingY, 5) = 255
                         If GameMode <> 1 Then
                             Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
@@ -441,6 +444,22 @@ Sub HUD
                 End If
                 hbpos = 0
                 invrow = 0
+                Dim ContainerX
+                Dim ContainerY
+                Dim ContainerSelectedX
+                Dim ContainerSelectedY
+                ContainerX = ContainerItem
+                While ContainerX > 5
+                    ContainerX = ContainerX - 6
+                Wend
+                ContainerY = Int(ContainerItem / 6)
+
+                ContainerSelectedX = ContainerSelected
+                While ContainerSelectedX > 5
+                    ContainerSelectedX = ContainerSelectedX - 6
+                Wend
+                ContainerSelectedY = Int(ContainerSelected / 6)
+
                 For i = 0 To Container(18, 0)
                     'background
                     PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (0, 32)-(31, 63)
@@ -448,19 +467,19 @@ Sub HUD
                     If ActiveCursor = 1 Then
                         Select Case CursorMode
                             Case 0
-                                If invrow = Int(ContainerItem / 6) And hbpos = ContainerItem Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                                If invrow = ContainerY And hbpos = ContainerX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
                             Case 1
                                 If SwapInitiated = 1 Then
-                                    If invrow = Int(ContainerSelected / 6) And hbpos = ContainerSelected Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                                    If invrow = ContainerSelectedY And hbpos = ContainerSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
                                 End If
-                                If invrow = Int(ContainerItem / 6) And hbpos = ContainerItem Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
+                                If invrow = ContainerY And hbpos = ContainerX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
 
                         End Select
                     End If
                     If ActiveCursor = 0 Then
                         If CursorMode = 1 Then
                             If SwapInitiated = 1 Then
-                                If invrow = Int(ContainerSelected / 6) And hbpos = ContainerSelected Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
+                                If invrow = ContainerSelectedY And hbpos = ContainerSelectedX Then PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), (CameraPositionY + 68 - 16 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), (CameraPositionY + 68 - hboffset) - (16 * (invrow + 4) + invoffset * invrow) - invheight * 2), Texture.HudSprites, , (32, 32)-(63, 63)
                             End If
                         End If
                     End If

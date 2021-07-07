@@ -96,7 +96,7 @@ TileIndexData(6, 4) = 25 'resistance
 TileIndexData(6, 5) = 0 'is solid
 TileIndexData(6, 7) = 1 'is container
 ContainerData(6, 0) = 11 'number of slots  -1
-ContainerData(6, 1) = 1 'dissapears on empty
+ContainerData(6, 1) = 0 'dissapears on empty
 
 
 TileName(7, 0) = "Stone Wall" 'Name of the tile
