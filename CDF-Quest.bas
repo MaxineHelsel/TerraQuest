@@ -1,6 +1,6 @@
 $NoPrefix
 Option Explicit
-'On Error GoTo ERRORHANDLE
+On Error GoTo ERRORHANDLE
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
@@ -58,7 +58,7 @@ Do
     HUD
     ZOOM
     DEV
-    ChangeMap
+    ChangeMap 0, 0, 0
     DayLightCycle
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -234,7 +234,7 @@ Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
 End Sub
 
 
-Sub ChangeMap
+Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TickDelay
     Static TotalDelay
     Static LightStep
@@ -252,27 +252,36 @@ Sub ChangeMap
 
 
         End Select
+        If Command = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
         If TickDelay = 5 Then TickDelay = 0: LightStep = LightStep + 2
+        If Command = 1 Then ChangeMap 1, CommandMapX, CommandMapY
     Else
         SAVEMAP
-        Select Case Player.facing
-            Case 0
-                SavedMapY = SavedMapY - 1
-                LOADMAP (SavedMap)
-                Player.y = 480
-            Case 1
-                SavedMapY = SavedMapY + 1
-                LOADMAP (SavedMap)
-                Player.y = 0
-            Case 2
-                SavedMapX = SavedMapX - 1
-                LOADMAP (SavedMap)
-                Player.x = 640
-            Case 3
-                SavedMapX = SavedMapX + 1
-                LOADMAP (SavedMap)
-                Player.x = 0
-        End Select
+        If Command = 0 Then
+            Select Case Player.facing
+                Case 0
+                    SavedMapY = SavedMapY - 1
+                    LOADMAP (SavedMap)
+                    Player.y = 480
+                Case 1
+                    SavedMapY = SavedMapY + 1
+                    LOADMAP (SavedMap)
+                    Player.y = 0
+                Case 2
+                    SavedMapX = SavedMapX - 1
+                    LOADMAP (SavedMap)
+                    Player.x = 640
+                Case 3
+                    SavedMapX = SavedMapX + 1
+                    LOADMAP (SavedMap)
+                    Player.x = 0
+            End Select
+        End If
+        If Command = 1 Then
+            SavedMapX = CommandMapX
+            SavedMapY = CommandMapY
+            LOADMAP (SavedMap)
+        End If
         For i = 0 To 31
             For ii = 0 To 41
                 UpdateTile ii, i
@@ -283,7 +292,7 @@ Sub ChangeMap
         LightStep = 0
     End If
 
-    If Player.moving = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
+    If Player.moving = 0 And Command = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
     OverlayLightLevel = LightStep
 
     'Print Player.x; Player.y; Player.lasty; Player.moving; Player.facing; TickDelay; Settings.TickRate
@@ -490,11 +499,11 @@ Sub HUD
                         Color RGB(0, 0, 0)
                         For iii = 0 To 2
                             For ii = 0 To 2
-                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + iii - 1, (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap + ii - 1), Str$(Container(i, 7))
+                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + iii - 1, (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 9) - invgap + ii - 1), Str$(Container(i, 7))
                             Next
                         Next
                         Color RGB(255, 255, 255)
-                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap), Str$(Container(i, 7))
+                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 9) - invgap), Str$(Container(i, 7))
                     End If
 
                     hbpos = hbpos + 1
@@ -752,6 +761,7 @@ Sub DEV
         Dim dummystring As String
         Dim databit As Byte
         Dim i, ii As Byte
+        Dim DMapX, DMapY As Integer64
         Static RenderMode As Byte
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
@@ -787,8 +797,7 @@ Sub DEV
         Locate 1, 1
         Print Game.Title; " ("; Game.Buildinfo; ")"
         Print
-        If RenderMode = 0 Then Print "FPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
-        If RenderMode > 0 Then Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
+        Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
         Print "Current Time:"; GameTime + (TimeMode * 43200)
@@ -926,7 +935,12 @@ Sub DEV
                 Case "time"
                     Locate 28, 1: Print "          "
                     Locate 28, 1: Input "Set time:  ", GameTime
-
+                Case "maptp"
+                    Locate 28, 1: Print "              "
+                    Locate 28, 1: Input "MapX Cord", DMapX
+                    Locate 28, 1: Print "              "
+                    Locate 28, 1: Input "MapY Cord", DMapY
+                    ChangeMap 1, DMapX, DMapY
                 Case Else
             End Select
             KeyClear
@@ -1093,139 +1107,6 @@ Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
     Next
     Close #1
 
-End Sub
-
-
-Sub ErrorHandler
-    AutoDisplay
-    Cls
-    PLAYSOUND Sounds.error
-    Delay 0.5
-    KeyClear
-    Locate 1, 1
-    CENTERPRINT "CDF ERROR HANDLER"
-    Print "Error Code:"; Err
-    Locate 2, 1
-    ENDPRINT "Error Line:" + Str$(ErrorLine)
-    Print "--------------------------------------------------------------------------------"
-    Print
-    '       PRINT "--------------------------------------------------------------------------------"
-    Select Case Err
-        Case 100
-            Print "Assets folder is incomplete, this error can be triggered by one or more of the"
-            Print "following conditions:"
-            Print
-            Print
-            Print "     The assets folder is missing"
-            Print
-            Print "     Sub-directories in the Assets folder are missing"
-            Print
-            Print "     The contents of assets, or the directory itself is corrupted"
-            Print
-            Print "     You do not have proper permissions to access the assets directory"
-            Print
-            Print
-            Print "Make sure the entireity of the assets folder is present and accessible to your"
-            Print "user account and, if necessary, redownload the assets folder."
-            Print
-            Print "The assets folder, and its contents are necessary for the game to load, as it"
-            Print "contains all sprite and texture files, sounds and music, user saved data, and"
-            Print "world files. Without these, the game will not play correctly. It is advised to"
-            Print "not continue."
-            CONTPROMPT
-
-        Case 101
-            Print "This is a legacy error code, and should never be triggered in game, if it has"
-            Print "been triggered, not due to the /error command, please contact the developer"
-            CONTPROMPT
-
-        Case 102
-            Print "Invalid Code Position, This error occurs when the program flow enters an area"
-            Print "that it should not be, This is most likely a programming issue, and not an end"
-            Print "user issue."
-            Print ""
-            Print "There is no user solution to this issue, please file a bug report to the"
-            Print "developers, including the line number and what you were doing when it occured."
-            CONTPROMPT
-
-        Case 103
-            Print "This world was not made for this version of "; Game.Title; ". This means one of"
-            Print "the following cases is true:"
-            Print
-            Print
-            Print "     You are attempting to load an out of date world"
-            Print
-            Print "     You are attempting to load a world designed for a newer version of"
-            Print "     "; Game.Title
-            Print
-            Print "     Your world manifest is corrupted"
-            Print
-            Print
-            Print "Double check the world version and game version."
-            Print "World: ("; mapversion; ") Game: ("; Game.Version; ")"
-            Print
-            Print "If you are certain that this is a mistake, you may try to update the manifest"
-            Print "here. Note that this does not update old worlds, just broken manifest files"
-            Print "Otherwise you can try to load a different world. "; Game.Title; ""
-            Print "does not support loading out of version worlds."
-            Print
-            Print
-            CENTERPRINT "(U)pdate manifest, (R)eturn to existing map, (Q)uit to desktop."
-            Do
-                If KeyDown(113) Then System
-                If KeyDown(114) Then Exit Do
-                If KeyDown(117) Then
-                    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-                    Put #1, 3, Game.Version
-                    Close #1
-
-                    Exit Do
-
-                End If
-            Loop
-        Case 2
-            Print "Syntax error, READ attempted to read a number but could not parse the next"
-            Print "DATA item."
-            Print
-            CONTPROMPT
-        Case 3
-            Print "RETURN without GOSUB, The RETURN statement was encounted without first"
-            Print " executing a corresponding GOSUB."
-            Print
-            CONTPROMPT
-        Case 4
-            Print "Out of DATA, The READ statement has read past the end of a DATA block."
-            Print " Use RESTORE to change the current data item if necessary."
-            Print
-            CONTPROMPT
-
-        Case 9
-            Print "Subscript out of range, this error occurs when an array exceeds its bounds"
-            Print "This is most likely a programming error, please let the developer know."
-            Print
-            CONTPROMPT
-
-
-        Case Else
-            Print "Unrecognized error, contact developers"
-            CONTPROMPT
-
-    End Select
-
-    KeyClear
-    Cls
-    Resume Next
-End Sub
-
-Sub CONTPROMPT
-    Print
-    Print
-
-    CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop"
-    Do
-        If KeyDown(113) Then System
-        If KeyDown(105) Then Exit Do
-    Loop
 End Sub
 
 
