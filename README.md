@@ -38,6 +38,22 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 # ChangeLog
 
+## Alpha Version 21
+
+### What's new
+
+- Updated QB64 to version 2.0
+
+### Bug Fixes
+
+- Memory leak when minimized
+
+- Linux version locked to 30fps
+
+- Random characters and 1fps on world load - FIXED
+
+- All errors cause duplicate definition error
+
 ## Alpha Version 20
 
 ### Containers

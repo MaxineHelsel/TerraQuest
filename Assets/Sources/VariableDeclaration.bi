@@ -76,6 +76,7 @@ dim shared Flag.InventoryOpen as unsigned bit
 dim shared Flag.CastShadows as unsigned bit
 dim shared Flag.OpenCommand as byte
 dim shared Flag.RenderOverride as unsigned bit
+dim shared Flag.InitialRender as byte
 Dim Shared bgdraw As Unsigned Bit
 
 

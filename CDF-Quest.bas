@@ -20,6 +20,8 @@ Title "CDF-Quest"
 
 '$include: 'Assets\Sources\CreativeInventory.bi'
 
+Rem'$include: 'Assets\Sources\CraftingIndex.bi'
+
 
 INITIALIZE
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
@@ -47,6 +49,14 @@ DisplayOrder GLRender , Hardware , Software
 game:
 
 Do
+    If Flag.InitialRender = 0 Then 'this section of if and elseif is to prevent the game from giving random bullshit characters and running at 1fps, i have no idea why this works, or what caused it in the first place, but hey.
+        SwitchRender 0
+        Flag.InitialRender = 1
+    ElseIf Flag.InitialRender = 1 Then
+        SwitchRender 1
+        Flag.InitialRender = 2
+    End If
+
     SETBG
     SetMap
     CastShadow
@@ -60,6 +70,7 @@ Do
     DEV
     ChangeMap 0, 0, 0
     DayLightCycle
+
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
@@ -78,8 +89,13 @@ Loop
 Error 102
 
 
-Sub PickUpItem (ItemID)
-    If ItemID = -1 Then Exit Sub
+Function PickUpItem (ItemID)
+    Static PickupDelay As Single
+    If PickupDelay > CurrentTick Then
+        PickUpItem = 1
+        Exit Function
+    End If
+    If ItemID = -1 Then Exit Function
     Dim i, ii, iii
     For i = 0 To 3
         For ii = 0 To 5
@@ -103,8 +119,12 @@ Sub PickUpItem (ItemID)
         Next
     Next
     Alert 0, "Could not pick up item, Inventory full."
+    PickUpItem = 1
+    PickupDelay = CurrentTick + 60
+    Exit Function
     PickedUp:
-End Sub
+    PickUpItem = 0
+End Function
 Function FacingX
     Select Case Player.facing
         Case 0
@@ -176,7 +196,7 @@ Sub UseItem (Slot)
                     If GroundTile(FacingX, FacingY) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
                             If GameMode <> 1 Then
-                                PickUpItem (TileIndex(GroundTile(FacingX, FacingY), 3))
+                                If PickUpItem(TileIndex(GroundTile(FacingX, FacingY), 3)) = 1 Then Exit Select
                             End If
                             GroundTile(FacingX, FacingY) = 0
                             TileData(FacingX, FacingY, 4) = 255
@@ -193,7 +213,7 @@ Sub UseItem (Slot)
                     If WallTile(FacingX, FacingY) <> 1 Then
                         If TileData(FacingX, FacingY, 5) <= 0 Then
                             If GameMode <> 1 Then
-                                PickUpItem (TileIndex(WallTile(FacingX, FacingY), 3))
+                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
                             End If
                             WallTile(FacingX, FacingY) = 1
                             TileData(FacingX, FacingY, 5) = 255
@@ -328,7 +348,7 @@ Sub Alert (img, message As String)
     timeout = timeout + Settings.TickRate
     Locate 20, 1
     ENDPRINT message
-    If timeout < 60 * 5 Then Alert img, message Else timeout = 0
+    If timeout < 60 Then Alert img, message Else timeout = 0
 End Sub
 
 Sub INTER
@@ -763,6 +783,7 @@ Sub DEV
         Dim i, ii As Byte
         Dim DMapX, DMapY As Integer64
         Static RenderMode As Byte
+        RenderMode = DefaultRenderMode
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
         Print
@@ -988,7 +1009,7 @@ Sub SwitchRender (mode As Byte)
     Static FirstSkip As Byte
     If mode <> 0 And mode <> 1 Then Exit Sub
 
-    If FirstSkip = 1 Then
+    If FirstSkip = 1 Then 'this is to prevent the game from crashing if the files arent loaded yet, because this is also run to initially load the files
         FreeImage Texture.PlayerSprites
         FreeImage Texture.TileSheet
         FreeImage Texture.ItemSheet
