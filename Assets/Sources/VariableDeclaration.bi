@@ -78,7 +78,7 @@ dim shared Flag.OpenCommand as byte
 dim shared Flag.RenderOverride as unsigned bit
 dim shared Flag.InitialRender as byte
 Dim Shared bgdraw As Unsigned Bit
-
+                                    dim shared RenderMode as byte
 
 Dim Shared new As Unsigned Bit 'has not been updated, because might not exist
 

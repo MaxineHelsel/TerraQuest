@@ -70,6 +70,7 @@ Do
     DEV
     ChangeMap 0, 0, 0
     DayLightCycle
+    MinMemFix
 
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -86,8 +87,23 @@ Loop
 
 
 
+
 Error 102
 
+Sub MinMemFix
+    Static Last
+    Select Case ScreenIcon
+        Case -1
+            If Last = -1 Then Exit Select
+            SwitchRender 0
+            Last = -1
+        Case 0
+            If Last = 0 Then Exit Select
+            SwitchRender 1
+            Last = 0
+
+    End Select
+End Sub
 
 Function PickUpItem (ItemID)
     Static PickupDelay As Single
@@ -782,7 +798,6 @@ Sub DEV
         Dim databit As Byte
         Dim i, ii As Byte
         Dim DMapX, DMapY As Integer64
-        Static RenderMode As Byte
         RenderMode = DefaultRenderMode
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
