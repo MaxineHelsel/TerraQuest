@@ -1,8 +1,8 @@
 
 Sub SETBG
     If bgdraw = 0 Then
-        Dim i As Byte
-        Dim ii As Byte
+        Dim i As Integer
+        Dim ii As integer
         For i = 0 To 30
             For ii = 0 To 40
                 PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
@@ -13,8 +13,8 @@ End Sub
 
 
 Sub SetMap
-    Dim i As Byte
-    Dim ii As Byte
+    Dim i As integer
+    Dim ii As integer
     For i = 1 To 30
         For ii = 1 To 40
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)

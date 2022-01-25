@@ -1,5 +1,7 @@
 # CDF-Quest
 
+### WARNING This is the edge branch, meaning this version could be incomplete, unstable, untested, broken, etc. If you are looking for the latest released version, switch to stable.
+
 # Download instructions
 
 - Click 'Branch' and choose which version you want
@@ -42,7 +44,7 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 ### What's new
 
-- Updated QB64 to version 2.0
+- Now compiled with QB64 2.0
 
 ### Bug Fixes
 
@@ -52,7 +54,11 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 - Random characters and 1fps on world load - FIXED
 
-- All errors cause duplicate definition error
+- All errors cause duplicate definition error - Unable to fix till QB64 is updated, patched if compiled with QB64 2.1 dev build
+
+### New Items
+
+- Berry Bush - Painful on contact, Sweet when eaten, this item has it all
 
 ## Alpha Version 20
 
@@ -64,7 +70,7 @@ Containers allow you to store items outside of your inventory, such as in a ches
 
 - Ground item and Chest have functionality now
 
-- Raw wood, a crafting ingredient (crafting does not exist yet
+- Raw wood, a crafting ingredient (crafting does not exist yet)
 
 ## Alpha Version 19
 

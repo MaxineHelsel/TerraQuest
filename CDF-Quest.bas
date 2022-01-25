@@ -90,7 +90,7 @@ Loop
 
 Error 102
 
-Sub MinMemFix
+Sub MinMemFix 'this subroutine is specifically to try to fix a memory leak that occurs when in hardware accelerated mode, and the game is minimized. by simply turning off hardware acceleration.
     Static Last
     Select Case ScreenIcon
         Case -1
@@ -1072,7 +1072,9 @@ Sub GenerateMap
             TileData(ii, i, 5) = 255
             CeilingTile(ii, i) = 1
             TileData(ii, i, 6) = 255
-            If Ceil(Rnd * 10) = 5 Then WallTile(ii, i) = 5
+            If Ceil(Rnd * 10) = 5 Then
+                WallTile(ii, i) = 5
+            End If
             If Ceil(Rnd * 100) = 50 Then
                 WallTile(ii, i) = 11
                 NewContainer SavedMapX, SavedMapY, ii, i
@@ -1083,6 +1085,9 @@ Sub GenerateMap
                 Container(0, 7) = Ceil(Rnd * 3)
                 CloseContainer SavedMapX, SavedMapY, ii, i
 
+            End If
+            If Ceil(Rnd * 500) = 250 Then
+                WallTile(ii, i) = 12
             End If
             UpdateTile ii, i
         Next

@@ -223,5 +223,16 @@ ItemIndex(19, 5) = 0 '
 ItemIndex(19, 6) = 0 '
 ItemIndex(19, 7) = 1 'current stack
 ItemIndex(19, 8) = 100 'max stack
-ItemIndex(19, 9) = 18 'Item ID
+ItemIndex(19, 9) = 19 'Item ID
+
+ItemName(20, 0) = "Berry Bush" 'Name of the tile
+ItemName(20, 1) = "Placeholder" 'tooltip
+ItemIndex(20, 0) = 0 'item type
+ItemIndex(20, 1) = 80 'x position on tilesheet
+ItemIndex(20, 2) = 16 'y position on tilesheet
+ItemIndex(20, 3) = 12 'tile id
+ItemIndex(20, 4) = 1 'layer
+ItemIndex(20, 7) = 1 'current stack
+ItemIndex(20, 8) = 100 'max stack
+ItemIndex(20, 9) = 20 'Item ID
 

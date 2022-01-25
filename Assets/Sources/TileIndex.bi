@@ -171,6 +171,20 @@ TileIndexData(11, 7) = 1 'is container
 ContainerData(11, 0) = 0 'number of slots -1
 ContainerData(11, 1) = 1 'dissapears on empty
 
+TileName(12, 0) = "Berry Bush" 'Name of the tile
+TileName(12, 1) = "Placeholder" 'tooltip
+TileIndex(12, 0) = 1 'layer definition
+TileIndex(12, 1) = 190 'x position on tilesheet
+TileIndex(12, 2) = 0 'y position on tilesheet
+TileIndex(12, 3) = 20 'itemid
+TileIndexData(12, 0) = 1 'collision
+TileIndexData(12, 1) = 0 'casts shadow
+TileIndexData(12, 2) = 1 'blocks shadow
+TileIndexData(12, 3) = 0 'has interior shadow
+TileIndexData(12, 4) = 25 'resistance
+TileIndexData(12, 5) = 0 'is solid
+TileIndexData(12, 8) = 1 'damage on contact
+
 
 
 
