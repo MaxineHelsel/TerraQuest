@@ -4,7 +4,7 @@
 Game.Title = "CDF-Quest"
 Game.Buildinfo = "Survival Test"
 Game.Version = "Alpha Version 20"
-Game.Designation = "Unstable"
+Game.Designation = "Stable"
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file
 Settings.FrameRate = 60
