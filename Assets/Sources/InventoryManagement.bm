@@ -1,6 +1,6 @@
 Sub EmptySlot (slot, row)
     Dim i
-    For i = 0 To 9
+    For i = 0 To invparameters
         Inventory(row, slot, i) = -1
     Next
 End Sub

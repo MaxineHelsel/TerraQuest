@@ -7,9 +7,6 @@ PrintMode KeepBackground
 DisplayOrder Hardware , Software
 Title "CDF-Quest"
 
-'todo make the number of attributes a constant
-
-
 '$include: 'Assets\Sources\VariableDeclaration.bi'
 
 '$include: 'Assets\Sources\DefaultValues.bi'
@@ -21,6 +18,8 @@ Title "CDF-Quest"
 '$include: 'Assets\Sources\CreativeInventory.bi'
 
 Rem'$include: 'Assets\Sources\CraftingIndex.bi'
+
+Rem'$include: 'Assets\Sources\EffectsIndex.bi'
 
 
 INITIALIZE
@@ -90,6 +89,160 @@ Loop
 
 Error 102
 
+
+Sub MOVE
+    Player.moving = 0
+    Player.lastx = Player.x
+    Player.lasty = Player.y
+    If KeyDown(119) Then
+        Player.y = Player.y - .5
+        Player.facing = 0
+        Player.moving = 1
+        If KeyDown(100306) = 0 Then Player.y = Player.y - .5
+    End If
+    If KeyDown(115) Then
+        Player.y = Player.y + .5
+        Player.facing = 1
+        Player.moving = 1
+        If KeyDown(100306) = 0 Then Player.y = Player.y + .5
+    End If
+    If KeyDown(97) Then
+        Player.x = Player.x - .5
+        Player.facing = 2
+        Player.moving = 1
+        If KeyDown(100306) = 0 Then Player.x = Player.x - .5
+    End If
+    If KeyDown(100) Then
+        Player.x = Player.x + .5
+        Player.facing = 3
+        Player.moving = 1
+        If KeyDown(100306) = 0 Then Player.x = Player.x + .5
+    End If
+    If Player.x <= 0 Then Player.x = 0
+    If Player.y <= 0 Then Player.y = 0
+    If Player.x >= 640 - 16 Then Player.x = 640 - 16
+    If Player.y >= 480 - 16 Then Player.y = 480 - 16
+    If Flag.FreeCam = 1 Then
+        Player.x = Player.lastx
+        Player.y = Player.lasty
+        If Player.moving = 1 Then
+            Select Case Player.facing
+                Case 0
+                    CameraPositionY = CameraPositionY - 1
+                Case 1
+                    CameraPositionY = CameraPositionY + 1
+                Case 2
+                    CameraPositionX = CameraPositionX - 1
+                Case 3
+                    CameraPositionX = CameraPositionX + 1
+            End Select
+            Player.moving = 0
+        End If
+    End If
+End Sub
+
+
+
+Sub COLDET
+    Dim StuckFix As _Byte
+    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    Select Case Player.facing
+        Case 0
+            If Player.y - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
+        Case 1
+            If Player.y + 8 + 16 >= 480 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
+        Case 2
+            If Player.x - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+        Case 3
+            If Player.x + 8 + 16 >= 640 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    End Select
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                GoTo col2
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                GoTo col2
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+        End Select
+
+        col2:
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+        End Select
+    End If
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y) / 16) + 1, 0)
+            Case 1
+                Player.y = Player.y + 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.y = Player.y - 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
+            Case 1
+
+                Player.x = Player.x + 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
+            Case 1
+                Player.x = Player.x - 1
+        End Select
+    End If
+    Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
+
+
+End Sub
+
+
+
+
+
 Sub MinMemFix 'this subroutine is specifically to try to fix a memory leak that occurs when in hardware accelerated mode, and the game is minimized. by simply turning off hardware acceleration.
     Static Last
     Select Case ScreenIcon
@@ -127,7 +280,7 @@ Function PickUpItem (ItemID)
     For i = 0 To 3
         For ii = 0 To 5
             If Inventory(i, ii, 9) = -1 Then
-                For iii = 0 To 9
+                For iii = 0 To InvParameters
                     Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
                 Next
                 GoTo PickedUp
@@ -259,7 +412,7 @@ Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
     'Dim Shared Inventory(3, 5,9) As Integer
     'dim shared CreativeInventory(2,5,9,1)
     Dim i
-    For i = 0 To 9
+    For i = 0 To InvParameters
         Select Case Mode
             Case 0
                 Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
@@ -386,7 +539,7 @@ Sub NewStack (ItemID, StackNumber)
     Dim i, ii, iii
     For i = 0 To 3
         For ii = 0 To 5
-            If Inventory(i, ii, 9) = -1 Then
+            If Inventory(i, ii, InvParameters) = -1 Then
                 For iii = 0 To 9
                     Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
                 Next
@@ -768,7 +921,7 @@ Sub ConSwap (ContainerItem, ContainerSelected, InventoryY, Mode)
     'Dim Shared Inventory(3, 5,9) As Integer
     'dim shared CreativeInventory(2,5,9,1)
     Dim i
-    For i = 0 To 9
+    For i = 0 To InvParameters
         Select Case Mode
             Case 0
                 Swap Container(ContainerItem, i), Container(ContainerSelected, i)
@@ -780,7 +933,7 @@ End Sub
 
 Sub EmptyContainerSlot (slot)
     Dim i
-    For i = 0 To 9
+    For i = 0 To InvParameters
         Container(slot, i) = -1
     Next
 End Sub
@@ -798,7 +951,7 @@ Sub DEV
         Dim databit As Byte
         Dim i, ii As Byte
         Dim DMapX, DMapY As Integer64
-        RenderMode = DefaultRenderMode
+
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
         Print
@@ -813,7 +966,7 @@ Sub DEV
         ENDPRINT "Facing tile data:"
         If Player.x >= 0 And Player.x <= 640 - 16 And Player.y >= 0 And Player.y <= 480 - 16 Then
 
-            For i = 0 To 9
+            For i = 0 To TileParameters
                 dummystring = dummystring + Str$(TileData(FacingX, FacingY, i))
             Next
             ENDPRINT dummystring
@@ -836,6 +989,7 @@ Sub DEV
         Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
+        Print "World Seed:"; WorldSeed
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
 
@@ -864,9 +1018,24 @@ Sub DEV
                 Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.moving
-                ' Print "Contacted Tile ID:"; Player.tile; "(" + Hex$(Player.tile) + ")"
-                ' Print "Facing Tile ID:"; Player.tilefacing; "(" + Hex$(Player.tilefacing) + ")"
                 Print Player.lastx; Player.lasty
+            Case "inv", "inventory", "2"
+                Print "Inventory Slot 1 Data"
+                Select Case Inventory(0, 0, 0)
+                    Case 0
+                        Print "Tile: "; Trim$((ItemName(Inventory(0, 0, 9), 0))); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | TileID:"; Str$(Inventory(0, 0, 3)); " | Layer:"; Str$(Inventory(0, 0, 4)); " | "; Trim$(Str$(Inventory(0, 0, 5))) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                    Case 1
+                        Print "Tool: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | Durabillity:"; Str$(Inventory(0, 0, 3)); "/"; Trim$(Str$(Inventory(0, 0, 4))); " | Type:"; Str$(Inventory(0, 0, 5)); " | Strength:"; Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                    Case 2
+                        Print "Sword: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | Durabillity:"; Str$(Inventory(0, 0, 3)); "/"; Trim$(Str$(Inventory(0, 0, 4))); " | Delay:"; Str$(Inventory(0, 0, 5)); " | Damage:"; Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); " | Range"; Str$(Inventory(0, 0, 10)); " | Speed:"; Str$(Inventory(0, 0, 11));
+                    Case 3
+                        Print "Crafting Ingredient: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " |"; Str$(Inventory(0, 0, 3)) + Str$(Inventory(0, 0, 4)) + Str$(Inventory(0, 0, 5)) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                    Case Else
+                        Print "Unknown: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " |"; Str$(Inventory(0, 0, 3)) + Str$(Inventory(0, 0, 4)) + Trim$(Str$(Inventory(0, 0, 5))) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                End Select
+                'For i = 0 To InvParameters
+                '    Print Inventory(0, 0, i);
+                'Next
             Case Else
                 Print "Unrecognized Tile or Entity"
         End Select
@@ -1016,6 +1185,7 @@ Sub INITIALIZE
     OSPROBE
 
     SwitchRender (DefaultRenderMode)
+    RenderMode = DefaultRenderMode
 
 
 End Sub
@@ -1050,7 +1220,12 @@ Sub NewWorld
     KeyClear
     AutoDisplay
     Input "World Name?", WorldName
-    'Input "World Seed?", WorldSeed
+    Input "World Seed? (0 for random)", WorldSeed
+    If WorldSeed = 0 Then
+        Randomize Timer
+        WorldSeed = Ceil(Rnd * 18446744073709551615) - 9223372036854775807
+
+    End If
     'Randomize WorldSeed
     SavedMapX = 0
     SavedMapY = 0
@@ -1064,31 +1239,43 @@ End Sub
 
 Sub GenerateMap
     Dim i, ii, iii
+    Randomize Val(Str$(MapX) + Str$(MapY) + Str$(WorldSeed)) 'TODO, include world layer in this too
+
+    'if map is layer 0
     For i = 0 To 31
         For ii = 0 To 41
+
+            'generate base tiles
             GroundTile(ii, i) = 2
             TileData(ii, i, 4) = 255
             WallTile(ii, i) = 1
             TileData(ii, i, 5) = 255
             CeilingTile(ii, i) = 1
             TileData(ii, i, 6) = 255
+
+            'generate bushes
             If Ceil(Rnd * 10) = 5 Then
                 WallTile(ii, i) = 5
             End If
+
+            'generate ground wood items
             If Ceil(Rnd * 100) = 50 Then
                 WallTile(ii, i) = 11
                 NewContainer SavedMapX, SavedMapY, ii, i
                 OpenContainer SavedMapX, SavedMapY, ii, i
-                For iii = 0 To 9
+                For iii = 0 To InvParameters
                     Container(0, iii) = ItemIndex(19, iii)
                 Next
                 Container(0, 7) = Ceil(Rnd * 3)
                 CloseContainer SavedMapX, SavedMapY, ii, i
-
             End If
+
+            'generate berry bushes
             If Ceil(Rnd * 500) = 250 Then
                 WallTile(ii, i) = 12
             End If
+
+            'update set tiles
             UpdateTile ii, i
         Next
     Next
@@ -1106,7 +1293,7 @@ Sub NewContainer (MapX, Mapy, Tilex, Tiley)
     Put #1, total, ContainerData(containertype, 0): total = total + 1
     Put #1, total, ContainerData(containertype, 1): total = total + 1
     For i = 0 To ContainerData(containertype, 0)
-        For ii = 0 To 9
+        For ii = 0 To InvParameters
             Put #1, total, empty: total = total + 1
         Next
     Next
@@ -1124,7 +1311,7 @@ Sub OpenContainer (MapX, Mapy, Tilex, Tiley)
     Get #1, total, Container(18, 0): total = total + 1
     Get #1, total, Container(19, 0): total = total + 1
     For i = 0 To ContainerSize
-        For ii = 0 To 9
+        For ii = 0 To InvParameters
             Get #1, total, Container(i, ii): total = total + 1
         Next
     Next
@@ -1142,7 +1329,7 @@ Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
     Put #1, total, Container(18, 0): total = total + 1
     Put #1, total, Container(19, 0): total = total + 1
     For i = 0 To ContainerSize
-        For ii = 0 To 9
+        For ii = 0 To InvParameters
             Put #1, total, Container(i, ii): total = total + 1
         Next
     Next

@@ -1,5 +1,5 @@
-Dim Shared TileIndex(1000, 9)
-Dim Shared TileIndexData(1000, 8)
+Dim Shared TileIndex(1000, 4)
+Dim Shared TileIndexData(1000, TileParameters)
 Dim Shared ContainerData(1000, 3)
 Dim Shared TileName(1000, 3) As String
 

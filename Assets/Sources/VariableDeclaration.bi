@@ -7,18 +7,21 @@ Dim Shared Settings As Settings
 Dim Shared Sounds As Sounds
 Dim Shared Debug As Debug
 
+'Constants
+const TileParameters=11
+const InvParameters=11
 
 'Map Variables
 Dim Shared GroundTile(41, 31) As Unsigned Integer
 Dim Shared WallTile(41, 31) As Unsigned Integer
 Dim Shared CeilingTile(41, 31) As Unsigned Integer
-Dim Shared TileData(41, 31, 9) As integer
+Dim Shared TileData(41, 31, tileparameters) As integer
 Dim Shared SpawnPointX As Single
 Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
 
-                                 dim shared Container(20,9)
+dim shared Container(20,invparameters)
 
 
 Dim Shared SavedMapX As Integer64
@@ -30,7 +33,7 @@ Dim Shared MapX As Integer64
 Dim Shared MapY As Integer64
 
 Dim Shared WorldName As String
-'dim shared WorldSeed as integer64
+dim shared WorldSeed as integer64
 
 Dim Shared GlobalLightLevel as byte
 dim shared LocalLightLevel(41,31) as byte
@@ -51,12 +54,13 @@ Dim Shared KeyPressed As Long
 Dim Shared GameMode As Byte
 Dim Shared DefaultRenderMode as Byte
 
-Dim Shared Inventory(3, 5,9)
-dim shared CreativeInventory(2,5,9,1)
+Dim Shared Inventory(3, 5,invparameters)
+dim shared CreativeInventory(2,5,invparameters,1)
 
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
 Dim Shared Game.Buildinfo As String
+Dim Shared Game.FCV As String
 Dim Shared Game.HostOS As String
 Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
@@ -131,12 +135,15 @@ Type Character
     y As Single
     lastx As Single
     lasty As Single
+    vx as single
+    vy as single
 
     tile As Byte
     tilefacing As Byte
     facing As Byte
     moving As Byte
     type As Byte
+    tilecontact as byte
 
     level As Byte
     health As Byte

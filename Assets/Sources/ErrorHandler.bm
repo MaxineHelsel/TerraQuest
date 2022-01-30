@@ -47,8 +47,9 @@ Sub ErrorHandler
             Print "that it should not be, This is most likely a programming issue, and not an end"
             Print "user issue."
             Print ""
-            Print "There is no user solution to this issue, please file a bug report to the"
-            Print "developers, including the line number and what you were doing when it occured."
+            Print "There is no user solution to this issue, if this is reproducable, please file
+            print "a bug report to the github, including the line number and what you were doing
+            print "when it occured."
             CONTPROMPT
 
         Case 103

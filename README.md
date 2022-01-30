@@ -60,6 +60,10 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 - Berry Bush - Painful on contact, Sweet when eaten, this item has it all
 
+### New Features
+
+- Added TPS counter to debug menu, separating Frames per second and ticks per second
+
 ## Alpha Version 20
 
 ### Containers
