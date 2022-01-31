@@ -15,7 +15,7 @@ const InvParameters=11
 Dim Shared GroundTile(41, 31) As Unsigned Integer
 Dim Shared WallTile(41, 31) As Unsigned Integer
 Dim Shared CeilingTile(41, 31) As Unsigned Integer
-Dim Shared TileData(41, 31, tileparameters) As integer
+Dim Shared TileData(41, 31, tileparameters) As single
 Dim Shared SpawnPointX As Single
 Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
@@ -141,7 +141,8 @@ Type Character
     tile As Byte
     tilefacing As Byte
     facing As Byte
-    moving As Byte
+    movingx As Byte
+    movingy as byte
     type As Byte
     tilecontact as byte
 

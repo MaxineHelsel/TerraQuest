@@ -12,6 +12,7 @@ Added berry bush, used as a way to get food, (as well as take damage)
 #Features
 Debug Menu data viewer can now see whats in inventory slot 1
 Worlds now have seeds
+added player velocity, different tiles have effects on speed and slow down
 
 #Other Changes
 All blank textures now have a "missing texture" texture

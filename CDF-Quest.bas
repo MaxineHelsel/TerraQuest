@@ -89,43 +89,93 @@ Loop
 
 Error 102
 
+Function MoveUp
+    MoveUp = KeyDown(119)
+End Function
+
+Function MoveDown
+    MoveDown = KeyDown(115)
+End Function
+
+Function MoveLeft
+    MoveLeft = KeyDown(97)
+End Function
+
+Function MoveRight
+    MoveRight = KeyDown(100)
+End Function
+
+
 
 Sub MOVE
-    Player.moving = 0
-    Player.lastx = Player.x
+    Player.movingx = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
+    Player.movingy = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
+    Player.lastx = Player.x 'these 2 are literally just for the freecammode
     Player.lasty = Player.y
-    If KeyDown(119) Then
-        Player.y = Player.y - .5
+
+
+    If MoveUp Then
+        Player.vy = Player.vy - .3
         Player.facing = 0
-        Player.moving = 1
-        If KeyDown(100306) = 0 Then Player.y = Player.y - .5
+        Player.movingy = 1
     End If
-    If KeyDown(115) Then
-        Player.y = Player.y + .5
+    If MoveDown Then
+        Player.vy = Player.vy + .3
         Player.facing = 1
-        Player.moving = 1
-        If KeyDown(100306) = 0 Then Player.y = Player.y + .5
+        Player.movingy = 1
     End If
-    If KeyDown(97) Then
-        Player.x = Player.x - .5
+    If MoveLeft Then
+        Player.vx = Player.vx - .3
         Player.facing = 2
-        Player.moving = 1
-        If KeyDown(100306) = 0 Then Player.x = Player.x - .5
+        Player.movingx = 1
     End If
-    If KeyDown(100) Then
-        Player.x = Player.x + .5
+    If MoveRight Then
+        Player.vx = Player.vx + .3
         Player.facing = 3
-        Player.moving = 1
-        If KeyDown(100306) = 0 Then Player.x = Player.x + .5
+        Player.movingx = 1
     End If
+
+    If Player.vy > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
+    If Player.vy < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+
+    If Player.vx > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
+    If Player.vx < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+
+    If Player.movingy = 0 Then
+        If Player.vy > 0 Then
+            Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        End If
+        If Player.vy < 0 Then
+            Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            If Player.vy > 0 Then Player.vy = 0
+        End If
+    End If
+    If Player.movingx = 0 Then
+        If Player.vx > 0 Then
+            Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        End If
+        If Player.vx < 0 Then
+            Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            If Player.vx + 0 Then Player.vx = 0
+        End If
+
+
+    End If
+
+    Player.x = Player.x + Player.vx
+    Player.y = Player.y + Player.vy
+
+    'stops the player from going out of bounds
     If Player.x <= 0 Then Player.x = 0
     If Player.y <= 0 Then Player.y = 0
     If Player.x >= 640 - 16 Then Player.x = 640 - 16
     If Player.y >= 480 - 16 Then Player.y = 480 - 16
+
+    'self explanitory, but if you must know its to control the camera in freecam mode
     If Flag.FreeCam = 1 Then
         Player.x = Player.lastx
         Player.y = Player.lasty
-        If Player.moving = 1 Then
+        If Player.movingx = 1 Or Player.movingy = 1 Then
             Select Case Player.facing
                 Case 0
                     CameraPositionY = CameraPositionY - 1
@@ -136,11 +186,12 @@ Sub MOVE
                 Case 3
                     CameraPositionX = CameraPositionX + 1
             End Select
-            Player.moving = 0
+            Player.movingx = 0
+            Player.movingy = 0
         End If
     End If
-End Sub
 
+End Sub
 
 
 Sub COLDET
@@ -431,13 +482,13 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
     If LightStep < 12 Then
         Select Case Player.facing
             Case 0
-                If Player.y <= 0 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.y <= 0 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 1
-                If Player.y >= 480 - 16 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.y >= 480 - 16 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 2
-                If Player.x <= 0 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.x <= 0 And Player.y = Player.lasty And Player.movingx = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 3
-                If Player.x >= 640 - 16 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.x >= 640 - 16 And Player.y = Player.lasty And Player.movingx = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
 
 
         End Select
@@ -481,7 +532,7 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
         LightStep = 0
     End If
 
-    If Player.moving = 0 And Command = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
+    If Player.movingx = 0 And Player.movingy = 0 And Command = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
     OverlayLightLevel = LightStep
 
     'Print Player.x; Player.y; Player.lasty; Player.moving; Player.facing; TickDelay; Settings.TickRate
@@ -506,7 +557,8 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(GroundTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(GroundTile(TileX, TileY), 6)
     If TileIndexData(WallTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(WallTile(TileX, TileY), 6)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
-
+    TileData(TileX, TileY, 9) = TileIndexData(GroundTile(TileX, TileY), 9)
+    TileData(TileX, TileY, 10) = TileIndexData(GroundTile(TileX, TileY), 10)
 End Sub
 'For i = TileData(TileX, TileY, 8) To 0 Step -1
 
@@ -1016,8 +1068,9 @@ Sub DEV
             Case "player", "1"
                 Print "Player"
                 Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
+                Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
-                Print "Motion:"; Player.moving
+                Print "Motion:"; Player.movingx; Player.movingy
                 Print Player.lastx; Player.lasty
             Case "inv", "inventory", "2"
                 Print "Inventory Slot 1 Data"

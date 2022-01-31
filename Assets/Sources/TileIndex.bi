@@ -1,5 +1,6 @@
+
 Dim Shared TileIndex(1000, 4)
-Dim Shared TileIndexData(1000, TileParameters)
+Dim Shared TileIndexData(1000, TileParameters) As Single
 Dim Shared ContainerData(1000, 3)
 Dim Shared TileName(1000, 3) As String
 
@@ -14,6 +15,8 @@ TileIndexData(0, 2) = 0 'blocks shadow
 TileIndexData(0, 3) = 1 'has interior shadow
 TileIndexData(0, 4) = 0 'resistance
 TileIndexData(0, 5) = 0 'is solid
+TileIndexData(0, 9) = 0 'Friction
+TileIndexData(0, 10) = 10
 
 TileName(1, 0) = "Air" 'Name of the tile
 TileName(1, 1) = "Placeholder" 'tooltip
@@ -39,6 +42,8 @@ TileIndexData(2, 2) = 0 'blocks shadow
 TileIndexData(2, 3) = 0 'has interior shadow
 TileIndexData(2, 4) = 20 'resistance
 TileIndexData(2, 5) = 1 'is solid
+TileIndexData(2, 9) = 0.5 'friction
+TileIndexData(2, 10) = 1
 
 TileName(3, 0) = "Cut Grass" 'Name of the tile
 TileName(3, 1) = "Placeholder" 'tooltip
@@ -52,7 +57,8 @@ TileIndexData(3, 2) = 0 'blocks shadow
 TileIndexData(3, 3) = 0 'has interior shadow
 TileIndexData(3, 4) = 20 'resistance
 TileIndexData(3, 5) = 1 'is solid
-
+TileIndexData(3, 9) = 0.5 'Friction
+TileIndexData(3, 10) = 1.2
 
 TileName(4, 0) = "Dirt" 'Name of the tile
 TileName(4, 1) = "Placeholder" 'tooltip
@@ -66,6 +72,10 @@ TileIndexData(4, 2) = 0 'blocks shadow
 TileIndexData(4, 3) = 0 'has interior shadow
 TileIndexData(4, 4) = 17 'resistance
 TileIndexData(4, 5) = 1 'is solid
+TileIndexData(4, 9) = 0.8 'Friction
+TileIndexData(4, 10) = 0.8
+
+
 
 
 TileName(5, 0) = "Bush" 'Name of the tile
@@ -80,7 +90,7 @@ TileIndexData(5, 2) = 1 'blocks shadow
 TileIndexData(5, 3) = 0 'has interior shadow
 TileIndexData(5, 4) = 25 'resistance
 TileIndexData(5, 5) = 0 'is solid
-
+TileIndexData(0, 9) = 0 'Friction
 
 TileName(6, 0) = "Chest" 'Name of the tile
 TileName(6, 1) = "Placeholder" 'tooltip
