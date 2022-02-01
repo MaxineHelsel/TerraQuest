@@ -95,8 +95,6 @@ Sub LOADMAP (file As String)
     iii = 1
 
 
-    'TODO add error checking to see if map file exists
-
     'TODO make this a sub with 2 parameterss, 1
     If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1

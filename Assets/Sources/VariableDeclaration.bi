@@ -8,7 +8,7 @@ Dim Shared Sounds As Sounds
 Dim Shared Debug As Debug
 
 'Constants
-const TileParameters=11
+const TileParameters=13
 const InvParameters=11
 
 'Map Variables
