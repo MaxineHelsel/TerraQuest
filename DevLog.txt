@@ -8,15 +8,20 @@ Linux version locked to 30FPS - Unknown cause
 
 #Tiles
 Added berry bush, used as a way to get food, (as well as take damage)
+Added water
+Added ice, very slippery
 
 #Features
 Debug Menu data viewer can now see whats in inventory slot 1
 Worlds now have seeds
-added player velocity, different tiles have effects on speed and slow down
+added player velocity, different tiles have effects on speed and acceleration
+added /fill command set: /fillgt /fillwt /fillct
+added globalPOS to player data tracker
+
 
 #Other Changes
 All blank textures now have a "missing texture" texture
-All hardcoded references to 9 parameters for tiles and items have been updated to a constant and are now at 11
+All hardcoded references to 9 parameters for tiles and items have been updated to constants
 
 
 

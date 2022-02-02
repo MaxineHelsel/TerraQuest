@@ -5,7 +5,7 @@ Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
 DisplayOrder Hardware , Software
-Title "CDF-Quest"
+Title "TerraQuest"
 
 '$include: 'Assets\Sources\VariableDeclaration.bi'
 
@@ -59,7 +59,7 @@ Do
     SETBG
     SetMap
     CastShadow
-    MOVE
+    Move
     COLDET
     SPSET
     SetLighting
@@ -106,8 +106,79 @@ Function MoveRight
 End Function
 
 
+Function Perlin (X As Double, Y As Double, z As Double)
+    Dim i, p, first As Unsigned Byte
+    Static As Unsigned Byte PermArray(512)
+    Dim u, v, w As Double
 
-Sub MOVE
+    Restore permdata
+    If first = 0 Then
+        For i = 0 To 512
+            Read p
+            PermArray(i) = p
+            If i = 256 Then Restore permdata
+        Next
+        first = 1
+    End If
+
+
+    u = PerlinFade(X - Int(X))
+    v = PerlinFade(Y - Int(Y))
+    w = PerlinFade(z - Int(z))
+
+
+    Dim As Byte aaa, aba, aab, abb, baa, bba, bab, bbb
+    aaa = PermArray(PermArray(PermArray(Int(X)) + Int(Y)) + Int(z))
+    aba = PermArray(PermArray(PermArray(Int(X)) + Int(Y) + 1) + Int(z))
+    aab = PermArray(PermArray(PermArray(Int(X)) + Int(Y)) + Int(z) + 1)
+    abb = PermArray(PermArray(PermArray(Int(X)) + Int(Y) + 1) + Int(z) + 1)
+    baa = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y)) + Int(z))
+    bba = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y) + 1) + Int(z))
+    bab = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y)) + Int(z) + 1)
+    bbb = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y) + 1) + Int(z) + 1)
+
+
+
+
+
+    Dim As Unsigned Byte xi, yi, zi
+
+
+    permdata:
+    Data 151,160,137,91,90,15,
+    Data 131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+    Data 190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+    Data 88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,
+    Data 77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+    Data 102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,
+    Data 135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,
+    Data 5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+    Data 223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,
+    Data 129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,
+    Data 251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,
+    Data 49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
+    Data 138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
+
+End Function
+
+Function Grad (hash As Byte, x As Double, y As Double, z As Double)
+
+    Select Case Right$(Hex$(hash), 1)
+
+
+    End Select
+
+End Function
+
+Function LiIp
+End Function
+
+Function PerlinFade (t As Double)
+    PerlinFade = (6 * t ^ 5) - (15 * t ^ 4) + (10 * t ^ 3)
+End Function
+
+
+Sub Move
     Player.movingx = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
     Player.movingy = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
     Player.lastx = Player.x 'these 2 are literally just for the freecammode
@@ -115,22 +186,22 @@ Sub MOVE
 
 
     If MoveUp Then
-        Player.vy = Player.vy - .3
+        Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
         Player.facing = 0
         Player.movingy = 1
     End If
     If MoveDown Then
-        Player.vy = Player.vy + .3
+        Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
         Player.facing = 1
         Player.movingy = 1
     End If
     If MoveLeft Then
-        Player.vx = Player.vx - .3
+        Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
         Player.facing = 2
         Player.movingx = 1
     End If
     If MoveRight Then
-        Player.vx = Player.vx + .3
+        Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
         Player.facing = 3
         Player.movingx = 1
     End If
@@ -156,7 +227,7 @@ Sub MOVE
         End If
         If Player.vx < 0 Then
             Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
-            If Player.vx + 0 Then Player.vx = 0
+            If Player.vx > 0 Then Player.vx = 0
         End If
 
 
@@ -195,7 +266,8 @@ End Sub
 
 
 Sub COLDET
-    Dim StuckFix As _Byte
+    Dim StuckFix As _Byte 'why???, $option noprefix is enabled why the fuck does this have an underscore, also where is this used?
+    Dim i
     Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
     Select Case Player.facing
         Case 0
@@ -213,26 +285,38 @@ Sub COLDET
     End Select
 
     If Flag.NoClip = 0 Then
-        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y) / 16) + 1, 0)
+        For i = 0 To 14
+
+        Next
+    End If
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
+                Print " Colision Up"
                 GoTo col2
+
         End Select
 
         Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
+                Print " Colision Down"
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
+                Print " Colision Up"
                 GoTo col2
+
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
+                Print " Colision Down"
         End Select
 
         col2:
@@ -241,48 +325,58 @@ Sub COLDET
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
+                Print " Colision Left"
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
+                Print " Colision Right"
         End Select
 
         Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
+                Print " Colision Left"
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
+                Print " Colision Right"
         End Select
     End If
 
-    If Flag.NoClip = 0 Then
-        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y) / 16) + 1, 0)
+    'push player outside of tile if inside
+
+    If Flag.NoClip = 1 Then
+        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Player.y = Player.y + 1
+                Print " Colision 3,1"
         End Select
 
         Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
-                Swap Player.y, Player.lasty
+                ' Swap Player.y, Player.lasty
                 Player.y = Player.y - 1
+                Print " Colision 3,2"
         End Select
 
         Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
             Case 1
 
                 Player.x = Player.x + 1
+                Print " Colision 3,3"
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
             Case 1
                 Player.x = Player.x - 1
+                Print " Colision 3,4"
         End Select
     End If
     Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
@@ -992,7 +1086,6 @@ End Sub
 
 
 
-
 Sub DEV
     If Flag.DebugMode = 1 Then
         PrintMode FillBackground
@@ -1003,6 +1096,7 @@ Sub DEV
         Dim databit As Byte
         Dim i, ii As Byte
         Dim DMapX, DMapY As Integer64
+        Dim fillx, filly, fillid As Single
 
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
@@ -1068,6 +1162,7 @@ Sub DEV
             Case "player", "1"
                 Print "Player"
                 Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
+                Print "GlobalPOS"; "("; Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40); ","; Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30); ")"
                 Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.movingx; Player.movingy
@@ -1156,6 +1251,47 @@ Sub DEV
                 Case "ceilingtile", "ct"
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "Set CeilingTile ID: ", CeilingTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                Case "fillwalltile", "fillwt", "fwt"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "WallTile ID: ", fillid
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "X ñ from pos: ", fillx
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Y ñ from pos: ", filly
+
+                    For i = 0 To fillx Step Sgn(fillx)
+                        For ii = 0 To filly Step Sgn(filly)
+                            WallTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                        Next
+                    Next
+
+                Case "fillgroundtile", "fillgt", "fgt"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "GroundTile ID: ", fillid
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "X ñ from pos: ", fillx
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Y ñ from pos: ", filly
+
+                    For i = 0 To fillx Step Sgn(fillx)
+                        For ii = 0 To filly Step Sgn(filly)
+                            GroundTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                        Next
+                    Next
+                Case "fillceilingtile", "fillct", "fct"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "WallTile ID: ", fillid
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "X ñ from pos: ", fillx
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Y ñ from pos: ", filly
+
+                    For i = 0 To fillx Step Sgn(fillx)
+                        For ii = 0 To filly Step Sgn(filly)
+                            CeilingTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                        Next
+                    Next
+
                 Case "tiledata", "td"
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "Select Data Bit: ", databit

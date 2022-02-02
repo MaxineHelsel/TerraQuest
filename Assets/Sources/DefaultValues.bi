@@ -1,7 +1,7 @@
 'Note: any changes made to this file, and any other source files require a recompile of the game before they are recognized
 
 'Default variables that are required to be set on initial load
-Game.Title = "CDF-Quest"
+Game.Title = "TerraQuest"
 Game.Buildinfo = "Survival Test"
 Game.Version = "Alpha Version 21"
 Game.Designation = "Edge"
