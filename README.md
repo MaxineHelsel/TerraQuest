@@ -1,4 +1,4 @@
-# CDF-Quest
+# TerraQuest
 
 ### WARNING This is the edge branch, meaning this version could be incomplete, unstable, untested, broken, etc. If you are looking for the latest released version, switch to stable.
 
@@ -50,19 +50,31 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 - Memory leak when minimized
 
-- Linux version locked to 30fps
-
-- Random characters and 1fps on world load - FIXED
+- Random characters and 1fps on world load 
 
 - All errors cause duplicate definition error - Unable to fix till QB64 is updated, patched if compiled with QB64 2.1 dev build
 
 ### New Items
 
-- Berry Bush - Painful on contact, Sweet when eaten, this item has it all
+- Berry Bush - Painful on contact, Sweet when eaten, this item has it all (damage and food not implimented yet)
+
+- Ice - A cold slippery version of water
+
+- Water - May or may not be wet
 
 ### New Features
 
+- Worlds now have seed numbers, use to generate the same world again
+
+- Natural terrain generation, lakes will now generate
+
+- Velocity and friction have been added
+
 - Added TPS counter to debug menu, separating Frames per second and ticks per second
+
+- Added /fillwt /fillgt /fillct commands to replace a large ammount of tiles at once
+
+- Added inventory slot 1 tracker to data tracker
 
 ## Alpha Version 20
 

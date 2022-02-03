@@ -2,12 +2,12 @@ Alpha Version 21
 
 #Bugs
 Memory leak when minimized - fix implimented but not working fully
-Linux version locked to 30FPS - Unknown cause
+NO Linux version locked to 30FPS - Unknown cause
 
 #Items
 
 #Tiles
-Added berry bush, used as a way to get food, (as well as take damage)
+Added berry bush, will be used as a way to get food, as well as take damage
 Added water
 Added ice, very slippery
 
@@ -17,7 +17,7 @@ Worlds now have seeds
 added player velocity, different tiles have effects on speed and acceleration
 added /fill command set: /fillgt /fillwt /fillct
 added globalPOS to player data tracker
-
+Added lake terrain generation
 
 #Other Changes
 All blank textures now have a "missing texture" texture

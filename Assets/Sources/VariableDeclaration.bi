@@ -33,7 +33,7 @@ Dim Shared MapX As Integer64
 Dim Shared MapY As Integer64
 
 Dim Shared WorldName As String
-dim shared WorldSeed as double
+dim shared WorldSeed as integer64
 
 Dim Shared GlobalLightLevel as byte
 dim shared LocalLightLevel(41,31) as byte
@@ -64,6 +64,9 @@ Dim Shared Game.FCV As String
 Dim Shared Game.HostOS As String
 Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
+
+Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
+
 
 
 

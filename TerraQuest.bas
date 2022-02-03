@@ -106,78 +106,6 @@ Function MoveRight
 End Function
 
 
-Function Perlin (X As Double, Y As Double, z As Double)
-    Dim i, p, first As Unsigned Byte
-    Static As Unsigned Byte PermArray(512)
-    Dim u, v, w As Double
-
-    Restore permdata
-    If first = 0 Then
-        For i = 0 To 512
-            Read p
-            PermArray(i) = p
-            If i = 256 Then Restore permdata
-        Next
-        first = 1
-    End If
-
-
-    u = PerlinFade(X - Int(X))
-    v = PerlinFade(Y - Int(Y))
-    w = PerlinFade(z - Int(z))
-
-
-    Dim As Byte aaa, aba, aab, abb, baa, bba, bab, bbb
-    aaa = PermArray(PermArray(PermArray(Int(X)) + Int(Y)) + Int(z))
-    aba = PermArray(PermArray(PermArray(Int(X)) + Int(Y) + 1) + Int(z))
-    aab = PermArray(PermArray(PermArray(Int(X)) + Int(Y)) + Int(z) + 1)
-    abb = PermArray(PermArray(PermArray(Int(X)) + Int(Y) + 1) + Int(z) + 1)
-    baa = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y)) + Int(z))
-    bba = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y) + 1) + Int(z))
-    bab = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y)) + Int(z) + 1)
-    bbb = PermArray(PermArray(PermArray(Int(X) + 1) + Int(Y) + 1) + Int(z) + 1)
-
-
-
-
-
-    Dim As Unsigned Byte xi, yi, zi
-
-
-    permdata:
-    Data 151,160,137,91,90,15,
-    Data 131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-    Data 190,6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
-    Data 88,237,149,56,87,174,20,125,136,171,168,68,175,74,165,71,134,139,48,27,166,
-    Data 77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
-    Data 102,143,54,65,25,63,161,1,216,80,73,209,76,132,187,208,89,18,169,200,196,
-    Data 135,130,116,188,159,86,164,100,109,198,173,186,3,64,52,217,226,250,124,123,
-    Data 5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
-    Data 223,183,170,213,119,248,152,2,44,154,163,70,221,153,101,155,167,43,172,9,
-    Data 129,22,39,253,19,98,108,110,79,113,224,232,178,185,112,104,218,246,97,228,
-    Data 251,34,242,193,238,210,144,12,191,179,162,241,81,51,145,235,249,14,239,107,
-    Data 49,192,214,31,181,199,106,157,184,84,204,176,115,121,50,45,127,4,150,254,
-    Data 138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
-
-End Function
-
-Function Grad (hash As Byte, x As Double, y As Double, z As Double)
-
-    Select Case Right$(Hex$(hash), 1)
-
-
-    End Select
-
-End Function
-
-Function LiIp
-End Function
-
-Function PerlinFade (t As Double)
-    PerlinFade = (6 * t ^ 5) - (15 * t ^ 4) + (10 * t ^ 3)
-End Function
-
-
 Sub Move
     Player.movingx = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
     Player.movingy = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
@@ -266,6 +194,7 @@ End Sub
 
 
 Sub COLDET
+    Dim ColU, ColD, ColL, ColR
     Dim StuckFix As _Byte 'why???, $option noprefix is enabled why the fuck does this have an underscore, also where is this used?
     Dim i
     Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
@@ -285,16 +214,11 @@ Sub COLDET
     End Select
 
     If Flag.NoClip = 0 Then
-        For i = 0 To 14
-
-        Next
-    End If
-
-    If Flag.NoClip = 0 Then
         Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
-                Print " Colision Up"
+
+                ColU = 1
                 GoTo col2
 
         End Select
@@ -302,13 +226,15 @@ Sub COLDET
         Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
-                Print " Colision Down"
+
+                ColD = 1
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
-                Print " Colision Up"
+
+                ColU = 1
                 GoTo col2
 
         End Select
@@ -316,7 +242,8 @@ Sub COLDET
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
-                Print " Colision Down"
+
+                ColD = 1
         End Select
 
         col2:
@@ -325,63 +252,77 @@ Sub COLDET
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
-                Print " Colision Left"
+                ' Print " Colision Left"
+                ColU = 0
+                ColD = 0
+                ColL = 1
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
-                Print " Colision Right"
+                ' Print " Colision Right"
+                ColU = 0
+                ColD = 0
+                ColR = 1
         End Select
 
         Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
-                Print " Colision Left"
+                '  Print " Colision Left"
+                ColU = 0
+                ColD = 0
+
+                ColL = 1
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 Swap Player.y, Player.lasty
                 Player.x = Player.lastx
-                Print " Colision Right"
+                ' Print " Colision Right"
+                ColU = 0
+                ColD = 0
+
+                ColR = 1
         End Select
     End If
 
     'push player outside of tile if inside
 
-    If Flag.NoClip = 1 Then
+    If Flag.NoClip = 0 Then
         Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
             Case 1
                 Player.y = Player.y + 1
-                Print " Colision 3,1"
+                '  Print " Colision 3,1"
         End Select
 
         Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
             Case 1
                 ' Swap Player.y, Player.lasty
                 Player.y = Player.y - 1
-                Print " Colision 3,2"
+                '  Print " Colision 3,2"
         End Select
 
         Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
             Case 1
 
                 Player.x = Player.x + 1
-                Print " Colision 3,3"
+                ' Print " Colision 3,3"
         End Select
 
         Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
             Case 1
                 Player.x = Player.x - 1
-                Print " Colision 3,4"
+                ' Print " Colision 3,4"
         End Select
     End If
-    Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
 
-
+    If ColU = 1 Or ColD = 1 Then Player.vy = 0
+    If ColL = 1 Or ColR = 1 Then Player.vx = 0
 End Sub
 
 
@@ -1416,19 +1357,23 @@ Sub NewWorld
 
     End If
     'Randomize WorldSeed
-    SavedMapX = 0
+    SavedMapX = -1
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
     SAVEMAP
-    GenerateMap
+    Do
+        SavedMapX = SavedMapX + 1
+        GenerateMap
+    Loop Until GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) <> 13
     SAVEMAP
     LOADWORLD
 End Sub
 
 Sub GenerateMap
     Dim i, ii, iii
-    Randomize Val(Str$(MapX) + Str$(MapY) + Str$(WorldSeed)) 'TODO, include world layer in this too
+    Dim PerlinTile As Double
+
 
     'if map is layer 0
     For i = 0 To 31
@@ -1442,26 +1387,43 @@ Sub GenerateMap
             CeilingTile(ii, i) = 1
             TileData(ii, i, 6) = 255
 
-            'generate bushes
-            If Ceil(Rnd * 10) = 5 Then
-                WallTile(ii, i) = 5
-            End If
 
-            'generate ground wood items
-            If Ceil(Rnd * 100) = 50 Then
-                WallTile(ii, i) = 11
-                NewContainer SavedMapX, SavedMapY, ii, i
-                OpenContainer SavedMapX, SavedMapY, ii, i
-                For iii = 0 To InvParameters
-                    Container(0, iii) = ItemIndex(19, iii)
-                Next
-                Container(0, 7) = Ceil(Rnd * 3)
-                CloseContainer SavedMapX, SavedMapY, ii, i
-            End If
+            'generate terrain
+            PerlinTile = Perlin((ii + (SavedMapX * 40)) / 100, (i + (SavedMapY * 30)) / 100, 0, WorldSeed)
+            Select Case PerlinTile
+                Case Is < 0.35
+                    GroundTile(ii, i) = 13
+            End Select
+        Next
+    Next
+    Randomize Val(Str$(MapX) + Str$(MapY) + Str$(WorldSeed)) 'TODO, include world layer in this too
+    For i = 0 To 31
+        For ii = 0 To 41
 
-            'generate berry bushes
-            If Ceil(Rnd * 500) = 250 Then
-                WallTile(ii, i) = 12
+
+            If GroundTile(ii, i) <> 13 Then
+
+                'generate bushes
+                If Ceil(Rnd * 10) = 5 Then
+                    WallTile(ii, i) = 5
+                End If
+
+                'generate ground wood items
+                If Ceil(Rnd * 100) = 50 Then
+                    WallTile(ii, i) = 11
+                    NewContainer SavedMapX, SavedMapY, ii, i
+                    OpenContainer SavedMapX, SavedMapY, ii, i
+                    For iii = 0 To InvParameters
+                        Container(0, iii) = ItemIndex(19, iii)
+                    Next
+                    Container(0, 7) = Ceil(Rnd * 3)
+                    CloseContainer SavedMapX, SavedMapY, ii, i
+                End If
+
+                'generate berry bushes
+                If Ceil(Rnd * 500) = 250 Then
+                    WallTile(ii, i) = 12
+                End If
             End If
 
             'update set tiles
@@ -1543,6 +1505,6 @@ End Sub
 '$include: 'Assets\Sources\MapDraw.bm'
 '$include: 'Assets\Sources\ScreenZoom.bm'
 '$include: 'Assets\Sources\AudioControl.bm'
-
+'$include: 'Assets\Sources\PerlinNoise.bm'
 
 
