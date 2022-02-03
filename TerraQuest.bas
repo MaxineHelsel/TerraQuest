@@ -1,14 +1,11 @@
 $NoPrefix
 Option Explicit
-'On Error GoTo ERRORHANDLE
+On Error GoTo ERRORHANDLE
 Randomize Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
 DisplayOrder Hardware , Software
-Title "CDF-Quest"
-
-'todo make the number of attributes a constant
-
+Title "TerraQuest"
 
 '$include: 'Assets\Sources\VariableDeclaration.bi'
 
@@ -19,6 +16,10 @@ Title "CDF-Quest"
 '$include: 'Assets\Sources\InventoryIndex.bi'
 
 '$include: 'Assets\Sources\CreativeInventory.bi'
+
+Rem'$include: 'Assets\Sources\CraftingIndex.bi'
+
+Rem'$include: 'Assets\Sources\EffectsIndex.bi'
 
 
 INITIALIZE
@@ -47,10 +48,18 @@ DisplayOrder GLRender , Hardware , Software
 game:
 
 Do
+    If Flag.InitialRender = 0 Then 'this section of if and elseif is to prevent the game from giving random bullshit characters and running at 1fps, i have no idea why this works, or what caused it in the first place, but hey.
+        SwitchRender 0
+        Flag.InitialRender = 1
+    ElseIf Flag.InitialRender = 1 Then
+        SwitchRender 1
+        Flag.InitialRender = 2
+    End If
+
     SETBG
     SetMap
     CastShadow
-    MOVE
+    Move
     COLDET
     SPSET
     SetLighting
@@ -58,8 +67,10 @@ Do
     HUD
     ZOOM
     DEV
-    ChangeMap
+    ChangeMap 0, 0, 0
     DayLightCycle
+    MinMemFix
+
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
@@ -75,11 +86,271 @@ Loop
 
 
 
+
 Error 102
 
+Function MoveUp
+    MoveUp = KeyDown(119)
+End Function
 
-Sub PickUpItem (ItemID)
-    If ItemID = -1 Then Exit Sub
+Function MoveDown
+    MoveDown = KeyDown(115)
+End Function
+
+Function MoveLeft
+    MoveLeft = KeyDown(97)
+End Function
+
+Function MoveRight
+    MoveRight = KeyDown(100)
+End Function
+
+
+Sub Move
+    Player.movingx = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
+    Player.movingy = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
+    Player.lastx = Player.x 'these 2 are literally just for the freecammode
+    Player.lasty = Player.y
+
+
+    If MoveUp Then
+        Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.facing = 0
+        Player.movingy = 1
+    End If
+    If MoveDown Then
+        Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.facing = 1
+        Player.movingy = 1
+    End If
+    If MoveLeft Then
+        Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.facing = 2
+        Player.movingx = 1
+    End If
+    If MoveRight Then
+        Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.facing = 3
+        Player.movingx = 1
+    End If
+
+    If Player.vy > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
+    If Player.vy < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+
+    If Player.vx > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
+    If Player.vx < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+
+    If Player.movingy = 0 Then
+        If Player.vy > 0 Then
+            Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        End If
+        If Player.vy < 0 Then
+            Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            If Player.vy > 0 Then Player.vy = 0
+        End If
+    End If
+    If Player.movingx = 0 Then
+        If Player.vx > 0 Then
+            Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        End If
+        If Player.vx < 0 Then
+            Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            If Player.vx > 0 Then Player.vx = 0
+        End If
+
+
+    End If
+
+    Player.x = Player.x + Player.vx
+    Player.y = Player.y + Player.vy
+
+    'stops the player from going out of bounds
+    If Player.x <= 0 Then Player.x = 0
+    If Player.y <= 0 Then Player.y = 0
+    If Player.x >= 640 - 16 Then Player.x = 640 - 16
+    If Player.y >= 480 - 16 Then Player.y = 480 - 16
+
+    'self explanitory, but if you must know its to control the camera in freecam mode
+    If Flag.FreeCam = 1 Then
+        Player.x = Player.lastx
+        Player.y = Player.lasty
+        If Player.movingx = 1 Or Player.movingy = 1 Then
+            Select Case Player.facing
+                Case 0
+                    CameraPositionY = CameraPositionY - 1
+                Case 1
+                    CameraPositionY = CameraPositionY + 1
+                Case 2
+                    CameraPositionX = CameraPositionX - 1
+                Case 3
+                    CameraPositionX = CameraPositionX + 1
+            End Select
+            Player.movingx = 0
+            Player.movingy = 0
+        End If
+    End If
+
+End Sub
+
+
+Sub COLDET
+    Dim ColU, ColD, ColL, ColR
+    Dim StuckFix As _Byte 'why???, $option noprefix is enabled why the fuck does this have an underscore, also where is this used?
+    Dim i
+    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    Select Case Player.facing
+        Case 0
+            If Player.y - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
+        Case 1
+            If Player.y + 8 + 16 >= 480 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
+        Case 2
+            If Player.x - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+        Case 3
+            If Player.x + 8 + 16 >= 640 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    End Select
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColU = 1
+                GoTo col2
+
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColD = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColU = 1
+                GoTo col2
+
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColD = 1
+        End Select
+
+        col2:
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                ' Print " Colision Left"
+                ColU = 0
+                ColD = 0
+                ColL = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                ' Print " Colision Right"
+                ColU = 0
+                ColD = 0
+                ColR = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                '  Print " Colision Left"
+                ColU = 0
+                ColD = 0
+
+                ColL = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                ' Print " Colision Right"
+                ColU = 0
+                ColD = 0
+
+                ColR = 1
+        End Select
+    End If
+
+    'push player outside of tile if inside
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Player.y = Player.y + 1
+                '  Print " Colision 3,1"
+        End Select
+
+        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                ' Swap Player.y, Player.lasty
+                Player.y = Player.y - 1
+                '  Print " Colision 3,2"
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
+            Case 1
+
+                Player.x = Player.x + 1
+                ' Print " Colision 3,3"
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
+            Case 1
+                Player.x = Player.x - 1
+                ' Print " Colision 3,4"
+        End Select
+    End If
+
+    If ColU = 1 Or ColD = 1 Then Player.vy = 0
+    If ColL = 1 Or ColR = 1 Then Player.vx = 0
+End Sub
+
+
+
+
+
+Sub MinMemFix 'this subroutine is specifically to try to fix a memory leak that occurs when in hardware accelerated mode, and the game is minimized. by simply turning off hardware acceleration.
+    Static Last
+    Select Case ScreenIcon
+        Case -1
+            If Last = -1 Then Exit Select
+            SwitchRender 0
+            Last = -1
+        Case 0
+            If Last = 0 Then Exit Select
+            SwitchRender 1
+            Last = 0
+
+    End Select
+End Sub
+
+Function PickUpItem (ItemID)
+    Static PickupDelay As Single
+    If PickupDelay > CurrentTick Then
+        PickUpItem = 1
+        Exit Function
+    End If
+    If ItemID = -1 Then Exit Function
     Dim i, ii, iii
     For i = 0 To 3
         For ii = 0 To 5
@@ -95,7 +366,7 @@ Sub PickUpItem (ItemID)
     For i = 0 To 3
         For ii = 0 To 5
             If Inventory(i, ii, 9) = -1 Then
-                For iii = 0 To 9
+                For iii = 0 To InvParameters
                     Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
                 Next
                 GoTo PickedUp
@@ -103,8 +374,12 @@ Sub PickUpItem (ItemID)
         Next
     Next
     Alert 0, "Could not pick up item, Inventory full."
+    PickUpItem = 1
+    PickupDelay = CurrentTick + 60
+    Exit Function
     PickedUp:
-End Sub
+    PickUpItem = 0
+End Function
 Function FacingX
     Select Case Player.facing
         Case 0
@@ -176,7 +451,7 @@ Sub UseItem (Slot)
                     If GroundTile(FacingX, FacingY) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
                             If GameMode <> 1 Then
-                                PickUpItem (TileIndex(GroundTile(FacingX, FacingY), 3))
+                                If PickUpItem(TileIndex(GroundTile(FacingX, FacingY), 3)) = 1 Then Exit Select
                             End If
                             GroundTile(FacingX, FacingY) = 0
                             TileData(FacingX, FacingY, 4) = 255
@@ -193,7 +468,7 @@ Sub UseItem (Slot)
                     If WallTile(FacingX, FacingY) <> 1 Then
                         If TileData(FacingX, FacingY, 5) <= 0 Then
                             If GameMode <> 1 Then
-                                PickUpItem (TileIndex(WallTile(FacingX, FacingY), 3))
+                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
                             End If
                             WallTile(FacingX, FacingY) = 1
                             TileData(FacingX, FacingY, 5) = 255
@@ -223,7 +498,7 @@ Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
     'Dim Shared Inventory(3, 5,9) As Integer
     'dim shared CreativeInventory(2,5,9,1)
     Dim i
-    For i = 0 To 9
+    For i = 0 To InvParameters
         Select Case Mode
             Case 0
                 Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
@@ -234,7 +509,7 @@ Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
 End Sub
 
 
-Sub ChangeMap
+Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TickDelay
     Static TotalDelay
     Static LightStep
@@ -242,37 +517,46 @@ Sub ChangeMap
     If LightStep < 12 Then
         Select Case Player.facing
             Case 0
-                If Player.y <= 0 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.y <= 0 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 1
-                If Player.y >= 480 - 16 And Player.x = Player.lastx And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.y >= 480 - 16 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 2
-                If Player.x <= 0 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.x <= 0 And Player.y = Player.lasty And Player.movingx = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 3
-                If Player.x >= 640 - 16 And Player.y = Player.lasty And Player.moving = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.x >= 640 - 16 And Player.y = Player.lasty And Player.movingx = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
 
 
         End Select
+        If Command = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
         If TickDelay = 5 Then TickDelay = 0: LightStep = LightStep + 2
+        If Command = 1 Then ChangeMap 1, CommandMapX, CommandMapY
     Else
         SAVEMAP
-        Select Case Player.facing
-            Case 0
-                SavedMapY = SavedMapY - 1
-                LOADMAP (SavedMap)
-                Player.y = 480
-            Case 1
-                SavedMapY = SavedMapY + 1
-                LOADMAP (SavedMap)
-                Player.y = 0
-            Case 2
-                SavedMapX = SavedMapX - 1
-                LOADMAP (SavedMap)
-                Player.x = 640
-            Case 3
-                SavedMapX = SavedMapX + 1
-                LOADMAP (SavedMap)
-                Player.x = 0
-        End Select
+        If Command = 0 Then
+            Select Case Player.facing
+                Case 0
+                    SavedMapY = SavedMapY - 1
+                    LOADMAP (SavedMap)
+                    Player.y = 480
+                Case 1
+                    SavedMapY = SavedMapY + 1
+                    LOADMAP (SavedMap)
+                    Player.y = 0
+                Case 2
+                    SavedMapX = SavedMapX - 1
+                    LOADMAP (SavedMap)
+                    Player.x = 640
+                Case 3
+                    SavedMapX = SavedMapX + 1
+                    LOADMAP (SavedMap)
+                    Player.x = 0
+            End Select
+        End If
+        If Command = 1 Then
+            SavedMapX = CommandMapX
+            SavedMapY = CommandMapY
+            LOADMAP (SavedMap)
+        End If
         For i = 0 To 31
             For ii = 0 To 41
                 UpdateTile ii, i
@@ -283,7 +567,7 @@ Sub ChangeMap
         LightStep = 0
     End If
 
-    If Player.moving = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
+    If Player.movingx = 0 And Player.movingy = 0 And Command = 0 Then TickDelay = 0: TotalDelay = 0: LightStep = 0
     OverlayLightLevel = LightStep
 
     'Print Player.x; Player.y; Player.lasty; Player.moving; Player.facing; TickDelay; Settings.TickRate
@@ -308,7 +592,8 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(GroundTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(GroundTile(TileX, TileY), 6)
     If TileIndexData(WallTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(WallTile(TileX, TileY), 6)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
-
+    TileData(TileX, TileY, 9) = TileIndexData(GroundTile(TileX, TileY), 9)
+    TileData(TileX, TileY, 10) = TileIndexData(GroundTile(TileX, TileY), 10)
 End Sub
 'For i = TileData(TileX, TileY, 8) To 0 Step -1
 
@@ -319,7 +604,7 @@ Sub Alert (img, message As String)
     timeout = timeout + Settings.TickRate
     Locate 20, 1
     ENDPRINT message
-    If timeout < 60 * 5 Then Alert img, message Else timeout = 0
+    If timeout < 60 Then Alert img, message Else timeout = 0
 End Sub
 
 Sub INTER
@@ -341,7 +626,7 @@ Sub NewStack (ItemID, StackNumber)
     Dim i, ii, iii
     For i = 0 To 3
         For ii = 0 To 5
-            If Inventory(i, ii, 9) = -1 Then
+            If Inventory(i, ii, InvParameters) = -1 Then
                 For iii = 0 To 9
                     Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
                 Next
@@ -490,11 +775,11 @@ Sub HUD
                         Color RGB(0, 0, 0)
                         For iii = 0 To 2
                             For ii = 0 To 2
-                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + iii - 1, (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap + ii - 1), Str$(Container(i, 7))
+                                PrintString ((0 + adjustx) + (adjustspace * hbpos) + iii - 1, (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 9) - invgap + ii - 1), Str$(Container(i, 7))
                             Next
                         Next
                         Color RGB(255, 255, 255)
-                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 5) - invgap), Str$(Container(i, 7))
+                        PrintString ((0 + adjustx) + (adjustspace * hbpos), (480 - 16 + adjusty) - (adjustspace * (invrow + 3) + 9) - invgap), Str$(Container(i, 7))
                     End If
 
                     hbpos = hbpos + 1
@@ -723,7 +1008,7 @@ Sub ConSwap (ContainerItem, ContainerSelected, InventoryY, Mode)
     'Dim Shared Inventory(3, 5,9) As Integer
     'dim shared CreativeInventory(2,5,9,1)
     Dim i
-    For i = 0 To 9
+    For i = 0 To InvParameters
         Select Case Mode
             Case 0
                 Swap Container(ContainerItem, i), Container(ContainerSelected, i)
@@ -735,11 +1020,10 @@ End Sub
 
 Sub EmptyContainerSlot (slot)
     Dim i
-    For i = 0 To 9
+    For i = 0 To InvParameters
         Container(slot, i) = -1
     Next
 End Sub
-
 
 
 
@@ -752,7 +1036,9 @@ Sub DEV
         Dim dummystring As String
         Dim databit As Byte
         Dim i, ii As Byte
-        Static RenderMode As Byte
+        Dim DMapX, DMapY As Integer64
+        Dim fillx, filly, fillid As Single
+
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
         Print
@@ -767,7 +1053,7 @@ Sub DEV
         ENDPRINT "Facing tile data:"
         If Player.x >= 0 And Player.x <= 640 - 16 And Player.y >= 0 And Player.y <= 480 - 16 Then
 
-            For i = 0 To 9
+            For i = 0 To TileParameters
                 dummystring = dummystring + Str$(TileData(FacingX, FacingY, i))
             Next
             ENDPRINT dummystring
@@ -787,10 +1073,10 @@ Sub DEV
         Locate 1, 1
         Print Game.Title; " ("; Game.Buildinfo; ")"
         Print
-        If RenderMode = 0 Then Print "FPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
-        If RenderMode > 0 Then Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
+        Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
+        Print "World Seed:"; WorldSeed
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
 
@@ -817,11 +1103,28 @@ Sub DEV
             Case "player", "1"
                 Print "Player"
                 Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
+                Print "GlobalPOS"; "("; Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40); ","; Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30); ")"
+                Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
-                Print "Motion:"; Player.moving
-                ' Print "Contacted Tile ID:"; Player.tile; "(" + Hex$(Player.tile) + ")"
-                ' Print "Facing Tile ID:"; Player.tilefacing; "(" + Hex$(Player.tilefacing) + ")"
+                Print "Motion:"; Player.movingx; Player.movingy
                 Print Player.lastx; Player.lasty
+            Case "inv", "inventory", "2"
+                Print "Inventory Slot 1 Data"
+                Select Case Inventory(0, 0, 0)
+                    Case 0
+                        Print "Tile: "; Trim$((ItemName(Inventory(0, 0, 9), 0))); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | TileID:"; Str$(Inventory(0, 0, 3)); " | Layer:"; Str$(Inventory(0, 0, 4)); " | "; Trim$(Str$(Inventory(0, 0, 5))) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                    Case 1
+                        Print "Tool: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | Durabillity:"; Str$(Inventory(0, 0, 3)); "/"; Trim$(Str$(Inventory(0, 0, 4))); " | Type:"; Str$(Inventory(0, 0, 5)); " | Strength:"; Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                    Case 2
+                        Print "Sword: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | Durabillity:"; Str$(Inventory(0, 0, 3)); "/"; Trim$(Str$(Inventory(0, 0, 4))); " | Delay:"; Str$(Inventory(0, 0, 5)); " | Damage:"; Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); " | Range"; Str$(Inventory(0, 0, 10)); " | Speed:"; Str$(Inventory(0, 0, 11));
+                    Case 3
+                        Print "Crafting Ingredient: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " |"; Str$(Inventory(0, 0, 3)) + Str$(Inventory(0, 0, 4)) + Str$(Inventory(0, 0, 5)) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                    Case Else
+                        Print "Unknown: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " |"; Str$(Inventory(0, 0, 3)) + Str$(Inventory(0, 0, 4)) + Trim$(Str$(Inventory(0, 0, 5))) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
+                End Select
+                'For i = 0 To InvParameters
+                '    Print Inventory(0, 0, i);
+                'Next
             Case Else
                 Print "Unrecognized Tile or Entity"
         End Select
@@ -889,6 +1192,47 @@ Sub DEV
                 Case "ceilingtile", "ct"
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "Set CeilingTile ID: ", CeilingTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                Case "fillwalltile", "fillwt", "fwt"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "WallTile ID: ", fillid
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "X ñ from pos: ", fillx
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Y ñ from pos: ", filly
+
+                    For i = 0 To fillx Step Sgn(fillx)
+                        For ii = 0 To filly Step Sgn(filly)
+                            WallTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                        Next
+                    Next
+
+                Case "fillgroundtile", "fillgt", "fgt"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "GroundTile ID: ", fillid
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "X ñ from pos: ", fillx
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Y ñ from pos: ", filly
+
+                    For i = 0 To fillx Step Sgn(fillx)
+                        For ii = 0 To filly Step Sgn(filly)
+                            GroundTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                        Next
+                    Next
+                Case "fillceilingtile", "fillct", "fct"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "WallTile ID: ", fillid
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "X ñ from pos: ", fillx
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Y ñ from pos: ", filly
+
+                    For i = 0 To fillx Step Sgn(fillx)
+                        For ii = 0 To filly Step Sgn(filly)
+                            CeilingTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                        Next
+                    Next
+
                 Case "tiledata", "td"
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "Select Data Bit: ", databit
@@ -926,7 +1270,12 @@ Sub DEV
                 Case "time"
                     Locate 28, 1: Print "          "
                     Locate 28, 1: Input "Set time:  ", GameTime
-
+                Case "maptp"
+                    Locate 28, 1: Print "              "
+                    Locate 28, 1: Input "MapX Cord", DMapX
+                    Locate 28, 1: Print "              "
+                    Locate 28, 1: Input "MapY Cord", DMapY
+                    ChangeMap 1, DMapX, DMapY
                 Case Else
             End Select
             KeyClear
@@ -966,6 +1315,7 @@ Sub INITIALIZE
     OSPROBE
 
     SwitchRender (DefaultRenderMode)
+    RenderMode = DefaultRenderMode
 
 
 End Sub
@@ -974,7 +1324,7 @@ Sub SwitchRender (mode As Byte)
     Static FirstSkip As Byte
     If mode <> 0 And mode <> 1 Then Exit Sub
 
-    If FirstSkip = 1 Then
+    If FirstSkip = 1 Then 'this is to prevent the game from crashing if the files arent loaded yet, because this is also run to initially load the files
         FreeImage Texture.PlayerSprites
         FreeImage Texture.TileSheet
         FreeImage Texture.ItemSheet
@@ -1000,40 +1350,83 @@ Sub NewWorld
     KeyClear
     AutoDisplay
     Input "World Name?", WorldName
-    'Input "World Seed?", WorldSeed
+    Input "World Seed? (0 for random)", WorldSeed
+    If WorldSeed = 0 Then
+        Randomize Timer
+        WorldSeed = Ceil(Rnd * 18446744073709551615) - 9223372036854775807
+
+    End If
     'Randomize WorldSeed
-    SavedMapX = 0
+    SavedMapX = -1
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
     SAVEMAP
-    GenerateMap
+    Do
+        SavedMapX = SavedMapX + 1
+        GenerateMap
+    Loop Until GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) <> 13
     SAVEMAP
     LOADWORLD
 End Sub
 
 Sub GenerateMap
     Dim i, ii, iii
+    Dim PerlinTile As Double
+
+
+    'if map is layer 0
     For i = 0 To 31
         For ii = 0 To 41
+
+            'generate base tiles
             GroundTile(ii, i) = 2
             TileData(ii, i, 4) = 255
             WallTile(ii, i) = 1
             TileData(ii, i, 5) = 255
             CeilingTile(ii, i) = 1
             TileData(ii, i, 6) = 255
-            If Ceil(Rnd * 10) = 5 Then WallTile(ii, i) = 5
-            If Ceil(Rnd * 100) = 50 Then
-                WallTile(ii, i) = 11
-                NewContainer SavedMapX, SavedMapY, ii, i
-                OpenContainer SavedMapX, SavedMapY, ii, i
-                For iii = 0 To 9
-                    Container(0, iii) = ItemIndex(19, iii)
-                Next
-                Container(0, 7) = Ceil(Rnd * 3)
-                CloseContainer SavedMapX, SavedMapY, ii, i
 
+
+            'generate terrain
+            PerlinTile = Perlin((ii + (SavedMapX * 40)) / 100, (i + (SavedMapY * 30)) / 100, 0, WorldSeed)
+            Select Case PerlinTile
+                Case Is < 0.35
+                    GroundTile(ii, i) = 13
+            End Select
+        Next
+    Next
+    Randomize Val(Str$(MapX) + Str$(MapY) + Str$(WorldSeed)) 'TODO, include world layer in this too
+    For i = 0 To 31
+        For ii = 0 To 41
+
+
+            If GroundTile(ii, i) <> 13 Then
+
+                'generate bushes
+                If Ceil(Rnd * 10) = 5 Then
+                    WallTile(ii, i) = 5
+                End If
+
+                'generate ground wood items
+                If Ceil(Rnd * 100) = 50 Then
+                    WallTile(ii, i) = 11
+                    NewContainer SavedMapX, SavedMapY, ii, i
+                    OpenContainer SavedMapX, SavedMapY, ii, i
+                    For iii = 0 To InvParameters
+                        Container(0, iii) = ItemIndex(19, iii)
+                    Next
+                    Container(0, 7) = Ceil(Rnd * 3)
+                    CloseContainer SavedMapX, SavedMapY, ii, i
+                End If
+
+                'generate berry bushes
+                If Ceil(Rnd * 500) = 250 Then
+                    WallTile(ii, i) = 12
+                End If
             End If
+
+            'update set tiles
             UpdateTile ii, i
         Next
     Next
@@ -1051,7 +1444,7 @@ Sub NewContainer (MapX, Mapy, Tilex, Tiley)
     Put #1, total, ContainerData(containertype, 0): total = total + 1
     Put #1, total, ContainerData(containertype, 1): total = total + 1
     For i = 0 To ContainerData(containertype, 0)
-        For ii = 0 To 9
+        For ii = 0 To InvParameters
             Put #1, total, empty: total = total + 1
         Next
     Next
@@ -1069,7 +1462,7 @@ Sub OpenContainer (MapX, Mapy, Tilex, Tiley)
     Get #1, total, Container(18, 0): total = total + 1
     Get #1, total, Container(19, 0): total = total + 1
     For i = 0 To ContainerSize
-        For ii = 0 To 9
+        For ii = 0 To InvParameters
             Get #1, total, Container(i, ii): total = total + 1
         Next
     Next
@@ -1087,145 +1480,12 @@ Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
     Put #1, total, Container(18, 0): total = total + 1
     Put #1, total, Container(19, 0): total = total + 1
     For i = 0 To ContainerSize
-        For ii = 0 To 9
+        For ii = 0 To InvParameters
             Put #1, total, Container(i, ii): total = total + 1
         Next
     Next
     Close #1
 
-End Sub
-
-
-Sub ErrorHandler
-    AutoDisplay
-    Cls
-    PLAYSOUND Sounds.error
-    Delay 0.5
-    KeyClear
-    Locate 1, 1
-    CENTERPRINT "CDF ERROR HANDLER"
-    Print "Error Code:"; Err
-    Locate 2, 1
-    ENDPRINT "Error Line:" + Str$(ErrorLine)
-    Print "--------------------------------------------------------------------------------"
-    Print
-    '       PRINT "--------------------------------------------------------------------------------"
-    Select Case Err
-        Case 100
-            Print "Assets folder is incomplete, this error can be triggered by one or more of the"
-            Print "following conditions:"
-            Print
-            Print
-            Print "     The assets folder is missing"
-            Print
-            Print "     Sub-directories in the Assets folder are missing"
-            Print
-            Print "     The contents of assets, or the directory itself is corrupted"
-            Print
-            Print "     You do not have proper permissions to access the assets directory"
-            Print
-            Print
-            Print "Make sure the entireity of the assets folder is present and accessible to your"
-            Print "user account and, if necessary, redownload the assets folder."
-            Print
-            Print "The assets folder, and its contents are necessary for the game to load, as it"
-            Print "contains all sprite and texture files, sounds and music, user saved data, and"
-            Print "world files. Without these, the game will not play correctly. It is advised to"
-            Print "not continue."
-            CONTPROMPT
-
-        Case 101
-            Print "This is a legacy error code, and should never be triggered in game, if it has"
-            Print "been triggered, not due to the /error command, please contact the developer"
-            CONTPROMPT
-
-        Case 102
-            Print "Invalid Code Position, This error occurs when the program flow enters an area"
-            Print "that it should not be, This is most likely a programming issue, and not an end"
-            Print "user issue."
-            Print ""
-            Print "There is no user solution to this issue, please file a bug report to the"
-            Print "developers, including the line number and what you were doing when it occured."
-            CONTPROMPT
-
-        Case 103
-            Print "This world was not made for this version of "; Game.Title; ". This means one of"
-            Print "the following cases is true:"
-            Print
-            Print
-            Print "     You are attempting to load an out of date world"
-            Print
-            Print "     You are attempting to load a world designed for a newer version of"
-            Print "     "; Game.Title
-            Print
-            Print "     Your world manifest is corrupted"
-            Print
-            Print
-            Print "Double check the world version and game version."
-            Print "World: ("; mapversion; ") Game: ("; Game.Version; ")"
-            Print
-            Print "If you are certain that this is a mistake, you may try to update the manifest"
-            Print "here. Note that this does not update old worlds, just broken manifest files"
-            Print "Otherwise you can try to load a different world. "; Game.Title; ""
-            Print "does not support loading out of version worlds."
-            Print
-            Print
-            CENTERPRINT "(U)pdate manifest, (R)eturn to existing map, (Q)uit to desktop."
-            Do
-                If KeyDown(113) Then System
-                If KeyDown(114) Then Exit Do
-                If KeyDown(117) Then
-                    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-                    Put #1, 3, Game.Version
-                    Close #1
-
-                    Exit Do
-
-                End If
-            Loop
-        Case 2
-            Print "Syntax error, READ attempted to read a number but could not parse the next"
-            Print "DATA item."
-            Print
-            CONTPROMPT
-        Case 3
-            Print "RETURN without GOSUB, The RETURN statement was encounted without first"
-            Print " executing a corresponding GOSUB."
-            Print
-            CONTPROMPT
-        Case 4
-            Print "Out of DATA, The READ statement has read past the end of a DATA block."
-            Print " Use RESTORE to change the current data item if necessary."
-            Print
-            CONTPROMPT
-
-        Case 9
-            Print "Subscript out of range, this error occurs when an array exceeds its bounds"
-            Print "This is most likely a programming error, please let the developer know."
-            Print
-            CONTPROMPT
-
-
-        Case Else
-            Print "Unrecognized error, contact developers"
-            CONTPROMPT
-
-    End Select
-
-    KeyClear
-    Cls
-    Resume Next
-End Sub
-
-Sub CONTPROMPT
-    Print
-    Print
-
-    CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop"
-    Do
-        If KeyDown(113) Then System
-        If KeyDown(105) Then Exit Do
-    Loop
 End Sub
 
 
@@ -1245,6 +1505,6 @@ End Sub
 '$include: 'Assets\Sources\MapDraw.bm'
 '$include: 'Assets\Sources\ScreenZoom.bm'
 '$include: 'Assets\Sources\AudioControl.bm'
-
+'$include: 'Assets\Sources\PerlinNoise.bm'
 
 

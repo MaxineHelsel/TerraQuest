@@ -1,4 +1,4 @@
-Dim Shared ItemIndex(1000, 9)
+Dim Shared ItemIndex(1000, InvParameters)
 Dim Shared ItemName(1000, 2) As String
 
 ItemName(0, 0) = "Creative Shovel"
@@ -205,11 +205,13 @@ ItemIndex(18, 1) = 48 'item texture x cord
 ItemIndex(18, 2) = 16 'item texture y cord
 ItemIndex(18, 3) = 100 'tool max durabillity
 ItemIndex(18, 4) = 100 'tool current durrabillity
-ItemIndex(18, 5) = .25 'swing delay
-ItemIndex(18, 6) = 2 'attack strength
+ItemIndex(18, 5) = .01 'swing delay
+ItemIndex(18, 6) = 100 'attack strength
 ItemIndex(18, 7) = 1 'current stack
 ItemIndex(18, 8) = 1 'max stack
-ItemIndex(18, 9) = 18 'Item ID
+ItemIndex(18, 9) = 18 'item id
+ItemIndex(18, 10) = 10 'range
+ItemIndex(18, 11) = 3 'speed
 
 
 ItemName(19, 0) = "Wood"
@@ -223,5 +225,16 @@ ItemIndex(19, 5) = 0 '
 ItemIndex(19, 6) = 0 '
 ItemIndex(19, 7) = 1 'current stack
 ItemIndex(19, 8) = 100 'max stack
-ItemIndex(19, 9) = 18 'Item ID
+ItemIndex(19, 9) = 19 'Item ID
+
+ItemName(20, 0) = "Berry Bush" 'Name of the tile
+ItemName(20, 1) = "Placeholder" 'tooltip
+ItemIndex(20, 0) = 0 'item type
+ItemIndex(20, 1) = 80 'x position on tilesheet
+ItemIndex(20, 2) = 16 'y position on tilesheet
+ItemIndex(20, 3) = 12 'tile id
+ItemIndex(20, 4) = 1 'layer
+ItemIndex(20, 7) = 1 'current stack
+ItemIndex(20, 8) = 100 'max stack
+ItemIndex(20, 9) = 20 'Item ID
 

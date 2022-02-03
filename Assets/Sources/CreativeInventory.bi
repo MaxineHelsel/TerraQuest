@@ -1,5 +1,5 @@
 Dim i
-For i = 0 To 9
+For i = 0 To invparameters
     CreativeInventory(0, 0, i, 0) = ItemIndex(0, i)
     CreativeInventory(0, 1, i, 0) = ItemIndex(1, i)
     CreativeInventory(0, 2, i, 0) = ItemIndex(2, i)

@@ -54,6 +54,7 @@ Sub LOADWORLD
     Get #1, 10, SavedMapY
     Get #1, 11, SpawnMapX
     Get #1, 12, SpawnMapY
+    get #1,13,worldseed
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
@@ -64,7 +65,7 @@ Sub LOADWORLD
     While i < 4
         Get #1, total, Inventory(i, ii, iii)
         iii = iii + 1
-        If iii > 9 Then iii = 0: ii = ii + 1
+        If iii > invparameters Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
         total = total + 1
     Wend
@@ -94,9 +95,7 @@ Sub LOADMAP (file As String)
     iii = 1
 
 
-    'TODO add error checking to see if map file exists
-
-    'TODO make this a sub with 2 parameters, 1
+    'TODO make this a sub with 2 parameterss, 1
     If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
         For i = 1 To 30
@@ -133,7 +132,7 @@ Sub LOADMAP (file As String)
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
-                For iiii = 0 To 9
+                For iiii = 0 To tileparameters
                     Get #1, iii, TileData(ii, i, iiii)
                     iii = iii + 1
                 Next
@@ -190,6 +189,7 @@ Sub SAVEMAP
     Put #1, 10, SavedMapY
     Put #1, 11, SpawnMapX
     Put #1, 12, SpawnMapY
+        put #1,13,worldseed
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
@@ -200,7 +200,7 @@ Sub SAVEMAP
     While i < 4
         Put #1, total, Inventory(i, ii, iii)
         iii = iii + 1
-        If iii > 9 Then iii = 0: ii = ii + 1
+        If iii > invparameters Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
         total = total + 1
     Wend
@@ -250,7 +250,7 @@ Sub SAVEMAP
     Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
-            For iiii = 0 To 9
+            For iiii = 0 To tileparameters
                 Put #1, iii, TileData(ii, i, iiii)
                 iii = iii + 1
             Next

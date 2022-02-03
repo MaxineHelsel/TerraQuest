@@ -1,4 +1,6 @@
-# CDF-Quest
+# TerraQuest
+
+### WARNING This is the edge branch, meaning this version could be incomplete, unstable, untested, broken, etc. If you are looking for the latest released version, switch to stable.
 
 # Download instructions
 
@@ -38,6 +40,42 @@ macOS comes last, because i have to switch to a different system and pull the al
 
 # ChangeLog
 
+## Alpha Version 21
+
+### What's new
+
+- Now compiled with QB64 2.0
+
+### Bug Fixes
+
+- Memory leak when minimized
+
+- Random characters and 1fps on world load 
+
+- All errors cause duplicate definition error - Unable to fix till QB64 is updated, patched if compiled with QB64 2.1 dev build
+
+### New Items
+
+- Berry Bush - Painful on contact, Sweet when eaten, this item has it all (damage and food not implimented yet)
+
+- Ice - A cold slippery version of water
+
+- Water - May or may not be wet
+
+### New Features
+
+- Worlds now have seed numbers, use to generate the same world again
+
+- Natural terrain generation, lakes will now generate
+
+- Velocity and friction have been added
+
+- Added TPS counter to debug menu, separating Frames per second and ticks per second
+
+- Added /fillwt /fillgt /fillct commands to replace a large ammount of tiles at once
+
+- Added inventory slot 1 tracker to data tracker
+
 ## Alpha Version 20
 
 ### Containers
@@ -48,7 +86,7 @@ Containers allow you to store items outside of your inventory, such as in a ches
 
 - Ground item and Chest have functionality now
 
-- Raw wood, a crafting ingredient (crafting does not exist yet
+- Raw wood, a crafting ingredient (crafting does not exist yet)
 
 ## Alpha Version 19
 
