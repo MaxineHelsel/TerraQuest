@@ -2,8 +2,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Survival Test"
-Game.Version = "Alpha Version 21"
+Game.Buildinfo = "Alpha Version 22"
+Game.Version = "A22.0-E1"
 Game.Designation = "Edge"
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file

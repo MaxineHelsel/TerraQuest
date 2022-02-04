@@ -1,1 +1,140 @@
 
+Sub COLDET
+    Dim ColU, ColD, ColL, ColR
+    Dim StuckFix As _Byte 'why???, $option noprefix is enabled why the fuck does this have an underscore, also where is this used?
+    Dim i
+    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    Select Case Player.facing
+        Case 0
+            If Player.y - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
+        Case 1
+            If Player.y + 8 + 16 >= 480 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
+        Case 2
+            If Player.x - 8 <= 0 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+        Case 3
+            If Player.x + 8 + 16 >= 640 Then Exit Select
+            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    End Select
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColU = 1
+                GoTo col2
+
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColD = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColU = 1
+                GoTo col2
+
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+
+                ColD = 1
+        End Select
+
+        col2:
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                ' Print " Colision Left"
+                ColU = 0
+                ColD = 0
+                ColL = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                ' Print " Colision Right"
+                ColU = 0
+                ColD = 0
+                ColR = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                '  Print " Colision Left"
+                ColU = 0
+                ColD = 0
+
+                ColL = 1
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                Swap Player.y, Player.lasty
+                Player.x = Player.lastx
+                ' Print " Colision Right"
+                ColU = 0
+                ColD = 0
+
+                ColR = 1
+        End Select
+    End If
+
+    'push player outside of tile if inside
+
+    If Flag.NoClip = 0 Then
+        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
+            Case 1
+                Player.y = Player.y + 1
+                '  Print " Colision 3,1"
+        End Select
+
+        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
+            Case 1
+                ' Swap Player.y, Player.lasty
+                Player.y = Player.y - 1
+                '  Print " Colision 3,2"
+        End Select
+
+        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
+            Case 1
+
+                Player.x = Player.x + 1
+                ' Print " Colision 3,3"
+        End Select
+
+        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
+            Case 1
+                Player.x = Player.x - 1
+                ' Print " Colision 3,4"
+        End Select
+    End If
+
+    If ColU = 1 Or ColD = 1 Then Player.vy = 0
+    If ColL = 1 Or ColR = 1 Then Player.vx = 0
+
+    If ColU = 1 Then ContactEffect (1)
+    If ColD = 1 Then ContactEffect (2)
+    If ColL = 1 Then ContactEffect (3)
+    If ColR = 1 Then ContactEffect (4)
+
+End Sub
+
+

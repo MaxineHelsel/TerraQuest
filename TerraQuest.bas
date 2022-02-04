@@ -192,140 +192,8 @@ Sub Move
 
 End Sub
 
-
-Sub COLDET
-    Dim ColU, ColD, ColL, ColR
-    Dim StuckFix As _Byte 'why???, $option noprefix is enabled why the fuck does this have an underscore, also where is this used?
-    Dim i
-    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
-    Select Case Player.facing
-        Case 0
-            If Player.y - 8 <= 0 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
-        Case 1
-            If Player.y + 8 + 16 >= 480 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
-        Case 2
-            If Player.x - 8 <= 0 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
-        Case 3
-            If Player.x + 8 + 16 >= 640 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
-    End Select
-
-    If Flag.NoClip = 0 Then
-        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-
-                ColU = 1
-                GoTo col2
-
-        End Select
-
-        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-
-                ColD = 1
-        End Select
-
-        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-
-                ColU = 1
-                GoTo col2
-
-        End Select
-
-        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-
-                ColD = 1
-        End Select
-
-        col2:
-
-        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-                Player.x = Player.lastx
-                ' Print " Colision Left"
-                ColU = 0
-                ColD = 0
-                ColL = 1
-        End Select
-
-        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-                Player.x = Player.lastx
-                ' Print " Colision Right"
-                ColU = 0
-                ColD = 0
-                ColR = 1
-        End Select
-
-        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-                Player.x = Player.lastx
-                '  Print " Colision Left"
-                ColU = 0
-                ColD = 0
-
-                ColL = 1
-        End Select
-
-        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
-            Case 1
-                Swap Player.y, Player.lasty
-                Player.x = Player.lastx
-                ' Print " Colision Right"
-                ColU = 0
-                ColD = 0
-
-                ColR = 1
-        End Select
-    End If
-
-    'push player outside of tile if inside
-
-    If Flag.NoClip = 0 Then
-        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 1) / 16) + 1, 0)
-            Case 1
-                Player.y = Player.y + 1
-                '  Print " Colision 3,1"
-        End Select
-
-        Select Case TileData(Int((Player.x + 7) / 16) + 1, Int((Player.y + 14) / 16) + 1, 0)
-            Case 1
-                ' Swap Player.y, Player.lasty
-                Player.y = Player.y - 1
-                '  Print " Colision 3,2"
-        End Select
-
-        Select Case TileData(Int((Player.x + 1) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
-            Case 1
-
-                Player.x = Player.x + 1
-                ' Print " Colision 3,3"
-        End Select
-
-        Select Case TileData(Int((Player.x + 14) / 16) + 1, Int((Player.y + 7) / 16) + 1, 0)
-            Case 1
-                Player.x = Player.x - 1
-                ' Print " Colision 3,4"
-        End Select
-    End If
-
-    If ColU = 1 Or ColD = 1 Then Player.vy = 0
-    If ColL = 1 Or ColR = 1 Then Player.vx = 0
+Sub ContactEffect (Direction As Byte)
 End Sub
-
-
 
 
 
@@ -1344,29 +1212,35 @@ End Sub
 
 
 
-Sub NewWorld
+Sub NewWorld '(worldname as string, worldseed as integer64)
     Dim i, ii, iii
     Cls
     KeyClear
     AutoDisplay
+
     Input "World Name?", WorldName
     Input "World Seed? (0 for random)", WorldSeed
+
     If WorldSeed = 0 Then
         Randomize Timer
         WorldSeed = Ceil(Rnd * 18446744073709551615) - 9223372036854775807
-
     End If
-    'Randomize WorldSeed
+
     SavedMapX = -1
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
-    SAVEMAP
-    Do
+
+    SAVEMAP 'necessary for at least 1 map to be saved before running generate map, because savemap is also responsible for creating the file structure for the world
+    GenerateMap 'generates -1,0 so that its not just saving a completely empty map
+    SAVEMAP 'saves that generated map
+
+    Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
         SavedMapX = SavedMapX + 1
         GenerateMap
     Loop Until GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) <> 13
-    SAVEMAP
+
+    SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
     LOADWORLD
 End Sub
 

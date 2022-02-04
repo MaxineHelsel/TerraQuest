@@ -1,3 +1,9 @@
+Alpha Version 22
+
+#Bugs
+New worlds have corrupt map -1,0 - E1
+
+
 Alpha Version 21
 
 #Bugs
