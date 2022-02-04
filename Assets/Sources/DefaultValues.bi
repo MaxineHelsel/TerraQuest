@@ -2,9 +2,10 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Alpha Version 22.0 Edge 1"
-Game.Version = "A22.0-E1"
+Game.Buildinfo = "Alpha Version 22.0 Edge 2"
+Game.Version = "A22.0-E2
 Game.Designation = "Edge"
+Game.FCV = 1
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file
 Settings.FrameRate = 60

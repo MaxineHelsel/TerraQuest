@@ -60,7 +60,7 @@ dim shared CreativeInventory(2,5,invparameters,1)
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
 Dim Shared Game.Buildinfo As String
-Dim Shared Game.FCV As String
+Dim Shared Game.FCV As integer
 Dim Shared Game.HostOS As String
 Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
