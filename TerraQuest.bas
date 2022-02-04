@@ -910,7 +910,7 @@ Sub DEV
         Locate 1, 1
         ENDPRINT "Debug Menu (Press F3 to Close)"
         Print
-        ENDPRINT "Version: " + Game.Version
+        ENDPRINT "Version: " + Game.Buildinfo
         ENDPRINT "Version Designation: " + Game.Designation
         ENDPRINT "Operating System: " + Game.HostOS
         If RenderMode = 0 Then ENDPRINT "Render Mode: Software"
@@ -939,7 +939,7 @@ Sub DEV
 
 
         Locate 1, 1
-        Print Game.Title; " ("; Game.Buildinfo; ")"
+        Print Game.Title; " ("; Game.Version; ")"
         Print
         Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
