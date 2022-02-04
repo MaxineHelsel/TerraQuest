@@ -1362,6 +1362,8 @@ Sub NewWorld
     Player.x = 320
     Player.y = 200
     SAVEMAP
+    GenerateMap
+    SAVEMAP
     Do
         SavedMapX = SavedMapX + 1
         GenerateMap
