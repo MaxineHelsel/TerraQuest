@@ -10,6 +10,8 @@ Dim Shared Debug As Debug
 'Constants
 const TileParameters=13
 const InvParameters=11
+const EffectParameters=4
+const MaxEffects=20
 
 'Map Variables
 Dim Shared GroundTile(41, 31) As Unsigned Integer
@@ -67,7 +69,7 @@ Dim Shared Game.32Bit as unsigned bit
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
-
+dim shared EffectArray(20,EffectParameters) as integer
 
 
 'Flags
@@ -85,7 +87,7 @@ dim shared Flag.OpenCommand as byte
 dim shared Flag.RenderOverride as unsigned bit
 dim shared Flag.InitialRender as byte
 Dim Shared bgdraw As Unsigned Bit
-                                    dim shared RenderMode as byte
+dim shared RenderMode as byte
 
 Dim Shared new As Unsigned Bit 'has not been updated, because might not exist
 
@@ -148,6 +150,8 @@ Type Character
     movingy as byte
     type As Byte
     tilecontact as byte
+
+
 
     level As Byte
     health As Byte

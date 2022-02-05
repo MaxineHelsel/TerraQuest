@@ -1,4 +1,5 @@
 
+
 Sub COLDET
     Dim ColU, ColD, ColL, ColR
     Dim StuckFix As _Byte 'why???, $option noprefix is enabled why the fuck does this have an underscore, also where is this used?
@@ -130,10 +131,11 @@ Sub COLDET
     If ColU = 1 Or ColD = 1 Then Player.vy = 0
     If ColL = 1 Or ColR = 1 Then Player.vx = 0
 
-    If ColU = 1 Then ContactEffect (1)
-    If ColD = 1 Then ContactEffect (2)
-    If ColL = 1 Then ContactEffect (3)
-    If ColR = 1 Then ContactEffect (4)
+    If ColU = 1 Then ContactEffect (1): 'Print "COLISION"
+    If ColD = 1 Then ContactEffect (2): 'Print "COLISION"
+    If ColL = 1 Then ContactEffect (3): 'Print "COLISION"
+    If ColR = 1 Then ContactEffect (4): 'Print "COLISION"
+
 
 End Sub
 

@@ -3,6 +3,9 @@ Alpha Version 22
 #Bugs
 New worlds have corrupt map -1,0 - E1
 
+#Features
+Berry Bushes now deal damage on contact - E2
+
 
 Alpha Version 21
 
