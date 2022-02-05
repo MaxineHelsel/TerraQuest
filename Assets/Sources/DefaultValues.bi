@@ -2,8 +2,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Alpha Version 22.0 Edge 2"
-Game.Version = "A22.0-E2
+Game.Buildinfo = "Alpha Version 22.0 Edge 3"
+Game.Version = "A22.0-E3
 Game.Designation = "Edge"
 Game.FCV = 1
 

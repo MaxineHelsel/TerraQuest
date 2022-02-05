@@ -1,0 +1,80 @@
+
+Sub ContactEffect (Direction As Byte)
+    Select Case Direction
+        Case 1
+            Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1), 0)
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1), 0)
+        Case 2
+            Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1), 0)
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1), 0)
+        Case 3
+            Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+        Case 4
+            Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+    End Select
+End Sub
+
+Sub EffectExecute (ID As Integer, Val1 As Single)
+    Select Case ID
+        Case 1 'Instant Damage
+            Player.health = Player.health - Val1
+    End Select
+
+End Sub
+
+Function EffectIndex (Sources As String, Value As Single)
+    Select Case Sources
+        Case "Contact Berry Bush"
+            Select Case Value
+                Case 0
+                    EffectIndex = 1 'effectid
+                Case 1
+                    EffectIndex = 2 'frame duration
+                Case 2
+                    EffectIndex = 30 'frame cooldown
+                Case 3
+                    EffectIndex = 1 'damage
+            End Select
+        Case Else
+            EffectIndex = 0
+    End Select
+End Function
+
+Sub Effects (Command As Byte, Sources As String)
+    Dim As Byte i, ii
+    Dim Null As Byte
+    Dim EffectSources(MaxEffects) As String
+
+    Select Case Command
+        Case 0 'count down and execute effect
+            For i = 0 To MaxEffects
+                If EffectArray(i, 1) > 0 Then EffectArray(i, 1) = EffectArray(i, 1) - Settings.TickRate
+                If EffectArray(i, 2) > 0 Then EffectArray(i, 2) = EffectArray(i, 2) - Settings.TickRate
+                If EffectArray(i, 1) > 0 Then
+                    EffectExecute EffectArray(i, 0), EffectArray(i, 3)
+
+                End If
+            Next
+        Case 1 ' apply new effect
+            For i = 0 To MaxEffects
+                If EffectArray(i, 0) = 0 Then
+                    For ii = 0 To EffectParameters
+                        EffectArray(i, ii) = EffectIndex(Sources, ii)
+                    Next
+                    Exit Case
+                End If
+                If EffectArray(i, 0) = EffectIndex(Sources, 0) Then
+                    If EffectArray(i, 2) <= 0 Then
+                        For ii = 0 To EffectParameters
+                            EffectArray(i, ii) = EffectIndex(Sources, ii)
+                        Next
+                    End If
+                    Exit Case
+                End If
+            Next
+    End Select
+End Sub
+
+ 
