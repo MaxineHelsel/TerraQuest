@@ -92,7 +92,7 @@ dim shared RenderMode as byte
 Dim Shared new As Unsigned Bit 'has not been updated, because might not exist
 
 
-
+                             dim shared SwimOffset as byte
 
 
 Type Debug

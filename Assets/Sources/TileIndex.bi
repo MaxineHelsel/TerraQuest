@@ -201,14 +201,14 @@ TileIndex(13, 0) = 0
 TileIndex(13, 1) = 208 'x position on tilesheet
 TileIndex(13, 2) = 0 'y position on tilesheet
 TileIndex(13, 3) = -1 'itemid
-TileIndexData(13, 0) = 1 'collision
+TileIndexData(13, 0) = 0 'collision
 TileIndexData(13, 1) = 0 'casts shadow
 TileIndexData(13, 2) = 0 'blocks shadow
 TileIndexData(13, 3) = 0 'has interior shadow
 TileIndexData(13, 4) = 1000 'resistance
 TileIndexData(13, 5) = 0 'is solid
-TileIndexData(13, 9) = 0.01 'friction
-TileIndexData(13, 10) = 2 'max speed
+TileIndexData(13, 9) = 0.04 'friction
+TileIndexData(13, 10) = 0.4 'max speed
 TileIndexData(13, 11) = 1 'tile spread
 
 TileName(14, 0) = "Ice"
