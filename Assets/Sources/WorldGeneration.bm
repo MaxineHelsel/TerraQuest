@@ -1,0 +1,101 @@
+
+
+Sub NewWorld '(worldname as string, worldseed as integer64)
+    Dim i, ii, iii
+    Cls
+    KeyClear
+    AutoDisplay
+
+    Input "World Name?", WorldName
+    Input "World Seed? (0 for random)", WorldSeed
+
+    If WorldSeed = 0 Then
+        Randomize Using Timer
+        WorldSeed = Ceil(Rnd * 18446744073709551615) - 9223372036854775807
+    End If
+
+    SavedMapX = -1
+    SavedMapY = 0
+    Player.x = 320
+    Player.y = 200
+
+    SAVEMAP 'necessary for at least 1 map to be saved before running generate map, because savemap is also responsible for creating the file structure for the world
+    GenerateMap 'generates -1,0 so that its not just saving a completely empty map
+    SAVEMAP 'saves that generated map
+
+    Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
+        SavedMapX = SavedMapX + 1
+        GenerateMap
+    Loop Until GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) <> 13
+
+    SpawnPointX = Player.x
+    SpawnPointY = Player.y
+    SpawnMapX = SavedMapX
+    SpawnMapY = SavedMapY
+    SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
+    LOADWORLD
+End Sub
+
+Sub GenerateMap
+    Dim i, ii, iii
+    Dim PerlinTile As Double
+
+
+    'if map is layer 0
+    For i = 0 To 31
+        For ii = 0 To 41
+
+            'generate base tiles
+            GroundTile(ii, i) = 2
+            TileData(ii, i, 4) = 255
+            WallTile(ii, i) = 1
+            TileData(ii, i, 5) = 255
+            CeilingTile(ii, i) = 1
+            TileData(ii, i, 6) = 255
+
+
+            'generate terrain
+            PerlinTile = Perlin((ii + (SavedMapX * 40)) / 100, (i + (SavedMapY * 30)) / 100, 0, WorldSeed)
+            Select Case PerlinTile
+                Case Is < 0.35
+                    GroundTile(ii, i) = 13
+            End Select
+        Next
+    Next
+    Randomize Using Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed)) 'TODO, include world layer in this too
+    For i = 0 To 31
+        For ii = 0 To 41
+
+
+            If GroundTile(ii, i) <> 13 Then
+
+                'generate bushes
+                If Ceil(Rnd * 10) = 5 Then
+                    WallTile(ii, i) = 5
+                End If
+
+                'generate ground wood items
+                If Ceil(Rnd * 100) = 50 Then
+                    WallTile(ii, i) = 11
+                    NewContainer SavedMapX, SavedMapY, ii, i
+                    OpenContainer SavedMapX, SavedMapY, ii, i
+                    For iii = 0 To InvParameters
+                        Container(0, iii) = ItemIndex(19, iii)
+                    Next
+                    Container(0, 7) = Ceil(Rnd * 3)
+                    CloseContainer SavedMapX, SavedMapY, ii, i
+                End If
+
+                'generate berry bushes
+                If Ceil(Rnd * 500) = 250 Then
+                    WallTile(ii, i) = 12
+                End If
+            End If
+
+            'update set tiles
+            UpdateTile ii, i
+        Next
+    Next
+End Sub
+
+ 

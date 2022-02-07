@@ -2,8 +2,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Alpha Version 22.0 Edge 4
-Game.Version = "A22.0-E4
+Game.Buildinfo = "Alpha Version 22.0 Edge 5
+Game.Version = "A22.0-E5
 Game.Designation = "Edge"
 Game.FCV = 1
 
@@ -19,6 +19,9 @@ File.HudSprites = "Assets\Sprites\Other\HUD.png"
 File.Shadows = "Assets\Sprites\Other\Shadows.png"
 
 Sounds.error = "Assets\Sounds\error.wav"
+Sounds.walk_grass= "Assets\Sounds\walk_grass.mp3"
+Sounds.damage_bush= "Assets\Sounds\damage_bush.mp3"
+Sounds.walk_water= "Assets\Sounds\walk_water.mp3"
 
 'Debug values that are only set here for testing purposes
 Player.health = 8

@@ -1,7 +1,7 @@
 $NoPrefix
 Option Explicit
 On Error GoTo ERRORHANDLE
-Randomize Timer
+Randomize Using Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
 DisplayOrder Hardware , Software
@@ -46,18 +46,13 @@ Error 102
 ERRORHANDLE: ErrorHandler
 DisplayOrder GLRender , Hardware , Software
 game:
-
+SwitchRender 0 'these 2 statements are important to prevent a dumb bug
+SwitchRender 1
 Do
-    If Flag.InitialRender = 0 Then 'this section of if and elseif is to prevent the game from giving random bullshit characters and running at 1fps, i have no idea why this works, or what caused it in the first place, but hey.
-        SwitchRender 0
-        Flag.InitialRender = 1
-    ElseIf Flag.InitialRender = 1 Then
-        SwitchRender 1
-        Flag.InitialRender = 2
-    End If
 
+    OnTopEffect
     Effects 0, ""
-    SETBG
+    SetBG
     SetMap
     CastShadow
     Move
@@ -71,6 +66,9 @@ Do
     ChangeMap 0, 0, 0
     DayLightCycle
     MinMemFix
+
+
+    If Player.health <= 0 Then Respawn
 
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -88,34 +86,114 @@ Loop
 Error 102
 
 
+Sub Respawn
+    SAVEMAP
+    Player.x = SpawnPointX
+    Player.y = SpawnPointY
+    SavedMapX = SpawnMapX
+    SavedMapY = SpawnMapY
+    LOADMAP SavedMap
+    Player.health = 8
+End Sub
+
+Function MoveUp
+    MoveUp = KeyDown(119)
+End Function
+
+Function MoveDown
+    MoveDown = KeyDown(115)
+End Function
+
+Function MoveLeft
+    MoveLeft = KeyDown(97)
+End Function
+
+Function MoveRight
+    MoveRight = KeyDown(100)
+End Function
+
+
+Sub SPSET
+    Static anim As Byte
+    Select Case Player.facing
+        Case 0
+            If Player.movingy = 1 Then
+                If anim < 15 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (0, 0)-(15, 17 - SwimOffset)
+                If anim > 14 And anim < 30 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 0)-(31, 17 - SwimOffset)
+                If anim > 29 And anim < 45 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (32, 0)-(47, 17 - SwimOffset)
+                If anim > 44 And anim < 60 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 0)-(31, 17 - SwimOffset)
+            Else
+                PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 0)-(31, 17 - SwimOffset)
+            End If
+        Case 1
+            If Player.movingy = 1 Then
+                If anim < 15 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (0, 36)-(15, 54 - SwimOffset)
+                If anim > 14 And anim < 30 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 36)-(31, 53 - SwimOffset)
+                If anim > 29 And anim < 45 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (32, 36)-(47, 53 - SwimOffset)
+                If anim > 44 And anim < 60 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 36)-(31, 53 - SwimOffset)
+            Else
+                PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 36)-(31, 53 - SwimOffset)
+            End If
+
+        Case 2
+            If Player.movingx = 1 Then
+                If anim < 15 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (0, 54)-(15, 71 - SwimOffset)
+                If anim > 14 And anim < 30 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 54)-(31, 71 - SwimOffset)
+                If anim > 29 And anim < 45 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (32, 54)-(47, 71 - SwimOffset)
+                If anim > 44 And anim < 60 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 54)-(31, 71 - SwimOffset)
+            Else
+                PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 54)-(31, 71 - SwimOffset)
+            End If
+
+        Case 3
+            If Player.movingx = 1 Then
+                If anim < 15 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (0, 18)-(15, 35 - SwimOffset)
+                If anim > 14 And anim < 30 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 18)-(31, 35 - SwimOffset)
+                If anim > 29 And anim < 45 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (32, 18)-(47, 35 - SwimOffset)
+                If anim > 44 And anim < 60 Then PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 18)-(31, 35 - SwimOffset)
+            Else
+                PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (16, 18)-(31, 35 - SwimOffset)
+            End If
+    End Select
+
+    anim = anim + Settings.TickRate
+    If KeyDown(100306) = 0 Then anim = anim + Settings.TickRate
+    If anim > 59 Then anim = 0
+End Sub
+
 
 
 Sub ContactEffect (Direction As Byte)
     Select Case Direction
         Case 1
             Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1), 0)
-            Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1), 0)
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1), 0)
         Case 2
             Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1), 0)
-            Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1), 0)
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1), 0)
         Case 3
             Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
-            Print "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
         Case 4
             Effects 1, "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
-            Print "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
-
-
-
+            'Print "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
     End Select
 End Sub
 
-Sub EffectExecute (ID As Integer, Val1 As Single)
+Sub OnTopEffect
+    Effects 1, "OnTop " + TileName(GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+End Sub
 
+
+Sub EffectExecute (ID As Integer, Val1 As Single)
     Select Case ID
         Case 1 'Instant Damage
             Player.health = Player.health - Val1
+            PlaySound Sounds.damage_bush
+        Case 2
+            SwimOffset = Val1
     End Select
+
 
 End Sub
 
@@ -132,10 +210,36 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 3
                     EffectIndex = 1 'damage
             End Select
+        Case "OnTop Water"
+            Select Case Value
+                Case 0
+                    EffectIndex = 2
+                Case 1
+                    EffectIndex = 2
+                Case 2
+                    EffectIndex = 0
+                Case 3
+                    EffectIndex = 7
+            End Select
         Case Else
             EffectIndex = 0
     End Select
 End Function
+
+Sub EffectEnd (EffectID As Integer, EffectSlot As Integer)
+    Dim i As Byte
+    Select Case EffectID
+        Case 1
+            For i = 0 To EffectParameters
+                EffectArray(EffectSlot, i) = 0
+            Next
+        Case 2
+            For i = 0 To EffectParameters
+                EffectArray(EffectSlot, i) = 0
+            Next
+            SwimOffset = 0
+    End Select
+End Sub
 
 Sub Effects (Command As Byte, Sources As String)
     Dim As Byte i, ii
@@ -149,7 +253,9 @@ Sub Effects (Command As Byte, Sources As String)
                 If EffectArray(i, 2) > 0 Then EffectArray(i, 2) = EffectArray(i, 2) - Settings.TickRate
                 If EffectArray(i, 1) > 0 Then
                     EffectExecute EffectArray(i, 0), EffectArray(i, 3)
-
+                End If
+                If EffectArray(i, 1) <= 0 And EffectArray(i, 2) <= 0 Then
+                    EffectEnd EffectArray(i, 0), i
                 End If
             Next
         Case 1 ' apply new effect
@@ -172,24 +278,12 @@ Sub Effects (Command As Byte, Sources As String)
     End Select
 End Sub
 
-Function MoveUp
-    MoveUp = KeyDown(119)
-End Function
 
-Function MoveDown
-    MoveDown = KeyDown(115)
-End Function
 
-Function MoveLeft
-    MoveLeft = KeyDown(97)
-End Function
-
-Function MoveRight
-    MoveRight = KeyDown(100)
-End Function
 
 
 Sub Move
+    Static SoundCooldown As Byte
     Player.movingx = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
     Player.movingy = 0 'sets to 0 and then if a key is being held, sets back to 1 before anyone notices
     Player.lastx = Player.x 'these 2 are literally just for the freecammode
@@ -205,6 +299,7 @@ Sub Move
         Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
         Player.facing = 1
         Player.movingy = 1
+
     End If
     If MoveLeft Then
         Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
@@ -240,9 +335,21 @@ Sub Move
             Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
             If Player.vx > 0 Then Player.vx = 0
         End If
-
-
     End If
+
+    If Player.movingx = 1 Or Player.movingy = 1 Then SoundCooldown = SoundCooldown - 1
+
+    If SoundCooldown <= 0 Then
+        If GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) = 13 Then
+            SoundCooldown = 60
+            PlaySound Sounds.walk_water
+
+        Else
+            SoundCooldown = 15
+            PlaySound Sounds.walk_grass
+        End If
+    End If
+
 
     Player.x = Player.x + Player.vx
     Player.y = Player.y + Player.vy
@@ -367,7 +474,7 @@ Sub UseItem (Slot)
         Case 0 'Block placing
             Select Case Inventory(0, Slot, 4)
                 Case 0
-                    If GroundTile(FacingX, FacingY) = 0 Then
+                    If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
                         GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
                         TileData(FacingX, FacingY, 4) = 255
                         If GameMode <> 1 Then
@@ -378,7 +485,7 @@ Sub UseItem (Slot)
                         SpreadLight (1)
                     End If
                 Case 1
-                    If WallTile(FacingX, FacingY) = 1 Then
+                    If WallTile(FacingX, FacingY) = 1 And GroundTile(FacingX, FacingY) <> 0 And GroundTile(FacingX, FacingY) <> 13 Then
                         WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
                         If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
                             NewContainer SavedMapX, SavedMapY, FacingX, FacingY
@@ -1024,6 +1131,7 @@ Sub DEV
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")"
         Print "World Seed:"; WorldSeed
+        Print "Map Seed:"; Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed))
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
 
@@ -1223,6 +1331,8 @@ Sub DEV
                     Locate 28, 1: Print "              "
                     Locate 28, 1: Input "MapY Cord", DMapY
                     ChangeMap 1, DMapX, DMapY
+                Case "genmap"
+                    GenerateMap
                 Case Else
             End Select
             KeyClear
@@ -1289,160 +1399,6 @@ Sub SwitchRender (mode As Byte)
 End Sub
 
 
-
-
-Sub NewWorld '(worldname as string, worldseed as integer64)
-    Dim i, ii, iii
-    Cls
-    KeyClear
-    AutoDisplay
-
-    Input "World Name?", WorldName
-    Input "World Seed? (0 for random)", WorldSeed
-
-    If WorldSeed = 0 Then
-        Randomize Timer
-        WorldSeed = Ceil(Rnd * 18446744073709551615) - 9223372036854775807
-    End If
-
-    SavedMapX = -1
-    SavedMapY = 0
-    Player.x = 320
-    Player.y = 200
-
-    SAVEMAP 'necessary for at least 1 map to be saved before running generate map, because savemap is also responsible for creating the file structure for the world
-    GenerateMap 'generates -1,0 so that its not just saving a completely empty map
-    SAVEMAP 'saves that generated map
-
-    Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
-        SavedMapX = SavedMapX + 1
-        GenerateMap
-    Loop Until GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) <> 13
-
-    SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
-    LOADWORLD
-End Sub
-
-Sub GenerateMap
-    Dim i, ii, iii
-    Dim PerlinTile As Double
-
-
-    'if map is layer 0
-    For i = 0 To 31
-        For ii = 0 To 41
-
-            'generate base tiles
-            GroundTile(ii, i) = 2
-            TileData(ii, i, 4) = 255
-            WallTile(ii, i) = 1
-            TileData(ii, i, 5) = 255
-            CeilingTile(ii, i) = 1
-            TileData(ii, i, 6) = 255
-
-
-            'generate terrain
-            PerlinTile = Perlin((ii + (SavedMapX * 40)) / 100, (i + (SavedMapY * 30)) / 100, 0, WorldSeed)
-            Select Case PerlinTile
-                Case Is < 0.35
-                    GroundTile(ii, i) = 13
-            End Select
-        Next
-    Next
-    Randomize Val(Str$(MapX) + Str$(MapY) + Str$(WorldSeed)) 'TODO, include world layer in this too
-    For i = 0 To 31
-        For ii = 0 To 41
-
-
-            If GroundTile(ii, i) <> 13 Then
-
-                'generate bushes
-                If Ceil(Rnd * 10) = 5 Then
-                    WallTile(ii, i) = 5
-                End If
-
-                'generate ground wood items
-                If Ceil(Rnd * 100) = 50 Then
-                    WallTile(ii, i) = 11
-                    NewContainer SavedMapX, SavedMapY, ii, i
-                    OpenContainer SavedMapX, SavedMapY, ii, i
-                    For iii = 0 To InvParameters
-                        Container(0, iii) = ItemIndex(19, iii)
-                    Next
-                    Container(0, 7) = Ceil(Rnd * 3)
-                    CloseContainer SavedMapX, SavedMapY, ii, i
-                End If
-
-                'generate berry bushes
-                If Ceil(Rnd * 500) = 250 Then
-                    WallTile(ii, i) = 12
-                End If
-            End If
-
-            'update set tiles
-            UpdateTile ii, i
-        Next
-    Next
-End Sub
-
-Sub NewContainer (MapX, Mapy, Tilex, Tiley)
-    Dim total As Integer
-    Dim i, ii, empty
-    Dim containertype
-    containertype = WallTile(Tilex, Tiley)
-    empty = -1
-    total = 1
-    If DirExists("Assets\Worlds\" + WorldName + "\Containers") = 0 Then MkDir "Assets\Worlds\" + WorldName + "\Containers"
-    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
-    Put #1, total, ContainerData(containertype, 0): total = total + 1
-    Put #1, total, ContainerData(containertype, 1): total = total + 1
-    For i = 0 To ContainerData(containertype, 0)
-        For ii = 0 To InvParameters
-            Put #1, total, empty: total = total + 1
-        Next
-    Next
-    Close #1
-End Sub
-
-Sub OpenContainer (MapX, Mapy, Tilex, Tiley)
-    Dim total As Integer
-    Dim i, ii, empty
-    Dim ContainerSize
-    Dim ContainerBreak
-    empty = -1
-    total = 1
-    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
-    Get #1, total, Container(18, 0): total = total + 1
-    Get #1, total, Container(19, 0): total = total + 1
-    For i = 0 To ContainerSize
-        For ii = 0 To InvParameters
-            Get #1, total, Container(i, ii): total = total + 1
-        Next
-    Next
-    Close #1
-End Sub
-
-Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
-    Dim total As Integer
-    Dim i, ii, empty
-    Dim ContainerSize
-    Dim ContainerBreak
-    empty = -1
-    total = 1
-    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
-    Put #1, total, Container(18, 0): total = total + 1
-    Put #1, total, Container(19, 0): total = total + 1
-    For i = 0 To ContainerSize
-        For ii = 0 To InvParameters
-            Put #1, total, Container(i, ii): total = total + 1
-        Next
-    Next
-    Close #1
-
-End Sub
-
-
-
 '$include: 'Assets\Sources\InventoryManagement.bm'
 '$include: 'Assets\Sources\ShadowCast.bm'
 '$include: 'Assets\Sources\DayNightCycle.bm'
@@ -1459,5 +1415,5 @@ End Sub
 '$include: 'Assets\Sources\ScreenZoom.bm'
 '$include: 'Assets\Sources\AudioControl.bm'
 '$include: 'Assets\Sources\PerlinNoise.bm'
-
-
+'$include: 'Assets\Sources\EffectFunctions.bm'
+'$include: 'Assets\Sources\WorldGeneration.bm'

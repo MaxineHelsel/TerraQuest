@@ -131,6 +131,9 @@ End Type
 
 Type Sounds
     error As String
+    walk_grass as string
+    damage_bush as string
+    walk_water as string
 End Type
 
 

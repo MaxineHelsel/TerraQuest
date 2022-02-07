@@ -5,3 +5,62 @@ Sub EmptySlot (slot, row)
     Next
 End Sub
 
+
+Sub NewContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim containertype
+    containertype = WallTile(Tilex, Tiley)
+    empty = -1
+    total = 1
+    If DirExists("Assets\Worlds\" + WorldName + "\Containers") = 0 Then MkDir "Assets\Worlds\" + WorldName + "\Containers"
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Put #1, total, ContainerData(containertype, 0): total = total + 1
+    Put #1, total, ContainerData(containertype, 1): total = total + 1
+    For i = 0 To ContainerData(containertype, 0)
+        For ii = 0 To InvParameters
+            Put #1, total, empty: total = total + 1
+        Next
+    Next
+    Close #1
+End Sub
+
+Sub OpenContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim ContainerSize
+    Dim ContainerBreak
+    empty = -1
+    total = 1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Get #1, total, Container(18, 0): total = total + 1
+    Get #1, total, Container(19, 0): total = total + 1
+    For i = 0 To ContainerSize
+        For ii = 0 To InvParameters
+            Get #1, total, Container(i, ii): total = total + 1
+        Next
+    Next
+    Close #1
+End Sub
+
+Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
+    Dim total As Integer
+    Dim i, ii, empty
+    Dim ContainerSize
+    Dim ContainerBreak
+    empty = -1
+    total = 1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Put #1, total, Container(18, 0): total = total + 1
+    Put #1, total, Container(19, 0): total = total + 1
+    For i = 0 To ContainerSize
+        For ii = 0 To InvParameters
+            Put #1, total, Container(i, ii): total = total + 1
+        Next
+    Next
+    Close #1
+
+End Sub
+
+
+

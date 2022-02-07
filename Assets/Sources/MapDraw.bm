@@ -1,8 +1,8 @@
 
-Sub SETBG
+Sub SetBG
     If bgdraw = 0 Then
         Dim i As Integer
-        Dim ii As integer
+        Dim ii As Integer
         For i = 0 To 30
             For ii = 0 To 40
                 PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
