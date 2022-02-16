@@ -44,6 +44,9 @@ dim shared OverlayLightLevel as byte
                                          dim shared GameTime as long
                                          dim shared TimeMode as byte
 
+dim shared ScreenRezX
+dim shared ScreenRezY
+
 Dim Shared CurrentTick As Unsigned Integer64
 
 dim shared OGLFPS as single
@@ -58,6 +61,9 @@ Dim Shared DefaultRenderMode as Byte
 
 Dim Shared Inventory(3, 5,invparameters)
 dim shared CreativeInventory(2,5,invparameters,1)
+dim shared CraftingGrid(5,5,invparameters)
+dim shared CraftingResult(invparameters)
+
 
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
@@ -86,6 +92,7 @@ dim shared Flag.CastShadows as unsigned bit
 dim shared Flag.OpenCommand as byte
 dim shared Flag.RenderOverride as unsigned bit
 dim shared Flag.InitialRender as byte
+dim shared Flag.ContainerOpen as unsigned bit
 Dim Shared bgdraw As Unsigned Bit
 dim shared RenderMode as byte
 
@@ -154,7 +161,7 @@ Type Character
     type As Byte
     tilecontact as byte
 
-
+    CraftingLevel as byte
 
     level As Byte
     health As Byte
@@ -169,6 +176,7 @@ End Type
 Type Settings
     FrameRate As Integer
     TickRate As Single
+    FullScreen as byte
 End Type
 
 

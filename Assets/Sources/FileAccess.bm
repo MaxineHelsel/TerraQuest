@@ -1,9 +1,16 @@
 
 Sub SAVESETTINGS
+                          dim as byte zero,one
+                          zero=0
+                          one=1
 
     Open "Assets\SaveData\Settings.cdf" As #1
     Put #1, 1, Settings.FrameRate
     Put #1, 2, Settings.TickRate
+    Put #1, 3, Screenrezx
+    Put #1, 4, Screenrezy
+    If fullscreen = 0 Then Put #1, 5, zero
+    If fullscreen = 2 Then Put #1, 5, one
     Close #1
 
 End Sub
@@ -16,6 +23,10 @@ Sub LOADSETTINGS
     Open "Assets\SaveData\Settings.cdf" As #1
     Get #1, 1, Settings.FrameRate
     Get #1, 2, Settings.TickRate
+    Get #1, 3, Screenrezx
+    Get #1, 4, Screenrezy
+    get #1,5,settings.fullscreen
+
     Close #1
 
 End Sub

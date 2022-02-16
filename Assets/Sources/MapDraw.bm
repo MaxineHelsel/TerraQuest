@@ -27,4 +27,24 @@ Sub SetMap
     Next
 End Sub
 
+Sub SwitchRender (mode As Byte)
+    Static FirstSkip As Byte
+    If mode <> 0 And mode <> 1 Then Exit Sub
+
+    If FirstSkip = 1 Then 'this is to prevent the game from crashing if the files arent loaded yet, because this is also run to initially load the files
+        FreeImage Texture.PlayerSprites
+        FreeImage Texture.TileSheet
+        FreeImage Texture.ItemSheet
+        FreeImage Texture.HudSprites
+        FreeImage Texture.Shadows
+    End If
+
+    Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
+    Texture.TileSheet = LoadImage(File.TileSheet, mode + 32)
+    Texture.ItemSheet = LoadImage(File.ItemSheet, mode + 32)
+    Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)
+    Texture.Shadows = LoadImage(File.Shadows, mode + 32)
+    FirstSkip = 1
+
+End Sub
 

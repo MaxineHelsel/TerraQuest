@@ -51,6 +51,9 @@ Sub ErrorHandler
             print "a bug report to the github, including the line number and what you were doing
             print "when it occured."
             CONTPROMPT
+            Case 258
+            ?"Invalid handle, An handle used for an image, sound, font etc. was invalid.
+            ?"Be sure to check the return values of functions like _LOADFONT and _LOADIMAGE.
 
         Case 103
             Print "This world was not made for this version of "; Game.Title; ". This means one of"

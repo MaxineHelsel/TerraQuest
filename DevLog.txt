@@ -4,15 +4,18 @@ Alpha Version 22
 New worlds have corrupt map -1,0 - E1
 Wall Tiles placed on ground air dissapear - E3
 Wall Tiles able to be placed on water - E3
+Splitting a stack no longer works - Discovered
 
 #Features
 Berry Bushes now deal damage on contact - E2
 Entering water will allow you to swim - E4
-Sound effects while walking - E5
+Sound effects - E5
 
 #Other Changes
 Changed water stats to support swimming - E4
-
+Health wheel now rainbow when in creative - E5
+Working on support for other resolutions - E5
+ReWrote HUD - E5
 
 Alpha Version 21
 

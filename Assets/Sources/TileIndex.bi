@@ -193,7 +193,7 @@ TileIndexData(12, 2) = 1 'blocks shadow
 TileIndexData(12, 3) = 0 'has interior shadow
 TileIndexData(12, 4) = 25 'resistance
 TileIndexData(12, 5) = 0 'is solid
-TileIndexData(12, 8) = 1 'damage on contact
+
 
 TileName(13, 0) = "Water"
 TileName(13, 1) = ""
@@ -227,7 +227,19 @@ TileIndexData(14, 9) = 0.01 'friction
 TileIndexData(14, 10) = 2 'max speed
 TileIndexData(14, 11) = 0 'tile spread
 
-
+TileName(15, 0) = "Crafting Station" 'Name of the tile
+TileName(15, 1) = "Placeholder" 'tooltip
+TileIndex(15, 0) = 1 'layer definition
+TileIndex(15, 1) = 240 'x position on tilesheet
+TileIndex(15, 2) = 0 'y position on tilesheet
+TileIndex(15, 3) = 21 'itemid
+TileIndexData(15, 0) = 1 'collision
+TileIndexData(15, 1) = 1 'casts shadow
+TileIndexData(15, 2) = 1 'blocks shadow
+TileIndexData(15, 3) = 0 'has interior shadow
+TileIndexData(15, 4) = 25 'resistance
+TileIndexData(15, 5) = 1 'is soli
+TileIndexData(15, 8) = 3
 
 
 

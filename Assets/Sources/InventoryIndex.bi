@@ -238,3 +238,20 @@ ItemIndex(20, 7) = 1 'current stack
 ItemIndex(20, 8) = 100 'max stack
 ItemIndex(20, 9) = 20 'Item ID
 
+ItemName(21, 0) = "Crafting Station"
+
+ItemIndex(21, 0) = 0 'type
+ItemIndex(21, 1) = 96 'ssx
+ItemIndex(21, 2) = 16 'ssy
+ItemIndex(21, 3) = 15 'tileID
+ItemIndex(21, 4) = 1 'layer
+ItemIndex(21, 7) = 1 'current stack
+ItemIndex(21, 8) = 100 'max stack
+ItemIndex(21, 9) = 21 'Item ID
+
+
+
+
+
+
+
