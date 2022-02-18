@@ -2,8 +2,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Alpha Version 22.0 Edge 5
-Game.Version = "A22.0-E5
+Game.Buildinfo = "Alpha Version 22.0 Edge 6
+Game.Version = "A22.0-E6
 Game.Designation = "Edge"
 Game.FCV = 1
 
@@ -25,6 +25,7 @@ Sounds.walk_water= "Assets\Sounds\walk_water.mp3"
 
 'Debug values that are only set here for testing purposes
 Player.health = 8
+player.maxhealth=0
 GameMode = 2
 Flag.DebugMode =1
 Flag.NoClip = 0

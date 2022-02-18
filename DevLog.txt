@@ -10,12 +10,16 @@ Splitting a stack no longer works - Discovered
 Berry Bushes now deal damage on contact - E2
 Entering water will allow you to swim - E4
 Sound effects - E5
+You can now use Space to use items in the hotbar when tabbed into it with the inventory open - E6
+Player now has a max health, and will always show health wheels up to max health, even if fully empty - E6
+Player can now have boost health, which is any health above max will be shown in golden wheels, rather than pink - E6
 
 #Other Changes
 Changed water stats to support swimming - E4
 Health wheel now rainbow when in creative - E5
-Working on support for other resolutions - E5
+Other resolutions supported - E5
 ReWrote HUD - E5
+Some features of HUD Not working with new hud yet, hold F2 to activate the legacy hud, it will look broken but will allow access to the rest of the existing features
 
 Alpha Version 21
 

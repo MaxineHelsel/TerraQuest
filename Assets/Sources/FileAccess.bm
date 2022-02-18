@@ -1,16 +1,16 @@
 
 Sub SAVESETTINGS
-                          dim as byte zero,one
-                          zero=0
-                          one=1
+    Dim As Byte zero, one
+    zero = 0
+    one = 1
 
     Open "Assets\SaveData\Settings.cdf" As #1
     Put #1, 1, Settings.FrameRate
     Put #1, 2, Settings.TickRate
-    Put #1, 3, Screenrezx
-    Put #1, 4, Screenrezy
-    If fullscreen = 0 Then Put #1, 5, zero
-    If fullscreen = 2 Then Put #1, 5, one
+    Put #1, 3, ScreenRezX
+    Put #1, 4, ScreenRezY
+    If FullScreen = 0 Then Put #1, 5, zero
+    If FullScreen = 2 Then Put #1, 5, one
     Close #1
 
 End Sub
@@ -23,9 +23,9 @@ Sub LOADSETTINGS
     Open "Assets\SaveData\Settings.cdf" As #1
     Get #1, 1, Settings.FrameRate
     Get #1, 2, Settings.TickRate
-    Get #1, 3, Screenrezx
-    Get #1, 4, Screenrezy
-    get #1,5,settings.fullscreen
+    Get #1, 3, ScreenRezX
+    Get #1, 4, ScreenRezY
+    Get #1, 5, Settings.FullScreen
 
     Close #1
 
@@ -65,7 +65,7 @@ Sub LOADWORLD
     Get #1, 10, SavedMapY
     Get #1, 11, SpawnMapX
     Get #1, 12, SpawnMapY
-    get #1,13,worldseed
+    Get #1, 13, WorldSeed
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
@@ -76,7 +76,7 @@ Sub LOADWORLD
     While i < 4
         Get #1, total, Inventory(i, ii, iii)
         iii = iii + 1
-        If iii > invparameters Then iii = 0: ii = ii + 1
+        If iii > InvParameters Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
         total = total + 1
     Wend
@@ -87,6 +87,7 @@ Sub LOADWORLD
     Get #1, total, Player.points: total = total + 1
     Get #1, total, Player.experience: total = total + 1
     Get #1, total, Player.gold: total = total + 1
+    Get #1, total, Player.MaxHealth: total = total + 1
     Close #1
 
     Player.x = SavePointX
@@ -143,7 +144,7 @@ Sub LOADMAP (file As String)
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
-                For iiii = 0 To tileparameters
+                For iiii = 0 To TileParameters
                     Get #1, iii, TileData(ii, i, iiii)
                     iii = iii + 1
                 Next
@@ -176,7 +177,7 @@ Sub SAVEMAP
     If DirExists("Assets\Worlds\" + WorldName) = 0 Then
         MkDir "Assets\Worlds\" + WorldName: new = 1
         MkDir "Assets\Worlds\" + WorldName + "\Maps"
-                MkDir "Assets\Worlds\" + WorldName + "\Containers"
+        MkDir "Assets\Worlds\" + WorldName + "\Containers"
     End If
 
 
@@ -200,7 +201,7 @@ Sub SAVEMAP
     Put #1, 10, SavedMapY
     Put #1, 11, SpawnMapX
     Put #1, 12, SpawnMapY
-        put #1,13,worldseed
+    Put #1, 13, WorldSeed
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
@@ -211,7 +212,7 @@ Sub SAVEMAP
     While i < 4
         Put #1, total, Inventory(i, ii, iii)
         iii = iii + 1
-        If iii > invparameters Then iii = 0: ii = ii + 1
+        If iii > InvParameters Then iii = 0: ii = ii + 1
         If ii > 5 Then ii = 0: i = i + 1
         total = total + 1
     Wend
@@ -223,6 +224,7 @@ Sub SAVEMAP
     Put #1, total, Player.points: total = total + 1
     Put #1, total, Player.experience: total = total + 1
     Put #1, total, Player.gold: total = total + 1
+    Put #1, total, Player.MaxHealth: total = total + 1
 
     Close #1
     iii = 1
@@ -261,7 +263,7 @@ Sub SAVEMAP
     Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
-            For iiii = 0 To tileparameters
+            For iiii = 0 To TileParameters
                 Put #1, iii, TileData(ii, i, iiii)
                 iii = iii + 1
             Next
@@ -279,7 +281,6 @@ Sub SAVEMAP
 
     badpw:
 End Sub
-
 
 
 

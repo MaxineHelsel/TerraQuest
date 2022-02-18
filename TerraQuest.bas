@@ -19,6 +19,7 @@ Title "TerraQuest"
 
 Rem'$include: 'Assets\Sources\CraftingIndex.bi'
 
+Const MaxCraftLevel = 5
 Dim Shared CursorHoverX, CursorHoverY, CursorHoverPage, CursorSelectedX, CursorSelectedY, CursorSelectedPage, CursorMode
 
 INITIALIZE
@@ -70,7 +71,10 @@ Do
     MinMemFix
 
     If Player.health <= 0 Then Respawn
-    If TileIndexData(WallTile(FacingX, FacingY), 8) > 0 Then Player.CraftingLevel = TileIndexData(WallTile(FacingX, FacingY), 8) Else Player.CraftingLevel = 2
+
+    If WithinBounds = 1 Then
+        If TileIndexData(WallTile(FacingX, FacingY), 8) > 0 Then Player.CraftingLevel = TileIndexData(WallTile(FacingX, FacingY), 8) Else Player.CraftingLevel = 2
+    End If
 
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -199,13 +203,18 @@ Sub DisplayLables
                 If Inventory(0, iii, 7) > 1 Then PrintString ((HotbarTextX) + (HotbarTextSpace * iii) + i - 1, HotbarTextY + ii - 1), Str$(Inventory(0, iii, 7))
                 For iiii = 0 To 2
                     If Flag.InventoryOpen = 1 And Inventory(iiii + 1, iii, 7) > 1 And GameMode <> 1 Then PrintString ((0 + HotbarTextX) + (HotbarTextSpace * iii) + i - 1, (HotbarTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset + ii - 1), Str$(Inventory(iiii + 1, iii, 7))
+                    '
                 Next
             Next
             For iii = Player.CraftingLevel - 1 To 0 Step -1
                 For iiii = Player.CraftingLevel - 1 To 0 Step -1
                     If Flag.InventoryOpen = 1 And CraftingGrid(iiii, iii, 7) > 1 Then PrintString ((0 + CraftingTextX) - (HotbarTextSpace * iii) + i - 1, (CraftingTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset + ii - 1), Str$(CraftingGrid(iiii, iii, 7))
+                    '
                 Next
             Next
+            iiii = 0
+            iii = Player.CraftingLevel
+            If Flag.InventoryOpen = 1 And CraftingGrid(iiii, iii, 7) > 1 Then PrintString ((0 + CraftingTextX) - (HotbarTextSpace * iii) + i - 1, (CraftingTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset + ii - 1), Str$(CraftingGrid(iiii, iii, 7))
         Next
     Next
 
@@ -225,10 +234,12 @@ Sub DisplayLables
     Next
     For iii = Player.CraftingLevel - 1 To 0 Step -1
         For iiii = Player.CraftingLevel - 1 To 0 Step -1
-
             If Flag.InventoryOpen = 1 And CraftingGrid(iiii, iii, 7) > 1 Then PrintString ((0 + CraftingTextX) - (HotbarTextSpace * iii), (CraftingTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset), Str$(CraftingGrid(iiii, iii, 7))
         Next
     Next
+    iiii = 0
+    iii = Player.CraftingLevel
+    If Flag.InventoryOpen = 1 And CraftingGrid(iiii, iii, 7) > 1 Then PrintString ((0 + CraftingTextX) - (HotbarTextSpace * iii), (CraftingTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset), Str$(CraftingGrid(iiii, iii, 7))
 End Sub
 
 Sub DisplayHealth
@@ -245,7 +256,13 @@ Sub DisplayHealth
         Case 1
             PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (4 * 32, 32)-(4 * 32 + 31, 63)
         Case 2
+            For i = 0 To Player.MaxHealth
+                PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                Token = Token + 1
+            Next
+            Token = 1
             While TMPHeal > 0
+                If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
                 If TMPHeal <= 8 Then
                     PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0)-((TMPHeal - 1) * 32 + 31, 31)
                 Else
@@ -335,6 +352,12 @@ Sub DisplayCrafting
                 Next
             Next
 
+            PutImage (CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)), CameraPositionY + CraftingY)-(CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)) + 16, CameraPositionY + CraftingY + 16), Texture.HudSprites, , (0, 32)-(31, 63)
+            PutImage (CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)) + ItemSizeOffset, CameraPositionY + CraftingY + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)) + 16 - ItemSizeOffset, CameraPositionY + CraftingY + 16 - ItemSizeOffset), Texture.ItemSheet, , (CraftingGrid(0, Player.CraftingLevel, 1), CraftingGrid(0, Player.CraftingLevel, 2))-(CraftingGrid(0, Player.CraftingLevel, 1) + 15, CraftingGrid(0, Player.CraftingLevel, 2) + 15)
+
+            If CursorHoverPage = 3 And CursorHoverX = Player.CraftingLevel Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)), CameraPositionY + CraftingY)-(CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)) + 16, CameraPositionY + CraftingY + 16), Texture.HudSprites, , (32, 32)-(63, 63)
+            If CursorSelectedPage = 3 And CursorSelectedX = Player.CraftingLevel And CursorMode = 1 Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)), CameraPositionY + CraftingY)-(CameraPositionX + CraftingX - (CraftingSpace * (Player.CraftingLevel)) + 16, CameraPositionY + CraftingY + 16), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
+
 
     End Select
 End Sub
@@ -380,11 +403,17 @@ Sub NewStack (ItemID, StackNumber)
 End Sub
 
 Sub ItemSwap
-    Dim As Byte i, ii
+    Dim As Byte i, ii, iii, CraftComplete
     Dim SwapItem1(InvParameters), Swapitem2(InvParameters)
 
+    'set the empty slots to -1
+    For i = 0 To InvParameters
+        SwapItem1(i) = -1
+        Swapitem2(i) = -1
+    Next
 
 
+    'Put the source and destination in to dummy arrays to make it easier to work with
     For i = 0 To InvParameters
         Select Case CursorSelectedPage
             Case 0
@@ -408,6 +437,19 @@ Sub ItemSwap
         End Select
     Next
 
+    'check and see if it involves the crafting table result
+    If CursorHoverPage = 3 Then
+        If CursorHoverX = Player.CraftingLevel Then
+            If Swapitem2(0) <> -1 Then Exit Sub Else CraftComplete = 1
+        End If
+    End If
+    If CursorSelectedPage = 3 Then
+        If CursorSelectedX = Player.CraftingLevel Then
+            If SwapItem1(0) <> -1 Then Exit Sub Else CraftComplete = 1
+        End If
+    End If
+
+    'swap the items, or stack if able
     If SwapItem1(9) = Swapitem2(9) Then
         SwapItem1(7) = SwapItem1(7) + Swapitem2(7)
         Swapitem2(7) = 0
@@ -429,6 +471,8 @@ Sub ItemSwap
         Next
     End If
 
+
+    'rewrite the dummy variables to the source and dest
     For i = 0 To InvParameters
 
 
@@ -454,6 +498,21 @@ Sub ItemSwap
         End Select
     Next
 
+    'if the result was pulled from the crafting table, remove the table items
+    If CraftComplete = 1 Then
+        CraftComplete = 0
+        For i = 0 To Player.CraftingLevel - 1
+            For ii = 0 To Player.CraftingLevel - 1
+                CraftingGrid(ii, i, 7) = CraftingGrid(ii, i, 7) - 1
+                If CraftingGrid(ii, i, 7) <= 0 Then
+
+                    For iii = 0 To InvParameters
+                        CraftingGrid(ii, i, iii) = -1
+                    Next
+                End If
+            Next
+        Next
+    End If
 End Sub
 
 
@@ -513,6 +572,9 @@ Sub InputCursor
         CursorHoverX = CursorHoverX + 1
         If CursorHoverPage = 3 Then CursorHoverX = CursorHoverX - 2
     End If
+    If InventoryUse And CursorHoverPage = 1 Then
+        UseItem CursorHoverX
+    End If
 
     Select Case CursorHoverPage
         Case 0 'Inventory
@@ -526,11 +588,11 @@ Sub InputCursor
             CursorHoverY = 0
         Case 2 'Container
         Case 3 'Crafting
-            If CursorHoverX > Player.CraftingLevel - 1 Then CursorHoverX = 0
-            If CursorHoverX < 0 Then CursorHoverX = Player.CraftingLevel - 1
+            If CursorHoverX > Player.CraftingLevel Then CursorHoverX = 0
+            If CursorHoverX < 0 Then CursorHoverX = Player.CraftingLevel
             If CursorHoverY > Player.CraftingLevel - 1 Then CursorHoverY = 0
             If CursorHoverY < 0 Then CursorHoverY = Player.CraftingLevel - 1
-            If CursorHoverY = -1 Then CursorHoverX = 0
+            If CursorHoverX = Player.CraftingLevel Then CursorHoverY = 0
 
     End Select
 
@@ -563,27 +625,36 @@ Sub Crafting
 
     For i = Player.CraftingLevel - 1 To 0 Step -1
         For ii = Player.CraftingLevel - 1 To 0 Step -1
-            recipe = recipe + Trim$(Str$(CraftingGrid(ii, i, 9))) + " "
+            recipe = recipe + Trim$(Str$(CraftingGrid(i, ii, 9))) + " "
         Next
         recipe = recipe + "|"
     Next
+    For i = 0 To InvParameters
+        CraftingGrid(0, Player.CraftingLevel, i) = -1
+    Next
 
     Select Case recipe
-        Case "0 0 0 |0 5 0 |0 0 0 |" 'bush to raw wood
+        Case "-1 -1 -1 |-1 5 -1 |-1 -1 -1 |" 'bush to raw wood
             For i = 0 To InvParameters
-                CraftingResult(i) = ItemIndex(19, i)
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(19, i)
             Next
-            CraftingGrid(1, 1, 7) = 4
+            CraftingGrid(0, Player.CraftingLevel, 7) = 4
         Case "19 19 |19 19 |" 'crafting station
             For i = 0 To InvParameters
-                CraftingResult(i) = ItemIndex(21, i)
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(21, i)
             Next
-        Case "0 0 0 |0 5 0 |19 19 19 |" 'Campfire
+        Case "-1 -1 -1 |-1 5 -1 |19 19 19 |" 'Campfire
             For i = 0 To InvParameters
-                CraftingResult(i) = ItemIndex(10, i)
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(10, i)
             Next
+        Case "19 19 19 |19 19 19 |19 19 19 |" 'Wood Wall
+            For i = 0 To InvParameters
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(8, i)
+            Next
+            CraftingGrid(0, Player.CraftingLevel, 7) = 9
 
     End Select
+    Print recipe
 End Sub
 
 Sub ClearTable
@@ -713,6 +784,10 @@ Function InventorySplit
         SingleHit = 1
     ElseIf KeyDown(92) = 0 Then SingleHit = 0
     End If
+End Function
+
+Function InventoryUse
+    InventoryUse = KeyDown(32)
 End Function
 
 
@@ -1370,22 +1445,23 @@ Sub DEV
                 Print "Motion:"; Player.movingx; Player.movingy
                 Print Player.lastx; Player.lasty
             Case "inv", "inventory", "2"
-                Print "Inventory Slot 1 Data"
-                Select Case Inventory(0, 0, 0)
-                    Case 0
-                        Print "Tile: "; Trim$((ItemName(Inventory(0, 0, 9), 0))); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | TileID:"; Str$(Inventory(0, 0, 3)); " | Layer:"; Str$(Inventory(0, 0, 4)); " | "; Trim$(Str$(Inventory(0, 0, 5))) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
-                    Case 1
-                        Print "Tool: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | Durabillity:"; Str$(Inventory(0, 0, 3)); "/"; Trim$(Str$(Inventory(0, 0, 4))); " | Type:"; Str$(Inventory(0, 0, 5)); " | Strength:"; Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
-                    Case 2
-                        Print "Sword: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " | Durabillity:"; Str$(Inventory(0, 0, 3)); "/"; Trim$(Str$(Inventory(0, 0, 4))); " | Delay:"; Str$(Inventory(0, 0, 5)); " | Damage:"; Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); " | Range"; Str$(Inventory(0, 0, 10)); " | Speed:"; Str$(Inventory(0, 0, 11));
-                    Case 3
-                        Print "Crafting Ingredient: "; Trim$(ItemName(Inventory(0, 0, 9), 0)); " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " |"; Str$(Inventory(0, 0, 3)) + Str$(Inventory(0, 0, 4)) + Str$(Inventory(0, 0, 5)) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
-                    Case Else
-                        Print "Unknown";
-                        If Inventory(0, 0, 9) > -1 Then Print ": "; Trim$(ItemName(Inventory(0, 0, 9), 0));
-                        Print ; " | SS:"; Str$(Inventory(0, 0, 1)); ","; Trim$(Str$(Inventory(0, 0, 2))); " |"; Str$(Inventory(0, 0, 3)) + Str$(Inventory(0, 0, 4)) + Trim$(Str$(Inventory(0, 0, 5))) + Str$(Inventory(0, 0, 6)); " | Stack:"; Str$(Inventory(0, 0, 7)); "/"; Trim$(Str$(Inventory(0, 0, 8))); " | ID:"; Str$(Inventory(0, 0, 9)); ""
-
-                End Select
+                Print "Inventory Data"
+                If CursorHoverPage = 1 Then
+                    Select Case Inventory(CursorHoverY, CursorHoverX, 0)
+                        Case 0
+                            Print "Tile: "; Trim$((ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0))); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " | TileID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)); " | Layer:"; Str$(Inventory(CursorHoverY, CursorHoverX, 4)); " | "; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 5))) + Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                        Case 1
+                            Print "Tool: "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " | Durabillity:"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 4))); " | Type:"; Str$(Inventory(CursorHoverY, CursorHoverX, 5)); " | Strength:"; Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                        Case 2
+                            Print "Sword: "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " | Durabillity:"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 4))); " | Delay:"; Str$(Inventory(CursorHoverY, CursorHoverX, 5)); " | Damage:"; Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); " | Range"; Str$(Inventory(CursorHoverY, CursorHoverX, 10)); " | Speed:"; Str$(Inventory(CursorHoverY, CursorHoverX, 11));
+                        Case 3
+                            Print "Crafting Ingredient: "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0)); " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " |"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)) + Str$(Inventory(CursorHoverY, CursorHoverX, 4)) + Str$(Inventory(CursorHoverY, CursorHoverX, 5)) + Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                        Case Else
+                            Print "Unknown";
+                            If Inventory(CursorHoverY, CursorHoverX, 9) > -1 Then Print ": "; Trim$(ItemName(Inventory(CursorHoverY, CursorHoverX, 9), 0));
+                            Print ; " | SS:"; Str$(Inventory(CursorHoverY, CursorHoverX, 1)); ","; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 2))); " |"; Str$(Inventory(CursorHoverY, CursorHoverX, 3)) + Str$(Inventory(CursorHoverY, CursorHoverX, 4)) + Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 5))) + Str$(Inventory(CursorHoverY, CursorHoverX, 6)); " | Stack:"; Str$(Inventory(CursorHoverY, CursorHoverX, 7)); "/"; Trim$(Str$(Inventory(CursorHoverY, CursorHoverX, 8))); " | ID:"; Str$(Inventory(CursorHoverY, CursorHoverX, 9)); ""
+                    End Select
+                End If
                 'For i = 0 To InvParameters
                 '    Print Inventory(0, 0, i);
                 'Next
@@ -1581,6 +1657,7 @@ End Sub
 
 
 Sub INITIALIZE
+    Dim As Byte i, ii, iii
     ScreenRezX = DesktopWidth
     ScreenRezY = DesktopHeight
     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
@@ -1599,7 +1676,13 @@ Sub INITIALIZE
     Else Error 100
     End If
 
-
+    For i = 0 To MaxCraftLevel
+        For ii = 0 To MaxCraftLevel
+            For iii = 0 To InvParameters
+                CraftingGrid(ii, i, iii) = -1
+            Next
+        Next
+    Next
 
     If new = 1 Then SAVESETTINGS
     LOADSETTINGS
@@ -1617,6 +1700,7 @@ End Sub
 
 
 
+
 '$include: 'Assets\Sources\InventoryManagement.bm'
 '$include: 'Assets\Sources\ShadowCast.bm'
 '$include: 'Assets\Sources\DayNightCycle.bm'
@@ -1626,7 +1710,7 @@ End Sub
 '$include: 'Assets\Sources\ErrorHandler.bm'
 '$include: 'Assets\Sources\FrameRate.bm'
 '$include: 'Assets\Sources\OsProbe.bm'
-'$include: 'Assets\Sources\CollisionDetection.bm'                                                                                  q
+'$include: 'Assets\Sources\CollisionDetection.bm'
 '$include: 'Assets\Sources\SpriteAnimation.bm'
 '$include: 'Assets\Sources\PlayerControl.bm'
 '$include: 'Assets\Sources\MapDraw.bm'

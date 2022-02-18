@@ -243,3 +243,18 @@ TileIndexData(15, 8) = 3
 
 
 
+TileName(16, 0) = "Wooden Ladder" 'Name of the tile
+TileName(16, 1) = "Placeholder" 'tooltip
+TileIndex(16, 0) = 0 'layer definition
+TileIndex(16, 1) = 0 'x position on tilesheet
+TileIndex(16, 2) = 16 'y position on tilesheet
+TileIndex(16, 3) = 16 'itemid
+TileIndexData(16, 0) = 1 'collision
+TileIndexData(16, 1) = 0 'casts shadow
+TileIndexData(16, 2) = 1 'blocks shadow
+TileIndexData(16, 3) = 1 'has interior shadow
+TileIndexData(16, 4) = 30 'resistance
+TileIndexData(16, 5) = 1 'is solid
+TileIndexData(16, 9) = 0.8 'Friction
+TileIndexData(16, 10) = 0.8
+

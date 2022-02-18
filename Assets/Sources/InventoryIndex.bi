@@ -219,8 +219,8 @@ ItemName(19, 1) = "Crafting Material"
 ItemIndex(19, 0) = 3 'item type (1 means tool)
 ItemIndex(19, 1) = 64 'item texture x cord
 ItemIndex(19, 2) = 16 'item texture y cord
-ItemIndex(19, 3) = 1 'crafting ID
-ItemIndex(19, 4) = 0 'minimum table
+ItemIndex(19, 3) = 0 '
+ItemIndex(19, 4) = 0 '
 ItemIndex(19, 5) = 0 '
 ItemIndex(19, 6) = 0 '
 ItemIndex(19, 7) = 1 'current stack
@@ -249,6 +249,31 @@ ItemIndex(21, 7) = 1 'current stack
 ItemIndex(21, 8) = 100 'max stack
 ItemIndex(21, 9) = 21 'Item ID
 
+ItemName(22, 0) = "Tool Handle"
+ItemName(22, 1) = "Crafting Material"
+ItemIndex(22, 0) = 3 'item type (1 means tool)
+ItemIndex(22, 1) = 112 'item texture x cord
+ItemIndex(22, 2) = 16 'item texture y cord
+ItemIndex(22, 3) = 0 '
+ItemIndex(22, 4) = 0 '
+ItemIndex(22, 5) = 0 '
+ItemIndex(22, 6) = 0 '
+ItemIndex(22, 7) = 1 'current stack
+ItemIndex(22, 8) = 100 'max stack
+ItemIndex(22, 9) = 22 'Item ID
+
+ItemName(23, 0) = "Red Berries"
+ItemName(23, 1) = "Food Item"
+ItemIndex(23, 0) = 4 'item type (1 means tool)
+ItemIndex(23, 1) = 128 'item texture x cord
+ItemIndex(23, 2) = 16 'item texture y cord
+ItemIndex(23, 3) = 1 'Health Gained
+ItemIndex(23, 4) = 0 '
+ItemIndex(23, 5) = 0 '
+ItemIndex(23, 6) = 0 '
+ItemIndex(23, 7) = 1 'current stack
+ItemIndex(23, 8) = 100 'max stack
+ItemIndex(23, 9) = 22 'Item ID
 
 
 
