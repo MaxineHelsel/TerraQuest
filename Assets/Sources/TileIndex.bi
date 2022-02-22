@@ -72,7 +72,7 @@ TileIndexData(4, 2) = 0 'blocks shadow
 TileIndexData(4, 3) = 0 'has interior shadow
 TileIndexData(4, 4) = 17 'resistance
 TileIndexData(4, 5) = 1 'is solid
-TileIndexData(4, 9) = 0.8 'Friction
+TileIndexData(4, 9) = 0.2 'Friction
 TileIndexData(4, 10) = 0.8
 
 
@@ -241,8 +241,6 @@ TileIndexData(15, 4) = 25 'resistance
 TileIndexData(15, 5) = 1 'is soli
 TileIndexData(15, 8) = 3
 
-
-
 TileName(16, 0) = "Wooden Ladder" 'Name of the tile
 TileName(16, 1) = "Placeholder" 'tooltip
 TileIndex(16, 0) = 0 'layer definition
@@ -257,4 +255,6 @@ TileIndexData(16, 4) = 30 'resistance
 TileIndexData(16, 5) = 1 'is solid
 TileIndexData(16, 9) = 0.8 'Friction
 TileIndexData(16, 10) = 0.8
+
+
 

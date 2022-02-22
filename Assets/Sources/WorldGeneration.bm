@@ -87,7 +87,7 @@ Sub GenerateMap
                 End If
 
                 'generate berry bushes
-                If Ceil(Rnd * 500) = 250 Then
+                If Ceil(Rnd * 250) = 125 Then
                     WallTile(ii, i) = 12
                 End If
             End If

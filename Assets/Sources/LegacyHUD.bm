@@ -533,6 +533,14 @@ Sub EmptyContainerSlot (slot)
     Next
 End Sub
 
+Function CraftSpace (level)
+    Select Case level
+        Case 0
+            CraftSpace = 8.5
+        Case 1
+            CraftSpace = 0
+    End Select
+End Function
 
 
 Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)

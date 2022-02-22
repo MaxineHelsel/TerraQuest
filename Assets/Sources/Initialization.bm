@@ -1,1 +1,44 @@
 
+Sub INITIALIZE
+    Dim As Byte i, ii, iii
+    ScreenRezX = DesktopWidth
+    ScreenRezY = DesktopHeight
+    Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
+    FullScreen SquarePixels
+
+    If DirExists("Assets") Then
+        If DirExists("Assets\Sprites") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Entities") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Items") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Other") = 0 Then Error 100
+        If DirExists("Assets\Sprites\Tiles") = 0 Then Error 100
+        If DirExists("Assets\Music") = 0 Then Error 100
+        If DirExists("Assets\Sounds") = 0 Then Error 100
+        If DirExists("Assets\Worlds") = 0 Then MkDir "Assets\Worlds"
+        If DirExists("Assets\SaveData") = 0 Then MkDir "Assets\SaveData": new = 1
+    Else Error 100
+    End If
+
+    For i = 0 To MaxCraftLevel
+        For ii = 0 To MaxCraftLevel
+            For iii = 0 To InvParameters
+                CraftingGrid(ii, i, iii) = -1
+            Next
+        Next
+    Next
+
+    If new = 1 Then SAVESETTINGS
+    LOADSETTINGS
+    Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
+    If Settings.FullScreen = 1 Then FullScreen SquarePixels
+    If Settings.FullScreen = 0 Then FullScreen Off
+
+    OSPROBE
+
+    SwitchRender (DefaultRenderMode)
+    RenderMode = DefaultRenderMode
+
+
+End Sub
+
+

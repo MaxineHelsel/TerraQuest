@@ -172,7 +172,7 @@ ItemIndex(15, 7) = 1 'current stack
 ItemIndex(15, 8) = 1 'max stack
 ItemIndex(15, 9) = 15 'Item ID
 
-ItemName(16, 0) = "Creative Axe"
+ItemName(16, 0) = "Wooden Axe"
 ItemName(16, 1) = "Allows you to break wall tiles"
 ItemIndex(16, 0) = 1 'item type (1 means tool)
 ItemIndex(16, 1) = 16 'item texture x cord
@@ -185,7 +185,7 @@ ItemIndex(16, 7) = 1 'current stack
 ItemIndex(16, 8) = 1 'max stack
 ItemIndex(16, 9) = 16 'Item ID
 
-ItemName(17, 0) = "Creative Pickaxe"
+ItemName(17, 0) = "Wooden Pickaxe"
 ItemName(17, 1) = "Allows you to mine"
 ItemIndex(17, 0) = 1 'item type (1 means tool)
 ItemIndex(17, 1) = 32 'item texture x cord
@@ -198,7 +198,7 @@ ItemIndex(17, 7) = 1 'current stack
 ItemIndex(17, 8) = 1 'max stack
 ItemIndex(17, 9) = 17 'Item ID
 
-ItemName(18, 0) = "Creative Sword"
+ItemName(18, 0) = "Wooden Sword"
 ItemName(18, 1) = "Allows you to fight"
 ItemIndex(18, 0) = 2 'item type (1 means tool)
 ItemIndex(18, 1) = 48 'item texture x cord
@@ -239,7 +239,7 @@ ItemIndex(20, 8) = 100 'max stack
 ItemIndex(20, 9) = 20 'Item ID
 
 ItemName(21, 0) = "Crafting Station"
-
+ItemName(21, 1) = "Placeholder"
 ItemIndex(21, 0) = 0 'type
 ItemIndex(21, 1) = 96 'ssx
 ItemIndex(21, 2) = 16 'ssy
@@ -264,19 +264,40 @@ ItemIndex(22, 9) = 22 'Item ID
 
 ItemName(23, 0) = "Red Berries"
 ItemName(23, 1) = "Food Item"
-ItemIndex(23, 0) = 4 'item type (1 means tool)
+ItemIndex(23, 0) = 4 'item type (4 means consumable)
 ItemIndex(23, 1) = 128 'item texture x cord
 ItemIndex(23, 2) = 16 'item texture y cord
-ItemIndex(23, 3) = 1 'Health Gained
+ItemIndex(23, 3) = 0 'consumable type
 ItemIndex(23, 4) = 0 '
 ItemIndex(23, 5) = 0 '
 ItemIndex(23, 6) = 0 '
 ItemIndex(23, 7) = 1 'current stack
 ItemIndex(23, 8) = 100 'max stack
-ItemIndex(23, 9) = 22 'Item ID
+ItemIndex(23, 9) = 23 'Item ID
 
+ItemName(24, 0) = "Health Wheel"
+ItemName(24, 1) = "Consumable, increases max health by 8"
+ItemIndex(24, 0) = 4 'item type (4 means consumable)
+ItemIndex(24, 1) = 144 'item texture x cord
+ItemIndex(24, 2) = 16 'item texture y cord
+ItemIndex(24, 3) = 1 'consumable type
+ItemIndex(24, 4) = 0 '
+ItemIndex(24, 5) = 0 '
+ItemIndex(24, 6) = 0 '
+ItemIndex(24, 7) = 1 'current stack
+ItemIndex(24, 8) = 100 'max stack
+ItemIndex(24, 9) = 24 'Item ID
 
-
+ItemName(25, 0) = "Wooden Ladder" 'Name of the tile
+ItemName(25, 1) = "Placeholder" 'tooltip
+ItemIndex(25, 0) = 0 'Item type
+ItemIndex(25, 1) = 160 'x position on tilesheet
+ItemIndex(25, 2) = 16 'y position on tilesheet
+ItemIndex(25, 3) = 4 'tile id
+ItemIndex(25, 4) = 0 'Layer
+ItemIndex(25, 7) = 1 'current stack
+ItemIndex(25, 8) = 100 'max stack
+ItemIndex(25, 9) = 25 'Item ID
 
 
 

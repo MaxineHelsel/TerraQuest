@@ -46,6 +46,7 @@ Error 102
 ERRORHANDLE: ErrorHandler
 DisplayOrder GLRender , Hardware , Software
 game:
+KeyClear
 SwitchRender 0 'these 2 statements are important to prevent a dumb bug
 SwitchRender 1
 Do
@@ -169,6 +170,7 @@ Sub DisplayLables
     Dim As Single CraftingTextX, CraftingTextY
     Dim As Single CraftingTitleX, CraftingTitleY
 
+
     InventoryTextOffset = 83
 
     HealthTextX = ScreenRezX - 60
@@ -187,6 +189,8 @@ Sub DisplayLables
     CraftingTextX = ScreenRezX - 66
     CraftingTextY = ScreenRezY + 23
 
+    CraftingTitleX = ScreenRezX - 84 - 50 - (68 * (Player.CraftingLevel - 2))
+    CraftingTitleY = ScreenRezY - 103 - 50 - (68 * (Player.CraftingLevel - 2))
 
     Color RGB(0, 0, 0)
     For i = 0 To 2
@@ -196,7 +200,7 @@ Sub DisplayLables
             PrintString (HotbarTitlex + (i - 1), HotbarTitley + (ii - 1)), "Hotbar:"
             If Flag.InventoryOpen = 1 Then
                 PrintString (InventoryTitleX + (i - 1), InventoryTitleY + (ii - 1)), "Inventory:"
-                'PrintString (Craftingtitlex + (i - 1), CraftingTitleY + (ii - 1)), "Crafting:"
+                PrintString (CraftingTitleX + (i - 1), CraftingTitleY + (ii - 1)), "Crafting:"
             End If
 
             For iii = 0 To 5
@@ -222,8 +226,10 @@ Sub DisplayLables
 
     PrintString (HealthTextX, HealthTextY), "Health:"
     PrintString (HotbarTitlex, HotbarTitley), "Hotbar:"
-    If Flag.InventoryOpen = 1 Then PrintString (InventoryTitleX, InventoryTitleY), "Inventory:"
-    'PrintString (Craftingtitlex + (i - 1), CraftingTitleY + (ii - 1)), "Crafting:"
+    If Flag.InventoryOpen = 1 Then
+        PrintString (InventoryTitleX, InventoryTitleY), "Inventory:"
+        PrintString (CraftingTitleX, CraftingTitleY), "Crafting:"
+    End If
     For iii = 0 To 5
 
         If Inventory(0, iii, 7) > 1 Then PrintString ((HotbarTextX) + (HotbarTextSpace * iii), HotbarTextY), Str$(Inventory(0, iii, 7))
@@ -375,36 +381,38 @@ Sub NewStack (ItemID, StackNumber)
             For i = 0 To 3
                 For ii = 0 To 5
                     If Inventory(i, ii, 9) = -1 Then
-                        For iii = 0 To 9
+                        For iii = 0 To InvParameters
                             Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
                         Next
                         Inventory(i, ii, 7) = StackNumber
-                        GoTo Complete
-                    End If
-                Next
-            Next
-            For i = 0 To 3
-                For ii = 0 To 5
-                    If Inventory(i, ii, 9) = -1 Then
-                        For iii = 0 To 9
-                            Inventory(i, ii, iii) = ItemIndex(ItemID, iii)
-                        Next
-                        Inventory(i, ii, 7) = StackNumber
-                        GoTo Complete
+                        Exit Sub
                     End If
                 Next
             Next
 
         Case 2
         Case 3
-            'no splitting in craftingUI
+            For i = 0 To Player.CraftingLevel - 1
+                For ii = 0 To Player.CraftingLevel - 1
+                    If CraftingGrid(i, ii, 9) = -1 Then
+                        For iii = 0 To InvParameters
+                            CraftingGrid(i, ii, iii) = ItemIndex(ItemID, iii)
+                        Next
+                        CraftingGrid(i, ii, 7) = StackNumber
+                        Exit Sub
+                    End If
+
+                Next
+            Next
     End Select
-    Complete:
 End Sub
 
 Sub ItemSwap
     Dim As Byte i, ii, iii, CraftComplete
     Dim SwapItem1(InvParameters), Swapitem2(InvParameters)
+
+    'prevent duplicating items by just attemting to swap an item with itself
+    If CursorHoverX = CursorSelectedX And CursorHoverY = CursorSelectedY And CursorHoverPage = CursorSelectedPage Then Exit Sub
 
     'set the empty slots to -1
     For i = 0 To InvParameters
@@ -474,8 +482,6 @@ Sub ItemSwap
 
     'rewrite the dummy variables to the source and dest
     For i = 0 To InvParameters
-
-
         Select Case CursorSelectedPage
             Case 0
                 Inventory(CursorSelectedY + 1, CursorSelectedX, i) = Swapitem2(i)
@@ -483,8 +489,6 @@ Sub ItemSwap
                 Inventory(0, CursorSelectedX, i) = Swapitem2(i)
             Case 3
                 CraftingGrid(CursorSelectedY, CursorSelectedX, i) = Swapitem2(i)
-
-
         End Select
 
         Select Case CursorHoverPage
@@ -544,7 +548,16 @@ Sub InputCursor
         If Flag.ContainerOpen = 0 And CursorHoverPage = 2 Then CursorHoverPage = 3
         If Flag.ContainerOpen = 0 And CursorSelectedPage = 2 Then CursorMode = 0
         If CursorHoverPage > 3 Then CursorHoverPage = 0
+
     End If
+    If InventoryShiftTab Then
+        CursorHoverPage = CursorHoverPage - 1
+        If Flag.ContainerOpen = 0 And CursorHoverPage = 2 Then CursorHoverPage = 1
+        If Flag.ContainerOpen = 0 And CursorSelectedPage = 2 Then CursorMode = 0
+        If CursorHoverPage < 0 Then CursorHoverPage = 3
+
+    End If
+
 
     If InventorySplit Then
         Select Case CursorHoverPage
@@ -553,6 +566,19 @@ Sub InputCursor
                     NewStack Inventory(CursorHoverY + 1, CursorHoverX, 9), Int(Inventory(CursorHoverY + 1, CursorHoverX, 7) / 2)
                     Inventory(CursorHoverY + 1, CursorHoverX, 7) = Ceil(Inventory(CursorHoverY + 1, CursorHoverX, 7) / 2)
                 End If
+            Case 1
+                If Inventory(CursorHoverY, CursorHoverX, 7) > 1 Then
+                    NewStack Inventory(CursorHoverY, CursorHoverX, 9), Int(Inventory(CursorHoverY, CursorHoverX, 7) / 2)
+                    Inventory(CursorHoverY, CursorHoverX, 7) = Ceil(Inventory(CursorHoverY, CursorHoverX, 7) / 2)
+                End If
+
+            Case 3
+                If CraftingGrid(CursorHoverY, CursorHoverX, 7) > 1 Then
+                    NewStack CraftingGrid(CursorHoverY, CursorHoverX, 9), Int(CraftingGrid(CursorHoverY, CursorHoverX, 7) / 2)
+                    CraftingGrid(CursorHoverY, CursorHoverX, 7) = Ceil(CraftingGrid(CursorHoverY, CursorHoverX, 7) / 2)
+                End If
+
+
         End Select
     End If
 
@@ -614,47 +640,11 @@ Sub Hud2
             DisplayContainer
             InputCursor
         End If
-        UseHotBar
+
         DisplayLables
 
     End If
-End Sub
-Sub Crafting
-    Dim recipe As String
-    Dim i, ii, iii As Byte
-
-    For i = Player.CraftingLevel - 1 To 0 Step -1
-        For ii = Player.CraftingLevel - 1 To 0 Step -1
-            recipe = recipe + Trim$(Str$(CraftingGrid(i, ii, 9))) + " "
-        Next
-        recipe = recipe + "|"
-    Next
-    For i = 0 To InvParameters
-        CraftingGrid(0, Player.CraftingLevel, i) = -1
-    Next
-
-    Select Case recipe
-        Case "-1 -1 -1 |-1 5 -1 |-1 -1 -1 |" 'bush to raw wood
-            For i = 0 To InvParameters
-                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(19, i)
-            Next
-            CraftingGrid(0, Player.CraftingLevel, 7) = 4
-        Case "19 19 |19 19 |" 'crafting station
-            For i = 0 To InvParameters
-                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(21, i)
-            Next
-        Case "-1 -1 -1 |-1 5 -1 |19 19 19 |" 'Campfire
-            For i = 0 To InvParameters
-                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(10, i)
-            Next
-        Case "19 19 19 |19 19 19 |19 19 19 |" 'Wood Wall
-            For i = 0 To InvParameters
-                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(8, i)
-            Next
-            CraftingGrid(0, Player.CraftingLevel, 7) = 9
-
-    End Select
-    Print recipe
+    UseHotBar
 End Sub
 
 Sub ClearTable
@@ -668,14 +658,6 @@ Sub ClearTable
     Next
 End Sub
 
-Function CraftSpace (level)
-    Select Case level
-        Case 0
-            CraftSpace = 8.5
-        Case 1
-            CraftSpace = 0
-    End Select
-End Function
 
 Function Item1
     Item1 = KeyDown(49)
@@ -725,7 +707,7 @@ Function InventoryUp
     If KeyDown(18432) And SingleHit <> 1 Then
         InventoryUp = KeyDown(18432)
         SingleHit = 1
-    5 ElseIf KeyDown(18432) = 0 Then SingleHit = 0
+    ElseIf KeyDown(18432) = 0 Then SingleHit = 0
     End If
 
 
@@ -768,6 +750,16 @@ Function InventoryTab
     ElseIf KeyDown(9) = 0 Then SingleHit = 0
     End If
 End Function
+
+Function InventoryShiftTab
+    Static SingleHit As Byte
+    If KeyDown(100304) And SingleHit <> 1 Then
+        InventoryShiftTab = KeyDown(100304)
+        SingleHit = 1
+    Else If KeyDown(100304) = 0 Then SingleHit = 0
+    End If
+End Function
+
 
 Function InventorySelect
     Static SingleHit As Byte
@@ -871,13 +863,22 @@ Sub OnTopEffect
 End Sub
 
 
+
 Sub EffectExecute (ID As Integer, Val1 As Single)
     Select Case ID
         Case 1 'Instant Damage
             If GameMode <> 1 Then Player.health = Player.health - Val1
             PlaySound Sounds.damage_bush
-        Case 2
+        Case 2 'Swimming
             SwimOffset = Val1
+        Case 3 'Instant Health
+            If GameMode <> 1 Then
+                If Player.health < (Player.MaxHealth + 1) * 8 Then
+                    Player.health = Player.health + Val1
+                End If
+            End If
+        Case 4 'max health increase
+            Player.MaxHealth = Player.MaxHealth + Val1
     End Select
 
 
@@ -919,6 +920,29 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 3
                     EffectIndex = 7
             End Select
+        Case "Consume Red Berries"
+            Select Case Value
+                Case 0
+                    EffectIndex = 3 'effectid
+                Case 1
+                    EffectIndex = 2 'frameduration
+                Case 2
+                    EffectIndex = 10 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+            End Select
+        Case "Consume Health Wheel"
+            Select Case Value
+                Case 0
+                    EffectIndex = 4 'effectid
+                Case 1
+                    EffectIndex = 2 'frameduration
+                Case 2
+                    EffectIndex = 0 '18000 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+            End Select
+
         Case Else
             EffectIndex = 0
     End Select
@@ -941,7 +965,6 @@ End Sub
 
 Sub Effects (Command As Byte, Sources As String)
     Dim As Byte i, ii
-    Dim Null As Byte
     Dim EffectSources(MaxEffects) As String
 
     Select Case Command
@@ -1169,6 +1192,7 @@ Function FacingY
 
 End Function
 Sub UseItem (Slot)
+    Static ConsumeCooldown
     Select Case Inventory(0, Slot, 0)
         Case 0 'Block placing
             Select Case Inventory(0, Slot, 4)
@@ -1236,8 +1260,24 @@ Sub UseItem (Slot)
                     End If
 
             End Select
+        Case 4 'consumables
+            If CurrentTick >= ConsumeCooldown Then
+                If EffectIndex("Consume " + ItemName(Inventory(0, Slot, 9), 0), 0) = 3 Then
+                    If Player.health >= ((Player.MaxHealth + 1) * 8) Then Exit Select
+                End If
+                Effects 1, "Consume " + ItemName(Inventory(0, Slot, 9), 0)
+
+                If GameMode <> 1 Then
+                    Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                    If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                End If
+
+                ConsumeCooldown = CurrentTick + 10
+            End If
 
     End Select
+
+
     If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
         WallTile(FacingX, FacingY) = 1
         UpdateTile FacingX, FacingY
@@ -1363,7 +1403,7 @@ End Sub
 
 
 Sub DEV
-    If Flag.DebugMode = 1 Then
+    If Flag.DebugMode = 1 Or CurrentTick < 1 Then
         PrintMode FillBackground
         Color , RGBA(0, 0, 0, 128)
         Dim comin As String
@@ -1640,6 +1680,14 @@ Sub DEV
                     ChangeMap 1, DMapX, DMapY
                 Case "genmap"
                     GenerateMap
+                Case "give", "item"
+                    Locate 28, 1: Print "                   "
+                    Locate 28, 1: Input "ItemID to give ", DMapX
+                    Locate 28, 1: Print "                   "
+                    Locate 28, 1: Input "Ammount ", DMapY
+
+                    NewStack DMapX, DMapY
+
                 Case Else
             End Select
             KeyClear
@@ -1654,49 +1702,6 @@ End Sub
 
 
 
-
-
-Sub INITIALIZE
-    Dim As Byte i, ii, iii
-    ScreenRezX = DesktopWidth
-    ScreenRezY = DesktopHeight
-    Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
-    FullScreen SquarePixels
-
-    If DirExists("Assets") Then
-        If DirExists("Assets\Sprites") = 0 Then Error 100
-        If DirExists("Assets\Sprites\Entities") = 0 Then Error 100
-        If DirExists("Assets\Sprites\Items") = 0 Then Error 100
-        If DirExists("Assets\Sprites\Other") = 0 Then Error 100
-        If DirExists("Assets\Sprites\Tiles") = 0 Then Error 100
-        If DirExists("Assets\Music") = 0 Then Error 100
-        If DirExists("Assets\Sounds") = 0 Then Error 100
-        If DirExists("Assets\Worlds") = 0 Then MkDir "Assets\Worlds"
-        If DirExists("Assets\SaveData") = 0 Then MkDir "Assets\SaveData": new = 1
-    Else Error 100
-    End If
-
-    For i = 0 To MaxCraftLevel
-        For ii = 0 To MaxCraftLevel
-            For iii = 0 To InvParameters
-                CraftingGrid(ii, i, iii) = -1
-            Next
-        Next
-    Next
-
-    If new = 1 Then SAVESETTINGS
-    LOADSETTINGS
-    Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
-    If Settings.FullScreen = 1 Then FullScreen SquarePixels
-    If Settings.FullScreen = 0 Then FullScreen Off
-
-    OSPROBE
-
-    SwitchRender (DefaultRenderMode)
-    RenderMode = DefaultRenderMode
-
-
-End Sub
 
 
 
@@ -1719,4 +1724,5 @@ End Sub
 '$include: 'Assets\Sources\PerlinNoise.bm'
 '$include: 'Assets\Sources\EffectFunctions.bm'
 '$include: 'Assets\Sources\WorldGeneration.bm'
+'$include: 'Assets\Sources\CraftingIndex.bm'
 '$include: 'Assets\Sources\LegacyHUD.bm'
