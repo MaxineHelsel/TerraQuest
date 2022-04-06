@@ -293,11 +293,25 @@ ItemName(25, 1) = "Placeholder" 'tooltip
 ItemIndex(25, 0) = 0 'Item type
 ItemIndex(25, 1) = 160 'x position on tilesheet
 ItemIndex(25, 2) = 16 'y position on tilesheet
-ItemIndex(25, 3) = 4 'tile id
+ItemIndex(25, 3) = 16 'tile id
 ItemIndex(25, 4) = 0 'Layer
 ItemIndex(25, 7) = 1 'current stack
 ItemIndex(25, 8) = 100 'max stack
 ItemIndex(25, 9) = 25 'Item ID
+
+ItemName(26, 0) = "Carrot"
+ItemName(26, 1) = "Food Item"
+ItemIndex(26, 0) = 4 'item type (4 means consumable)
+ItemIndex(26, 1) = 176 'item texture x cord
+ItemIndex(26, 2) = 16 'item texture y cord
+ItemIndex(26, 3) = 0 'consumable type
+ItemIndex(26, 4) = 0 '
+ItemIndex(26, 5) = 0 '
+ItemIndex(26, 6) = 0 '
+ItemIndex(26, 7) = 1 'current stack
+ItemIndex(26, 8) = 100 'max stack
+ItemIndex(26, 9) = 26 'Item ID
+
 
 
 

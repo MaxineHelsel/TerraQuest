@@ -23,7 +23,7 @@ Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
 
-dim shared Container(20,invparameters)
+dim shared Container(20,20,invparameters)
 
 
 Dim Shared SavedMapX As Integer64
@@ -72,10 +72,16 @@ Dim Shared Game.FCV As integer
 Dim Shared Game.HostOS As String
 Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
+dim shared Game.MapProtocol as integer
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
-dim shared EffectArray(20,EffectParameters) as integer
+
+Const EntityLimit = 1000
+Const EntityParameters = 20
+Dim Shared CurrentEntities
+Dim Shared entity(EntityLimit, EntityParameters)
+dim shared EffectArray(20,EffectParameters,EntityLimit) as integer
 
 
 'Flags
@@ -92,7 +98,7 @@ dim shared Flag.CastShadows as unsigned bit
 dim shared Flag.OpenCommand as byte
 dim shared Flag.RenderOverride as unsigned bit
 dim shared Flag.InitialRender as byte
-dim shared Flag.ContainerOpen as unsigned bit
+dim shared Flag.ContainerOpen as byte
 Dim Shared bgdraw As Unsigned Bit
 dim shared RenderMode as byte
 
@@ -122,6 +128,9 @@ Dim Shared prevfolder As String 'temp
 
 Type File
     PlayerSprites As String
+    PlayerSheet as string
+    ZombieSheet as string
+    PigSheet as string
     TileSheet As String
     ItemSheet as string
     HudSprites As String
@@ -130,6 +139,10 @@ End Type
 
 Type Texture
     PlayerSprites As Long
+    PlayerSheet as long
+    ZombieSheet as long
+    PigSheet as long
+
     TileSheet As Long
     ItemSheet as long
     HudSprites As Long

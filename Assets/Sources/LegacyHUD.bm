@@ -1,4 +1,29 @@
 
+
+
+Sub ConSwap (ContainerItem, ContainerSelected, InventoryY, Mode)
+    'Dim Shared Inventory(3, 5,9) As Integer
+    'dim shared CreativeInventory(2,5,9,1)
+    Dim i
+    For i = 0 To InvParameters
+        Select Case Mode
+            Case 0
+                Swap Container(ContainerItem, i), Container(ContainerSelected, i)
+            Case 1
+                Swap Container(ContainerItem, i), Inventory(InventoryY, ContainerSelected, i)
+        End Select
+    Next
+End Sub
+
+Sub EmptyContainerSlot (slot)
+    Dim i
+    For i = 0 To InvParameters
+        Container(slot, i) = -1
+    Next
+End Sub
+
+
+
 Sub HUD
     If Flag.HudDisplay = 0 Then
         Dim i, ii, iii, iiii
@@ -45,37 +70,7 @@ Sub HUD
 
         tmpheal = Player.health
 
-        'Health Display
-        Select Case GameMode
-            Case 1
-                PutImage (CameraPositionX + 88 - 16, CameraPositionY - 52 + (token - 1) * 16)-(CameraPositionX + 88, CameraPositionY - 52 + 16 + (token - 1) * 16), Texture.HudSprites, , (4 * 32, 32)-(4 * 32 + 31, 63)
-            Case 2
-                While tmpheal > 0
-                    If tmpheal <= 8 Then
-                        PutImage (CameraPositionX + 88 - 16, CameraPositionY - 52 + (token - 1) * 16)-(CameraPositionX + 88, CameraPositionY - 52 + 16 + (token - 1) * 16), Texture.HudSprites, , ((tmpheal - 1) * 32, 0)-((tmpheal - 1) * 32 + 31, 31)
-                    Else
-                        PutImage (CameraPositionX + 88 - 16, CameraPositionY - 52 + (token - 1) * 16)-(CameraPositionX + 88, CameraPositionY - 52 + 16 + (token - 1) * 16), Texture.HudSprites, , (7 * 32, 0)-(7 * 32 + 31, 31)
-                    End If
-                    tmpheal = tmpheal - 8
-                    token = token + 1
-                Wend
-        End Select
 
-        'Hotbar Display
-        For hbpos = 0 To 5
-            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos), CameraPositionY + 68 - 16 - hboffset)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos), CameraPositionY + 68 - hboffset), Texture.HudSprites, , (0, 32)-(31, 63)
-            PutImage (CameraPositionX - 72 + hboffset + (17 * hbpos) + hbitemsize, CameraPositionY + 68 - 16 - hboffset + hbitemsize)-(CameraPositionX - 72 + 16 + hboffset + (17 * hbpos) - hbitemsize, CameraPositionY + 68 - hboffset - hbitemsize), Texture.ItemSheet, , (Inventory(0, hbpos, 1), Inventory(0, hbpos, 2))-(Inventory(0, hbpos, 1) + 15, Inventory(0, hbpos, 2) + 15)
-            If Inventory(0, hbpos, 7) > 1 Then
-                Color RGB(0, 0, 0)
-                For i = 0 To 2
-                    For ii = 0 To 2
-                        PrintString ((0 + adjustx) + (adjustspace * hbpos) + i - 1, 480 - 16 + adjusty + ii - 1), Str$(Inventory(0, hbpos, 7))
-                    Next
-                Next
-                Color RGB(255, 255, 255)
-                PrintString ((0 + adjustx) + (adjustspace * hbpos), 480 - 16 + adjusty), Str$(Inventory(0, hbpos, 7))
-            End If
-        Next
 
         'Inventory Display
         If Flag.InventoryOpen = 1 Then
@@ -512,49 +507,3 @@ Sub HUD
 End Sub
 
 
-Sub ConSwap (ContainerItem, ContainerSelected, InventoryY, Mode)
-    'Dim Shared Inventory(3, 5,9) As Integer
-    'dim shared CreativeInventory(2,5,9,1)
-    Dim i
-    For i = 0 To InvParameters
-        Select Case Mode
-            Case 0
-                Swap Container(ContainerItem, i), Container(ContainerSelected, i)
-            Case 1
-                Swap Container(ContainerItem, i), Inventory(InventoryY, ContainerSelected, i)
-        End Select
-    Next
-End Sub
-
-Sub EmptyContainerSlot (slot)
-    Dim i
-    For i = 0 To InvParameters
-        Container(slot, i) = -1
-    Next
-End Sub
-
-Function CraftSpace (level)
-    Select Case level
-        Case 0
-            CraftSpace = 8.5
-        Case 1
-            CraftSpace = 0
-    End Select
-End Function
-
-
-Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
-    'Dim Shared Inventory(3, 5,9) As Integer
-    'dim shared CreativeInventory(2,5,9,1)
-    Dim i
-    For i = 0 To InvParameters
-        Select Case Mode
-            Case 0
-                Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
-            Case 1
-                Swap Inventory(ItemSelectY + 1, ItemSelectX, i), Inventory(CreativePage + 1, Slot, i)
-        End Select
-    Next
-End Sub
-
- 

@@ -105,8 +105,9 @@ TileIndexData(6, 3) = 0 'has interior shadow
 TileIndexData(6, 4) = 25 'resistance
 TileIndexData(6, 5) = 0 'is solid
 TileIndexData(6, 7) = 1 'is container
-ContainerData(6, 0) = 11 'number of slots  -1
-ContainerData(6, 1) = 0 'dissapears on empty
+ContainerData(6, 0) = 5 'number of slots  -1
+ContainerData(6, 1) = 1
+ContainerData(6, 2) = 0 'dissapears on empty
 
 
 TileName(7, 0) = "Stone Wall" 'Name of the tile
@@ -179,7 +180,8 @@ TileIndexData(11, 5) = 0 'is solid
 TileIndexData(11, 6) = 0 'light casts
 TileIndexData(11, 7) = 1 'is container
 ContainerData(11, 0) = 0 'number of slots -1
-ContainerData(11, 1) = 1 'dissapears on empty
+ContainerData(11, 1) = 0 'number of slots -1
+ContainerData(11, 2) = 1 'dissapears on empty
 
 TileName(12, 0) = "Berry Bush" 'Name of the tile
 TileName(12, 1) = "Placeholder" 'tooltip
@@ -246,7 +248,7 @@ TileName(16, 1) = "Placeholder" 'tooltip
 TileIndex(16, 0) = 0 'layer definition
 TileIndex(16, 1) = 0 'x position on tilesheet
 TileIndex(16, 2) = 16 'y position on tilesheet
-TileIndex(16, 3) = 16 'itemid
+TileIndex(16, 3) = 25 'itemid
 TileIndexData(16, 0) = 1 'collision
 TileIndexData(16, 1) = 0 'casts shadow
 TileIndexData(16, 2) = 1 'blocks shadow
@@ -256,5 +258,17 @@ TileIndexData(16, 5) = 1 'is solid
 TileIndexData(16, 9) = 0.8 'Friction
 TileIndexData(16, 10) = 0.8
 
+TileName(17, 0) = "Carrot" 'Name of the tile
+TileName(17, 1) = "Placeholder" 'tooltip
+TileIndex(17, 0) = 1 'layer definition
+TileIndex(17, 1) = 16 'x position on tilesheet
+TileIndex(17, 2) = 16 'y position on tilesheet
+TileIndex(17, 3) = 26 'itemid
+TileIndexData(17, 0) = 0 'collision
+TileIndexData(17, 1) = 0 'casts shadow
+TileIndexData(17, 2) = 1 'blocks shadow
+TileIndexData(17, 3) = 0 'has interior shadow
+TileIndexData(17, 4) = 5 'resistance
+TileIndexData(17, 5) = 0 'is solid
 
 
