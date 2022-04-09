@@ -17,17 +17,12 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\CreativeInventory.bi'
 
+'$include: 'Assets\Sources\SplashText.bi'
+
+
 Rem'$include: 'Assets\Sources\CraftingIndex.bi'
 
-
-Const MaxCraftLevel = 5
-Dim Shared CursorHoverX, CursorHoverY, CursorHoverPage, CursorSelectedX, CursorSelectedY, CursorSelectedPage, CursorMode
-
-Dim Shared ContainerSizeX, ContainerSizeY, ContainerOTU
-Dim Shared ContainerParams(4)
-
-'entitystats(ID, Health, Type)
-
+Dim Shared ImmunityTimer
 INITIALIZE
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
@@ -71,10 +66,15 @@ Do
     Entities (1)
     SetLighting
     INTER
-    If KeyDown(15360) = 0 Then Hud2
-
+    Hud2
+    For i = 0 To MaxEffects
+        For ii = 0 To EffectParameters
+            Print EffectArray(i, ii, 0);
+        Next
+        Print
+    Next
     ContainerUpdate
-
+    Print ImmunityTimer
     ZOOM
     DEV
     ChangeMap 0, 0, 0
@@ -144,13 +144,20 @@ Sub ContainerUpdate
 End Sub
 
 Function Dialog (Template, DialogString As String, Options, OptionsText As String)
+    Static HighlightedOption
+
     Select Case Template
-        Case 0
+        Case 0 ' Title Screen
             'put title screen icon
             'put splash text
             'Draw Options buttons
 
+        Case 1
+
+
     End Select
+    'check for key input if options is more than 1
+    'if enter is pressed, then return option number, starting at 1, otherwise return 0
 End Function
 
 Sub TitleScreen
@@ -208,6 +215,9 @@ Sub TitleScreen
             Next
 
         End If
+        Select Case Dialog(0, "TerraQuest", 2, "Load World\nCreate World\nOptions")
+            Case 1
+        End Select
         KeyPressed = KeyHit
         If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
         CurrentTick = CurrentTick + Settings.TickRate
@@ -459,6 +469,7 @@ Sub Respawn
     SavedMapY = SpawnMapY
     LOADMAP SavedMap
     Player.health = 8
+    Effects 1, "Immunity Respawn", 0
 End Sub
 
 Sub UseHotBar
@@ -640,26 +651,28 @@ Sub DisplayHealth
 
     TMPHeal = Player.health
 
-    Select Case GameMode
-        Case 1
-            PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (4 * 32, 32)-(4 * 32 + 31, 63)
-        Case 2
-            For i = 0 To Player.MaxHealth
-                PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
-                Token = Token + 1
-            Next
-            Token = 1
-            While TMPHeal > 0
-                If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
-                If TMPHeal <= 8 Then
-                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0)-((TMPHeal - 1) * 32 + 31, 31)
-                Else
-                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0)-(7 * 32 + 31, 31)
-                End If
-                TMPHeal = TMPHeal - 8
-                Token = Token + 1
-            Wend
-    End Select
+    If ImmunityFlash = 0 Then
+        Select Case GameMode
+            Case 1
+                PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (4 * 32, 32)-(4 * 32 + 31, 63)
+            Case 2
+                For i = 0 To Player.MaxHealth
+                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                    Token = Token + 1
+                Next
+                Token = 1
+                While TMPHeal > 0
+                    If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
+                    If TMPHeal <= 8 Then
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0)-((TMPHeal - 1) * 32 + 31, 31)
+                    Else
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0)-(7 * 32 + 31, 31)
+                    End If
+                    TMPHeal = TMPHeal - 8
+                    Token = Token + 1
+                Wend
+        End Select
+    End If
 End Sub
 
 Sub DisplayHotbar
@@ -1084,6 +1097,17 @@ Sub InputCursor
 
     End If
 
+    If InventoryDrop Then
+        'check if tile is air
+        If WallTile(Int((Player.x + 8) / 16), Int((Player.y + 8) / 16)) = 1 Then
+            'place grounditem tile
+
+            'put cursorhover contents in ground item
+        Else
+            'play error sound
+        End If
+    End If
+
 
     If InventorySplit Then
         Select Case CursorHoverPage
@@ -1320,6 +1344,10 @@ Function InventoryUse
     InventoryUse = KeyDown(32)
 End Function
 
+Function InventoryDrop
+    InventoryDrop = KeyDown(113)
+End Function
+
 
 
 
@@ -1407,6 +1435,7 @@ Function WithinBounds
     If Player.x > 0 And Player.y > 0 And Player.x < 640 - 16 And Player.y < 480 - 16 Then WithinBounds = 1 Else WithinBounds = 0
 End Function
 
+
 Sub ContactEffect (Direction As Byte, Entity As Single)
     Dim PosX, PosY
     If WithinBounds = 1 Then
@@ -1444,14 +1473,16 @@ End Sub
 
 
 Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
+
     Select Case ID
         Case 1 'Instant Damage
             If Entity = 0 Then
-                If GameMode <> 1 Then Player.health = Player.health - Val1
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                'possibly move damage sound here, and play a different sound for entity??
             Else
                 entity(Entity, 1) = entity(Entity, 1) - Val1
             End If
-            PlaySound Sounds.damage_bush
+            If ImmunityTimer = 0 Then PlaySound Sounds.damage_bush
         Case 2 'Swimming
             If Entity = 0 Then
                 SwimOffset = Val1
@@ -1467,6 +1498,9 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
             End If
         Case 4 'max health increase
             Player.MaxHealth = Player.MaxHealth + Val1
+        Case 5
+            ImmunityTimer = ImmunityTimer + 1
+            If ImmunityTimer > Val1 + 1 Then ImmunityTimer = 1: ImmunityFlash = ImmunityFlash + 1
     End Select
 
 
@@ -1474,6 +1508,17 @@ End Sub
 
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
+        Case "Immunity Respawn"
+            Select Case Value
+                Case 0
+                    EffectIndex = 5
+                Case 1
+                    EffectIndex = 180
+                Case 2
+                    EffectIndex = 0
+                Case 3
+                    EffectIndex = 15
+            End Select
         Case "Contact Campfire"
             Select Case Value
                 Case 0
@@ -1564,17 +1609,21 @@ End Function
 
 Sub EffectEnd (EffectID As Integer, EffectSlot As Integer, Entity As Single)
     Dim i As Byte
+
     Select Case EffectID
         Case 1
-            For i = 0 To EffectParameters
-                EffectArray(EffectSlot, i, Entity) = 0
-            Next
         Case 2
-            For i = 0 To EffectParameters
-                EffectArray(EffectSlot, i, Entity) = 0
-            Next
             SwimOffset = 0
+        Case 3
+        Case 4
+        Case 5
+            ImmunityTimer = 0: ImmunityFlash = 0
     End Select
+
+    For i = 0 To EffectParameters
+        EffectArray(EffectSlot, i, Entity) = 0
+    Next
+
 End Sub
 
 
@@ -2563,6 +2612,26 @@ Sub DEV
                     Locate 28, 1: Print "                      "
                     Locate 28, 1: Input "EntityNumber to Kill ", DMapX
                     EntityDespawn DMapX
+
+                Case "effect"
+
+                    For i = 0 To MaxEffects
+                        If EffectArray(i, 0, 0) = 0 Then
+                            For ii = 0 To EffectParameters
+                                Locate 28, 1: Print "                               "
+                                Locate 28, 1: Print "Effect Value", ii, "to apply ";: Input ; DMapX
+
+                                EffectArray(i, ii, 0) = DMapX
+                            Next
+                            Exit For
+                        End If
+                    Next
+                Case "effectsource", "es"
+                    Dim CommandString As String
+                    Locate 28, 1: Print "                      "
+                    Locate 28, 1: Input "Effect source to apply", CommandString
+
+                    Effects 1, CommandString, 0
 
                 Case Else
             End Select

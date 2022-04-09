@@ -12,6 +12,8 @@ const TileParameters=13
 const InvParameters=11
 const EffectParameters=4
 const MaxEffects=20
+Const MaxCraftLevel = 5
+
 
 'Map Variables
 Dim Shared GroundTile(41, 31) As Unsigned Integer
@@ -24,6 +26,13 @@ Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
 
 dim shared Container(20,20,invparameters)
+Dim Shared CursorHoverX, CursorHoverY, CursorHoverPage, CursorSelectedX, CursorSelectedY, CursorSelectedPage, CursorMode
+
+Dim Shared ContainerSizeX, ContainerSizeY, ContainerOTU
+Dim Shared ContainerParams(4)
+
+dim shared ImmunityFlash as unsigned bit
+
 
 
 Dim Shared SavedMapX As Integer64
