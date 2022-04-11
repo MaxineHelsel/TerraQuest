@@ -13,6 +13,7 @@ const InvParameters=11
 const EffectParameters=4
 const MaxEffects=20
 Const MaxCraftLevel = 5
+const CreativePages = 5
 
 
 'Map Variables
@@ -69,7 +70,7 @@ Dim Shared GameMode As Byte
 Dim Shared DefaultRenderMode as Byte
 
 Dim Shared Inventory(3, 5,invparameters)
-dim shared CreativeInventory(2,5,invparameters,1)
+dim shared CreativeInventory(2,5,invparameters,CreativePages)
 dim shared CraftingGrid(5, 5,invparameters)
 dim shared CraftingResult(invparameters)
 

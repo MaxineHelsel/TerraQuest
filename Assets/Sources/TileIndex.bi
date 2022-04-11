@@ -106,7 +106,7 @@ TileIndexData(6, 4) = 25 'resistance
 TileIndexData(6, 5) = 0 'is solid
 TileIndexData(6, 7) = 1 'is container
 ContainerData(6, 0) = 5 'number of slots  -1
-ContainerData(6, 1) = 1
+ContainerData(6, 1) = 2 'number of rows
 ContainerData(6, 2) = 0 'dissapears on empty
 
 

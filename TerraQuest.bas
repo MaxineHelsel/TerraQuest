@@ -23,13 +23,14 @@ Title "TerraQuest"
 Rem'$include: 'Assets\Sources\CraftingIndex.bi'
 
 Dim Shared ImmunityTimer
+Dim Shared CreativePage As Byte
 INITIALIZE
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
 CENTERPRINT "Temporary title screen"
 Print
 Dim InputString As String
-Input "(L)oad world, (C)reate new world: ", InputString
+Input "(L)oad world, (C)reate new world, (V)iew WIP Title Screen: ", InputString
 If LCase$(InputString) = "l" Then
     Input "World name"; WorldName
     LOADWORLD
@@ -40,6 +41,7 @@ For i = 0 To 31
         UpdateTile ii, i
     Next
 Next
+if lcase$(inputstring)="v" then titlescreen
 SpreadLight (1)
 GoTo game
 
@@ -67,14 +69,7 @@ Do
     SetLighting
     INTER
     Hud2
-    For i = 0 To MaxEffects
-        For ii = 0 To EffectParameters
-            Print EffectArray(i, ii, 0);
-        Next
-        Print
-    Next
     ContainerUpdate
-    Print ImmunityTimer
     ZOOM
     DEV
     ChangeMap 0, 0, 0
@@ -101,6 +96,16 @@ Do
 Loop
 
 Error 102
+
+Sub DebugShowEffects
+    Dim i, ii
+    For i = 0 To MaxEffects
+        For ii = 0 To EffectParameters
+            Print EffectArray(i, ii, 0);
+        Next
+        Print
+    Next
+End Sub
 
 Sub ContainerUpdate
     Dim i
@@ -855,49 +860,6 @@ End Sub
 
 
 
-Function CraftSpace (level)
-    Select Case level
-        Case 0
-            CraftSpace = 8.5
-        Case 1
-            CraftSpace = 0
-    End Select
-End Function
-
-
-
-
-
-
-
-
-
-Sub InvSwap (Slot, Mode, ItemSelectX, ItemSelectY, CreativePage)
-    'Dim Shared Inventory(3, 5,9) As Integer
-    'dim shared CreativeInventory(2,5,9,1)
-    Dim i
-    For i = 0 To InvParameters
-        Select Case Mode
-            Case 0
-                Swap CreativeInventory(ItemSelectY, ItemSelectX, i, CreativePage), Inventory(0, Slot, i)
-            Case 1
-                Swap Inventory(ItemSelectY + 1, ItemSelectX, i), Inventory(CreativePage + 1, Slot, i)
-        End Select
-    Next
-End Sub
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 Sub NewStack (ItemID, StackNumber)
@@ -953,7 +915,11 @@ Sub ItemSwap
     For i = 0 To InvParameters
         Select Case CursorSelectedPage
             Case 0
-                Swapitem2(i) = Inventory(CursorSelectedY + 1, CursorSelectedX, i)
+                If GameMode = 1 Then
+                    Swapitem2(i) = CreativeInventory(CursorSelectedY, CursorSelectedX, i, CreativePage)
+                Else
+                    Swapitem2(i) = Inventory(CursorSelectedY + 1, CursorSelectedX, i)
+                End If
             Case 1
                 Swapitem2(i) = Inventory(0, CursorSelectedX, i)
             Case 2
@@ -965,7 +931,11 @@ Sub ItemSwap
 
         Select Case CursorHoverPage
             Case 0
-                SwapItem1(i) = Inventory(CursorHoverY + 1, CursorHoverX, i)
+                If GameMode = 1 Then
+                    SwapItem1(i) = CreativeInventory(CursorSelectedY, CursorSelectedX, i, CreativePage)
+                Else
+                    SwapItem1(i) = Inventory(CursorSelectedY + 1, CursorSelectedX, i)
+                End If
             Case 1
                 SwapItem1(i) = Inventory(0, CursorHoverX, i)
             Case 2
@@ -986,7 +956,7 @@ Sub ItemSwap
     End If
     If CursorSelectedPage = 3 Then
         If CursorSelectedX = Player.CraftingLevel Then
-            If SwapItem1(0) <> -1 Then Exit Sub Else CraftComplete = 1
+            If SwapItem1(0) <> -1 And SwapItem1(9) <> Swapitem2(9) Then Exit Sub Else CraftComplete = 1
         End If
     End If
 
@@ -1017,7 +987,11 @@ Sub ItemSwap
     For i = 0 To InvParameters
         Select Case CursorSelectedPage
             Case 0
-                Inventory(CursorSelectedY + 1, CursorSelectedX, i) = Swapitem2(i)
+                If GameMode = 1 Then
+
+                Else
+                    Inventory(CursorSelectedY + 1, CursorSelectedX, i) = Swapitem2(i)
+                End If
             Case 1
                 Inventory(0, CursorSelectedX, i) = Swapitem2(i)
             Case 2
@@ -1029,7 +1003,13 @@ Sub ItemSwap
 
         Select Case CursorHoverPage
             Case 0
-                Inventory(CursorHoverY + 1, CursorHoverX, i) = SwapItem1(i)
+                If GameMode = 1 Then
+
+                Else
+                    Inventory(CursorHoverY + 1, CursorHoverX, i) = SwapItem1(i)
+                End If
+
+
             Case 1
                 Inventory(0, CursorHoverX, i) = SwapItem1(i)
             Case 2
@@ -1127,8 +1107,6 @@ Sub InputCursor
                     Container(CursorHoverY, CursorHoverX, 7) = Ceil(Container(CursorHoverY, CursorHoverX, 7) / 2)
                 End If
 
-
-
             Case 3
                 If CraftingGrid(CursorHoverY, CursorHoverX, 7) > 1 Then
                     NewStack CraftingGrid(CursorHoverY, CursorHoverX, 9), Int(CraftingGrid(CursorHoverY, CursorHoverX, 7) / 2)
@@ -1162,8 +1140,8 @@ Sub InputCursor
 
     Select Case CursorHoverPage
         Case 0 'Inventory
-            If CursorHoverX > 5 Then CursorHoverX = 0
-            If CursorHoverX < 0 Then CursorHoverX = 5
+            If CursorHoverX > 5 Then CursorHoverX = 0: CreativePage = CreativePage + 1
+            If CursorHoverX < 0 Then CursorHoverX = 5: CreativePage = CreativePage - 1
             If CursorHoverY > 2 Then CursorHoverY = 0
             If CursorHoverY < 0 Then CursorHoverY = 2
         Case 1 'Hotbar
@@ -1191,8 +1169,6 @@ End Sub
 Sub Hud2
     If Flag.HudDisplay = 0 Then
         Dim As Byte i, ii, iii, iiii
-        Static CreativePage
-        'Print CursorHoverPage, CursorHoverX, CursorHoverY
 
         DisplayHealth
         DisplayHotbar
