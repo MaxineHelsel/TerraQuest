@@ -2407,7 +2407,7 @@ Sub DEV
         Print Game.Title; " ("; Game.Version; ")"
         Print
         Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
-        Print "Window:"; CameraPositionX; ","; CameraPositionY;
+        Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + ")";
         If WorldReadOnly = 1 Then Print "(R/O)"
         If WorldReadOnly = 0 Then Print
@@ -3304,7 +3304,7 @@ End Sub
 Sub CENTERPRINT (nam$)
     _PrintMode _KeepBackground
     Dim i As _Byte
-    For i = 0 To Int(40 - (Len(nam$) / 2) - 1)
+    For i = 0 To Int((ScreenRezX / 8 / 2) - (Len(nam$) / 2) - 1)
         Print " ";
     Next
     _PrintMode _FillBackground
