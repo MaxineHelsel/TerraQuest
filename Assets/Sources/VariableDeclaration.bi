@@ -83,6 +83,7 @@ Dim Shared Game.HostOS As String
 Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
 dim shared Game.MapProtocol as integer
+dim shared Game.ManifestProtocol as integer
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 

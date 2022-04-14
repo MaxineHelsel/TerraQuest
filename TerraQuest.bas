@@ -24,6 +24,9 @@ Rem'$include: 'Assets\Sources\CraftingIndex.bi'
 
 Dim Shared ImmunityTimer
 Dim Shared CreativePage As Byte
+Dim Shared WorldReadOnly As Byte
+
+
 INITIALIZE
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
@@ -41,7 +44,7 @@ For i = 0 To 31
         UpdateTile ii, i
     Next
 Next
-if lcase$(inputstring)="v" then titlescreen
+If LCase$(InputString) = "v" Then TitleScreen
 SpreadLight (1)
 GoTo game
 
@@ -148,25 +151,41 @@ Sub ContainerUpdate
     End If
 End Sub
 
-Function Dialog (Template, DialogString As String, Options, OptionsText As String)
+Function Dialog (Template, DialogString As String, Options)
     Static HighlightedOption
+    Dim i
 
     Select Case Template
         Case 0 ' Title Screen
             'put title screen icon
+            CENTERPRINT DialogString + " " + Game.Buildinfo
             'put splash text
             'Draw Options buttons
+
+            Print "Load World";
+            If HighlightedOption = 1 Then Print "*" Else Print
+            Print "Create World";
+            If HighlightedOption = 2 Then Print "*" Else Print
+            Print "Settings";
+            If HighlightedOption = 3 Then Print "*" Else Print
+
 
         Case 1
 
 
     End Select
     'check for key input if options is more than 1
+    If InventoryUp Then HighlightedOption = HighlightedOption - 1
+    If InventoryDown Then HighlightedOption = HighlightedOption + 1
+    If InventoryLeft Then HighlightedOption = HighlightedOption - 1
+    If InventoryRight Then HighlightedOption = HighlightedOption + 1
+    If InventorySelect Then Dialog = HighlightedOption
     'if enter is pressed, then return option number, starting at 1, otherwise return 0
 End Function
 
 Sub TitleScreen
     Dim i, ii
+    Dim InputString As String
     SwitchRender 0 'these 2 statements are important to prevent a dumb bug
     SwitchRender 1
 
@@ -220,8 +239,17 @@ Sub TitleScreen
             Next
 
         End If
-        Select Case Dialog(0, "TerraQuest", 2, "Load World\nCreate World\nOptions")
+        Select Case Dialog(0, Game.Title, 2)
             Case 1
+                Settings.TickRate = 1
+                AutoDisplay
+                KeyClear
+                Input "World Name?", WorldName
+                LOADWORLD
+                Exit Sub
+            Case 2
+
+
         End Select
         KeyPressed = KeyHit
         If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
@@ -422,7 +450,7 @@ Function SummonEntity (ID, Parameter)
                     SummonEntity = 36000
                 Case 16 'facing direction
             End Select
-        Case 2
+        Case 2 'Zombie
             Select Case Parameter
                 Case 0 'ID
                     SummonEntity = ID
@@ -565,8 +593,9 @@ Sub DisplayLables
     InventoryTitleX = 6
     InventoryTitleY = ScreenRezY - 305
 
-    ContainerTextX = 50
-    ContainerTextY = 60
+    ContainerTextX = 10
+    ContainerTextY = 100
+
 
     ContainerTitleX = 6
     ContainerTitleY = 0
@@ -604,7 +633,8 @@ Sub DisplayLables
             Next
             For iii = 0 To ContainerSizeX
                 For iiii = 0 To ContainerSizeY
-                    If Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii) + i - 1, (ContainerTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset + ii - 1), Str$(Container(iiii, iii, 7))
+                    'TODO Fix container item labels
+                    ' If Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii) + i - 1, (ContainerTextY) - (HotbarTextSpace * iiii + 1) + ii - 1), Str$(Container(iiii, iii, 7))
                 Next
             Next
             iiii = 0
@@ -632,7 +662,7 @@ Sub DisplayLables
     Next
     For iii = 0 To ContainerSizeX
         For iiii = 0 To ContainerSizeY
-            If Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii), (ContainerTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset), Str$(Container(iiii, iii, 7))
+            '            If Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii), (ContainerTextY) - (HotbarTextSpace * iiii + 1)), Str$(Container(iiii, iii, 7))
         Next
     Next
 
@@ -1142,6 +1172,8 @@ Sub InputCursor
         Case 0 'Inventory
             If CursorHoverX > 5 Then CursorHoverX = 0: CreativePage = CreativePage + 1
             If CursorHoverX < 0 Then CursorHoverX = 5: CreativePage = CreativePage - 1
+            If CreativePage > CreativePages Then CreativePage = 0
+            If CreativePage < 0 Then CreativePage = CreativePages
             If CursorHoverY > 2 Then CursorHoverY = 0
             If CursorHoverY < 0 Then CursorHoverY = 2
         Case 1 'Hotbar
@@ -1326,11 +1358,61 @@ End Function
 
 
 
+Sub EntityDraw (PlayerRender As Byte)
+    Static AnimationFrame As Byte
+    Dim i
+    Dim SpriteSheet As Long
+    For i = 0 To CurrentEntities
+        If i > 0 Then
+            Select Case entity(i, 0)
+                Case 0
+                    SpriteSheet = Texture.PigSheet
+                Case 1
+                    SpriteSheet = Texture.ZombieSheet
+            End Select
+            'set player and entity values to one set
+        End If
 
+    Next
+End Sub
+
+Sub tmp (playerrender)
+    Dim dx, dy, anim
+    If playerrender = 1 Then
+        Select Case Player.facing
+            Case 0
+                dx = 16: dy = 0
+                If Player.movingy = 1 Then
+                    If anim < 15 Then dx = 0 Else If anim > 29 And anim < 45 Then dx = 32
+                End If
+            Case 1
+                dx = 16: dy = 36
+                If Player.movingy = 1 Then
+                    If anim < 15 Then dx = 0 Else If anim > 29 And anim < 45 Then dx = 32
+                End If
+            Case 2
+                dx = 16: dy = 54
+                If Player.movingx = 1 Then
+                    If anim < 15 Then dx = 0 Else If anim > 29 And anim < 45 Then dx = 32
+                End If
+            Case 3
+                dx = 16: dy = 18
+                If Player.movingx = 1 Then
+                    If anim < 15 Then dx = 0 Else If anim > 29 And anim < 45 Then dx = 32
+                End If
+        End Select
+        PutImage (Int(Player.x), Int(Player.y + SwimOffset) - 2)-((Int(Player.x)) + 16, (Int(Player.y) - 2) + 16), Texture.PlayerSprites, , (dx, dy)-Step(15, 17 - SwimOffset)
+    End If
+
+End Sub
 Sub SPSET (PlayerRender As Byte)
     Static anim As Byte
     Dim i
     'TEMP
+
+
+
+
     For i = 1 To CurrentEntities
         PutImage (Int(entity(i, 4)), Int(entity(i, 5)) - 2)-((Int(entity(i, 4))) + 16, (Int(entity(i, 5)) - 2) + 16), Texture.PlayerSprites, , (16, 18)-(31, 35)
     Next
@@ -1484,6 +1566,7 @@ End Sub
 
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
+        Case "Cooldown Wooden Sword"
         Case "Immunity Respawn"
             Select Case Value
                 Case 0
@@ -2053,48 +2136,42 @@ Sub Crafting
     For i = 0 To InvParameters
         CraftingGrid(0, Player.CraftingLevel, i) = -1
     Next
-
-    Select Case recipe
-        Case "-1 -1 -1 |-1 5 -1 |-1 -1 -1 |" 'raw wood
-            For i = 0 To InvParameters
+    For i = 0 To InvParameters
+        Select Case recipe
+            Case "-1 -1 -1 |-1 5 -1 |-1 -1 -1 |" 'raw wood
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(19, i)
-            Next
-            CraftingGrid(0, Player.CraftingLevel, 7) = 4
-        Case "19 19 |19 19 |" 'crafting station
-            For i = 0 To InvParameters
+                CraftingGrid(0, Player.CraftingLevel, 7) = 4
+
+            Case "19 19 |19 19 |" 'crafting station
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(21, i)
-            Next
-        Case "-1 -1 -1 |-1 5 -1 |19 19 19 |" 'Campfire
-            For i = 0 To InvParameters
+
+            Case "-1 -1 -1 |-1 5 -1 |19 19 19 |" 'Campfire
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(10, i)
-            Next
-        Case "19 19 19 |19 19 19 |19 19 19 |" 'Wood Wall
-            For i = 0 To InvParameters
+
+            Case "19 19 19 |19 19 19 |19 19 19 |" 'Wood Wall
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(8, i)
-            Next
-            CraftingGrid(0, Player.CraftingLevel, 7) = 9
-        Case "-1 19 -1 |-1 22 -1 |-1 22 -1 |" 'wooden shovel
-            For i = 0 To InvParameters
+                CraftingGrid(0, Player.CraftingLevel, 7) = 9
+
+            Case "-1 19 -1 |-1 22 -1 |-1 22 -1 |" 'wooden shovel
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(15, i)
-            Next
-        Case "19 19 -1 |19 22 -1 |-1 22 -1 |" 'wooden axe
-            For i = 0 To InvParameters
+
+            Case "19 19 -1 |19 22 -1 |-1 22 -1 |" 'wooden axe
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(16, i)
-            Next
-        Case "-1 -1 -1 |-1 19 -1 |-1 19 -1 |" 'Tool Handle
-            For i = 0 To InvParameters
+
+            Case "-1 19 -1 |-1 19 -1 |-1 22 -1 |" 'wooden sword
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
+
+            Case "-1 -1 -1 |-1 19 -1 |-1 19 -1 |" 'Tool Handle
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(22, i)
-            Next
-        Case "19 19 19 |19 -1 19 |19 19 19 |" 'Wood Wall
-            For i = 0 To InvParameters
+
+            Case "19 19 19 |19 -1 19 |19 19 19 |" 'Wood Wall
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(6, i)
-            Next
-        Case "-1 -1 -1 |-1 20 -1 |-1 -1 -1 |" 'Red Berries
-            For i = 0 To InvParameters
+
+            Case "-1 -1 -1 |-1 20 -1 |-1 -1 -1 |" 'Red Berries
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(23, i)
-            Next
-            CraftingGrid(0, Player.CraftingLevel, 7) = 4
-    End Select
+                CraftingGrid(0, Player.CraftingLevel, 7) = 4
+        End Select
+    Next
 End Sub
 
 
@@ -2304,6 +2381,7 @@ Sub DEV
         If RenderMode = 1 Then ENDPRINT "Render Mode: Hardware Exclusive"
         If RenderMode = 2 Then ENDPRINT "Render Mode: Hardware"
         If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
+        ENDPRINT "Screen Resolution:" + Str$(ScreenRezX) + " x" + Str$(ScreenRezY)
         Print
         ENDPRINT "Facing tile data:"
         If Player.x >= 0 And Player.x <= 640 - 16 And Player.y >= 0 And Player.y <= 480 - 16 Then
@@ -2329,8 +2407,10 @@ Sub DEV
         Print Game.Title; " ("; Game.Version; ")"
         Print
         Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
-        Print "Window:"; CameraPositionX; ","; CameraPositionY
-        Print "Current World: "; WorldName; " (" + SavedMap + ")"
+        Print "Window:"; CameraPositionX; ","; CameraPositionY;
+        Print "Current World: "; WorldName; " (" + SavedMap + ")";
+        If WorldReadOnly = 1 Then Print "(R/O)"
+        If WorldReadOnly = 0 Then Print
         Print "World Seed:"; WorldSeed
         Print "Map Seed:"; Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed))
         Print "Current Time:"; GameTime + (TimeMode * 43200)
@@ -2573,17 +2653,17 @@ Sub DEV
                 Case "summon"
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "EntityID to summon ", DMapX
-                    For DMapY = 0 To 100
+                    '  For DMapY = 0 To 100
+                    For i = 0 To EntityParameters
+                        CurrentEntities = CurrentEntities + 1
+                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
                         For i = 0 To EntityParameters
-                            CurrentEntities = CurrentEntities + 1
-                            ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                            For i = 0 To EntityParameters
-                                entity(CurrentEntities, i) = SummonEntity(DMapX, i)
-                            Next
+                            entity(CurrentEntities, i) = SummonEntity(DMapX, i)
                         Next
-                        entity(CurrentEntities, 4) = Player.x
-                        entity(CurrentEntities, 5) = Player.y
                     Next
+                    entity(CurrentEntities, 4) = Player.x
+                    entity(CurrentEntities, 5) = Player.y
+                    ' Next
                 Case "kill"
                     Locate 28, 1: Print "                      "
                     Locate 28, 1: Input "EntityNumber to Kill ", DMapX
@@ -2608,6 +2688,12 @@ Sub DEV
                     Locate 28, 1: Input "Effect source to apply", CommandString
 
                     Effects 1, CommandString, 0
+                Case "togglewriteprotect"
+                    WorldReadOnly = WorldReadOnly + 1
+                    If WorldReadOnly > 1 Then WorldReadOnly = 0
+                    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+                    Put #1, 4, WorldReadOnly
+                    Close #1
 
                 Case Else
             End Select
@@ -2671,15 +2757,17 @@ Sub LOADWORLD
     Dim As Integer iii
     Dim total
     Dim MapProtocol As Integer
+    Dim ManifestProtocol As Integer
     prevfolder = map.foldername
 
 
     Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
 
     Get #1, 1, GameTime
-
+    Get #1, 2, ManifestProtocol
+    If ManifestProtocol < Game.ManifestProtocol Then Close #1: ConvertManifest (ManifestProtocol): Exit Sub
     Get #1, 3, mapversion
-
+    Get #1, 4, WorldReadOnly
     Get #1, 5, SpawnPointX
     Get #1, 6, SpawnPointY
     Get #1, 7, SavePointX
@@ -2736,7 +2824,7 @@ Sub LOADMAP (file As String)
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf" As #1
         Get #1, 1, MapProtocol
         Close #1
-        If MapProtocol <> Game.MapProtocol Then ConvertWorld MapProtocol, file: Exit Sub
+        If MapProtocol <> Game.MapProtocol Then ConvertMap MapProtocol, file: Exit Sub
 
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
         For i = 1 To 30
@@ -2804,8 +2892,26 @@ Sub LOADMAP (file As String)
 
 End Sub
 
-Sub ConvertWorld (OldVersion As Integer, MapCord As String)
-    Print "Converting World from Protocol"; OldVersion; "To"; Game.MapProtocol
+Sub ConvertManifest (OldVersion As Integer)
+    Print "Converting Manifest from Protocol"; OldVersion; "To"; Game.ManifestProtocol
+    Select Case OldVersion
+        Case 0
+            Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+            Put #1, 4, WorldReadOnly
+            Close #1
+            OldVersion = 1
+        Case Else
+            Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+            Put #1, 2, OldVersion
+            Close #1
+            LOADWORLD
+            Exit Sub
+    End Select
+    ConvertManifest OldVersion
+End Sub
+
+Sub ConvertMap (OldVersion As Integer, MapCord As String)
+    Print "Converting Map from Protocol"; OldVersion; "To"; Game.MapProtocol
     Dim i, ii, iii
     Dim j, jj, jjj
     Dim total
@@ -2881,7 +2987,7 @@ Sub ConvertWorld (OldVersion As Integer, MapCord As String)
             LOADWORLD
             Exit Sub
     End Select
-    ConvertWorld OldVersion, MapCord
+    ConvertMap OldVersion, MapCord
 End Sub
 
 
@@ -2902,7 +3008,9 @@ Sub SAVEMAP
 
 
     Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-    If new = 0 Then
+    If new = 0 And WorldReadOnly = 1 Then
+        Close #1
+        Exit Sub
     End If
 
 
@@ -2910,7 +3018,7 @@ Sub SAVEMAP
     SavePointY = Player.y
     If TimeMode = 1 Then GameTime = GameTime + 43200
     Put #1, 1, GameTime
-
+    Put #1, 1, Game.ManifestProtocol
     Put #1, 3, Game.Version
 
     Put #1, 5, SpawnPointX
@@ -2945,7 +3053,6 @@ Sub SAVEMAP
     Put #1, total, Player.experience: total = total + 1
     Put #1, total, Player.gold: total = total + 1
     Put #1, total, Player.MaxHealth: total = total + 1
-
     Close #1
     iii = 1
     Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-0.cdf" As #1
@@ -3206,8 +3313,8 @@ End Sub
 
 Sub ENDPRINT (nam$)
     _PrintMode _KeepBackground
-    Dim i As _Byte
-    For i = 0 To Int(80 - (Len(nam$))) - 1
+    Dim i As Integer
+    For i = 0 To Int((ScreenRezX / 8) - (Len(nam$))) - 1
         Print " ";
     Next
     _PrintMode _FillBackground
@@ -3659,4 +3766,4 @@ End Sub
 
 
 
-Rem'$include:'Assets\Sources\LegacyHUD.bm'
+
