@@ -66,7 +66,7 @@ Do
     CastShadow
     Move
     COLDET (0)
-    SPSET (1)
+    RenderEntities (1)
     Entities (0)
     Entities (1)
     SetLighting
@@ -78,7 +78,6 @@ Do
     ChangeMap 0, 0, 0
     DayLightCycle
     MinMemFix
-
     If Player.health <= 0 Then Respawn
 
     If WithinBounds = 1 Then
@@ -220,7 +219,7 @@ Sub TitleScreen
         SetMap
         CastShadow
         COLDET (0)
-        SPSET (0)
+        RenderEntities (0)
         Entities (1)
         SetLighting
         INTER
@@ -449,6 +448,7 @@ Function SummonEntity (ID, Parameter)
                 Case 15 'Despawn timer
                     SummonEntity = 36000
                 Case 16 'facing direction
+                Case 17 'swim offset
             End Select
         Case 2 'Zombie
             Select Case Parameter
@@ -477,6 +477,7 @@ Function SummonEntity (ID, Parameter)
                 Case 15 'Despawn timer
                     SummonEntity = 36000
                 Case 16 'facing direction
+                Case 17 ' swim offset
             End Select
 
     End Select
@@ -573,9 +574,7 @@ Sub DisplayLables
     Dim As Single CraftingTextX, CraftingTextY
     Dim As Single CraftingTitleX, CraftingTitleY
     Dim As Single ContainerTitleX, ContainerTitleY
-    Dim As Single ContainerTextX, ContainerTextY
-
-
+    Static As Single ContainerTextX, ContainerTextY
 
 
     InventoryTextOffset = 83
@@ -593,18 +592,20 @@ Sub DisplayLables
     InventoryTitleX = 6
     InventoryTitleY = ScreenRezY - 305
 
-    ContainerTextX = 10
-    ContainerTextY = 100
 
+    ContainerTextX = 5
+    ContainerTextY = 22
 
     ContainerTitleX = 6
     ContainerTitleY = 0
 
-    CraftingTextX = ScreenRezX - 66
+    CraftingTextX = ScreenRezX - 67
     CraftingTextY = ScreenRezY + 23
 
     CraftingTitleX = ScreenRezX - 84 - 50 - (68 * (Player.CraftingLevel - 2))
     CraftingTitleY = ScreenRezY - 103 - 50 - (68 * (Player.CraftingLevel - 2))
+
+
 
     Color RGB(0, 0, 0)
     For i = 0 To 2
@@ -632,9 +633,9 @@ Sub DisplayLables
                 Next
             Next
             For iii = 0 To ContainerSizeX
-                For iiii = 0 To ContainerSizeY
+                5 For iiii = 0 To ContainerSizeY
                     'TODO Fix container item labels
-                    ' If Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii) + i - 1, (ContainerTextY) - (HotbarTextSpace * iiii + 1) + ii - 1), Str$(Container(iiii, iii, 7))
+                    If Flag.ContainerOpen = 1 And Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii) + i - 1, (ContainerTextY) + (HotbarTextSpace * iiii + 1) + ii - 1), Str$(Container(iiii, iii, 7))
                 Next
             Next
             iiii = 0
@@ -662,7 +663,7 @@ Sub DisplayLables
     Next
     For iii = 0 To ContainerSizeX
         For iiii = 0 To ContainerSizeY
-            '            If Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii), (ContainerTextY) - (HotbarTextSpace * iiii + 1)), Str$(Container(iiii, iii, 7))
+            If Flag.ContainerOpen And Flag.InventoryOpen = 1 And Container(iiii, iii, 7) > 1 Then PrintString ((0 + ContainerTextX) + (HotbarTextSpace * iii), (ContainerTextY) + (HotbarTextSpace * iiii + 1)), Str$(Container(iiii, iii, 7))
         Next
     Next
 
@@ -1366,7 +1367,7 @@ Sub EntityDraw (PlayerRender As Byte)
         If i > 0 Then
             Select Case entity(i, 0)
                 Case 0
-                    SpriteSheet = Texture.PigSheet
+                    SpriteSheet = Texture.DuckSheet
                 Case 1
                     SpriteSheet = Texture.ZombieSheet
             End Select
@@ -1406,6 +1407,7 @@ Sub tmp (playerrender)
 
 End Sub
 Sub SPSET (PlayerRender As Byte)
+    Exit Sub
     Static anim As Byte
     Dim i
     'TEMP
@@ -1465,26 +1467,83 @@ Sub SPSET (PlayerRender As Byte)
 
 End Sub
 
-Sub RenderEntities
+Sub RenderEntities (PlayerRender As Byte)
     Dim i
-    Dim PosX, PosY, Swim
+    Dim PosX, PosY, Swim, Facing, MovingY, MovingX
     Dim CharacterSheet As Long
+    Static Anim
     For i = 0 To CurrentEntities
-        If i = 0 Then PosX = Player.x: PosY = Player.y: Swim = SwimOffset Else PosX = entity(i, 4): PosY = entity(i, 5): Swim = entity(i, 13)
-        CharacterSheet = EntitySheet(entity(i, 0))
-        PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 18)-(31, 35 - SwimOffset)
+        'mainly just for title screen to not render the player
+        If PlayerRender = 0 And i = 0 Then i = 1
+
+        'set variables properly because i still havent migrated player values to the entity array
+        If i = 0 Then
+            PosX = Player.x: PosY = Player.y: Swim = SwimOffset: Facing = Player.facing: MovingY = Player.movingy: MovingX = Player.movingx
+        Else
+            PosX = entity(i, 4): PosY = entity(i, 5): Swim = entity(i, 17): Facing = entity(i, 16): MovingX = entity(i, 10): MovingY = entity(i, 11)
+        End If
+        CharacterSheet = EntitySheet&(entity(i, 0))
+
+
+        'im tired and too lazy to actually rewrite this properly so im just saying fuck it and pasting the shitty code i already had with a few tweeks, if you feel like rewriting this utter garbage properly, suit yourself
+        Select Case Facing
+            Case 0
+                If MovingY <> 0 Then
+                    If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 0)-(15, 17 - Swim)
+                    If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 0)-(31, 17 - Swim)
+                    If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 0)-(47, 17 - Swim)
+                    If Anim > 44 And Anim < 60 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 0)-(31, 17 - Swim)
+                Else
+                    PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 0)-(31, 17 - Swim)
+                End If
+            Case 1
+                If MovingY <> 0 Then
+                    If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 36)-(15, 54 - Swim)
+                    If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 36)-(31, 53 - Swim)
+                    If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 36)-(47, 53 - Swim)
+                    If Anim > 44 And Anim < 60 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 36)-(31, 53 - Swim)
+                Else
+                    PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 36)-(31, 53 - Swim)
+                End If
+
+            Case 2
+                If MovingX <> 0 Then
+                    If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 54)-(15, 71 - Swim)
+                    If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 54)-(31, 71 - Swim)
+                    If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 54)-(47, 71 - Swim)
+                    If Anim > 44 And Anim < 60 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 54)-(31, 71 - Swim)
+                Else
+                    PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 54)-(31, 71 - Swim)
+                End If
+
+            Case 3
+                If MovingX <> 0 Then
+                    If Anim < 15 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (0, 18)-(15, 35 - Swim)
+                    If Anim > 14 And Anim < 30 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 18)-(31, 35 - Swim)
+                    If Anim > 29 And Anim < 45 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (32, 18)-(47, 35 - Swim)
+                    If Anim > 44 And Anim < 60 Then PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 18)-(31, 35 - Swim)
+                Else
+                    PutImage (Int(PosX), Int(PosY + Swim) - 2)-((Int(PosX)) + 16, (Int(PosY) - 2) + 16), CharacterSheet, , (16, 18)-(31, 35 - Swim)
+                End If
+        End Select
+
+
     Next
+    Anim = Anim + Settings.TickRate + 1
+    If Anim > 59 Then Anim = 0
+
 End Sub
 
 Function EntitySheet& (ID)
     Select Case ID
         Case 0
-            EntitySheet = Texture.PlayerSheet
+            EntitySheet& = Texture.PlayerSheet
         Case 1
-            EntitySheet = Texture.ZombieSheet
+            EntitySheet& = Texture.DuckSheet
         Case 2
-            EntitySheet = Texture.PigSheet
-
+            EntitySheet& = Texture.ZombieSheet
+        Case Else
+            End
 
     End Select
 End Function
@@ -1545,7 +1604,7 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
             If Entity = 0 Then
                 SwimOffset = Val1
             Else
-                entity(Entity, 13) = Val1
+                entity(Entity, 17) = Val1
             End If
 
         Case 3 'Instant Health
@@ -2367,7 +2426,7 @@ Sub DEV
         Dim dv As Single
         Dim dummystring As String
         Dim databit As Byte
-        Dim i, ii As Byte
+        Dim i, ii As Integer
         Dim DMapX, DMapY As Integer64
         Dim fillx, filly, fillid As Single
 
@@ -2643,6 +2702,11 @@ Sub DEV
                     ChangeMap 1, DMapX, DMapY
                 Case "genmap"
                     GenerateMap
+                Case "masstp"
+                    For i = 0 To CurrentEntities
+                        entity(i, 4) = Player.x
+                        entity(i, 5) = Player.y
+                    Next
                 Case "give", "item"
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "ItemID to give ", DMapX
@@ -2651,18 +2715,20 @@ Sub DEV
 
                     NewStack DMapX, DMapY
                 Case "summon"
+                    Dim temp As Integer
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "EntityID to summon ", DMapX
+                    Locate 28, 1: Print "                                            "
+                    Locate 28, 1: Input "Number of this entity to spawn ", temp
+
                     '  For DMapY = 0 To 100
-                    For i = 0 To EntityParameters
+
+                    For ii = 0 To temp
                         CurrentEntities = CurrentEntities + 1
-                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
                         For i = 0 To EntityParameters
                             entity(CurrentEntities, i) = SummonEntity(DMapX, i)
                         Next
                     Next
-                    entity(CurrentEntities, 4) = Player.x
-                    entity(CurrentEntities, 5) = Player.y
                     ' Next
                 Case "kill"
                     Locate 28, 1: Print "                      "
@@ -3534,6 +3600,9 @@ Sub SwitchRender (mode As Byte)
 
     If FirstSkip = 1 Then 'this is to prevent the game from crashing if the files arent loaded yet, because this is also run to initially load the files
         FreeImage Texture.PlayerSprites
+        FreeImage Texture.PlayerSheet
+        FreeImage Texture.ZombieSheet
+        FreeImage Texture.DuckSheet
         FreeImage Texture.TileSheet
         FreeImage Texture.ItemSheet
         FreeImage Texture.HudSprites
@@ -3543,7 +3612,7 @@ Sub SwitchRender (mode As Byte)
     Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
     Texture.PlayerSheet = LoadImage(File.PlayerSheet, mode + 32)
     Texture.ZombieSheet = LoadImage(File.ZombieSheet, mode + 32)
-    Texture.PigSheet = LoadImage(File.PigSheet, mode + 32)
+    Texture.DuckSheet = LoadImage(File.DuckSheet, mode + 32)
     Texture.TileSheet = LoadImage(File.TileSheet, mode + 32)
     Texture.ItemSheet = LoadImage(File.ItemSheet, mode + 32)
     Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)

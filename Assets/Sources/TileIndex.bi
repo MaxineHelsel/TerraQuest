@@ -110,7 +110,7 @@ ContainerData(6, 1) = 2 'number of rows
 ContainerData(6, 2) = 0 'dissapears on empty
 
 
-TileName(7, 0) = "Stone Wall" 'Name of the tile
+TileName(7, 0) = "CobbleStone Wall" 'Name of the tile
 TileName(7, 1) = "Placeholder" 'tooltip
 TileIndex(7, 0) = 1 'layer definition
 TileIndex(7, 1) = 112 'x position on tilesheet
@@ -271,4 +271,29 @@ TileIndexData(17, 3) = 0 'has interior shadow
 TileIndexData(17, 4) = 5 'resistance
 TileIndexData(17, 5) = 0 'is solid
 
+TileName(18, 0) = "Stone Wall" 'Name of the tile
+TileName(18, 1) = "Placeholder" 'tooltip
+TileIndex(19, 0) = 1 'layer definition
+TileIndex(19, 1) = 32 'x position on tilesheet
+TileIndex(19, 2) = 16 'y position on tilesheet
+TileIndex(19, 3) = 28 'itemid
+TileIndexData(19, 0) = 1 'collision
+TileIndexData(19, 1) = 1 'casts shadow
+TileIndexData(19, 2) = 1 'blocks shadow
+TileIndexData(19, 3) = 0 'has interior shadow
+TileIndexData(19, 4) = 50 'resistance
+TileIndexData(19, 5) = 1 'is solid
+
+TileName(20, 0) = "Stone Path" 'Name of the tile
+TileName(20, 1) = "Placeholder" 'tooltip
+TileIndex(20, 0) = 1 'layer definition
+TileIndex(20, 1) = 48 'x position on tilesheet
+TileIndex(20, 2) = 16 'y position on tilesheet
+TileIndex(20, 3) = 29 'itemid
+TileIndexData(20, 0) = 0 'collision
+TileIndexData(20, 1) = 0 'casts shadow
+TileIndexData(20, 2) = 1 'blocks shadow
+TileIndexData(20, 3) = 0 'has interior shadow
+TileIndexData(20, 4) = 10 'resistance
+TileIndexData(20, 5) = 0 'is solid
 

@@ -88,10 +88,10 @@ dim shared Game.ManifestProtocol as integer
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
 
-Const EntityLimit = 1000
+Const EntityLimit = 1560
 Const EntityParameters = 20
 Dim Shared CurrentEntities
-Dim Shared entity(EntityLimit, EntityParameters)
+Dim Shared entity(EntityLimit, EntityParameters) as single
 dim shared EffectArray(20,EffectParameters,EntityLimit) as integer
 
 
@@ -141,7 +141,7 @@ Type File
     PlayerSprites As String
     PlayerSheet as string
     ZombieSheet as string
-    PigSheet as string
+    DuckSheet as string
     TileSheet As String
     ItemSheet as string
     HudSprites As String
@@ -152,7 +152,7 @@ Type Texture
     PlayerSprites As Long
     PlayerSheet as long
     ZombieSheet as long
-    PigSheet as long
+    DuckSheet as long
 
     TileSheet As Long
     ItemSheet as long

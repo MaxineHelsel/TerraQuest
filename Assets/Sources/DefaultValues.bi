@@ -3,11 +3,11 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta Version 1.0 Edge Build 220414A"
-Game.Version = "b1.0-220414A
+Game.Buildinfo = "Beta Version 1.0"
+Game.Version = "b1.0
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
-Game.Designation = "Edge"
+Game.Designation = "Stable"
 Game.FCV = 1
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file
@@ -16,9 +16,9 @@ Settings.TickRate = 1
 
 'File name locations
 File.PlayerSprites = "Assets\Sprites\Entities\character.png"
-File.PlayerSheet = "Assets\Sprites\Entities\player.png"
-File.ZombieSheet = "Assets\Sprites\Entities\zombie.png"
-File.PigSheet = "Assets\Sprites\Entities\pig.png"
+File.PlayerSheet = "Assets\Sprites\Entities\Player.png"
+File.ZombieSheet = "Assets\Sprites\Entities\Zombie.png"
+File.DuckSheet = "Assets\Sprites\Entities\Duck.png"
 File.TileSheet = "Assets\Sprites\Tiles\Tiles.png"
 File.ItemSheet = "Assets\Sprites\Items\Items.png"
 File.HudSprites = "Assets\Sprites\Other\HUD.png"
