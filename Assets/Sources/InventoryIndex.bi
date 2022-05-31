@@ -172,7 +172,7 @@ ItemIndex(15, 7) = 1 'current stack
 ItemIndex(15, 8) = 1 'max stack
 ItemIndex(15, 9) = 15 'Item ID
 
-ItemName(16, 0) = "Creative Axe"
+ItemName(16, 0) = "Wooden Axe"
 ItemName(16, 1) = "Allows you to break wall tiles"
 ItemIndex(16, 0) = 1 'item type (1 means tool)
 ItemIndex(16, 1) = 16 'item texture x cord
@@ -185,7 +185,7 @@ ItemIndex(16, 7) = 1 'current stack
 ItemIndex(16, 8) = 1 'max stack
 ItemIndex(16, 9) = 16 'Item ID
 
-ItemName(17, 0) = "Creative Pickaxe"
+ItemName(17, 0) = "Wooden Pickaxe"
 ItemName(17, 1) = "Allows you to mine"
 ItemIndex(17, 0) = 1 'item type (1 means tool)
 ItemIndex(17, 1) = 32 'item texture x cord
@@ -198,7 +198,7 @@ ItemIndex(17, 7) = 1 'current stack
 ItemIndex(17, 8) = 1 'max stack
 ItemIndex(17, 9) = 17 'Item ID
 
-ItemName(18, 0) = "Creative Sword"
+ItemName(18, 0) = "Wooden Sword"
 ItemName(18, 1) = "Allows you to fight"
 ItemIndex(18, 0) = 2 'item type (1 means tool)
 ItemIndex(18, 1) = 48 'item texture x cord
@@ -214,13 +214,13 @@ ItemIndex(18, 10) = 10 'range
 ItemIndex(18, 11) = 3 'speed
 
 
-ItemName(19, 0) = "Wood"
+ItemName(19, 0) = "Raw Wood"
 ItemName(19, 1) = "Crafting Material"
 ItemIndex(19, 0) = 3 'item type (1 means tool)
 ItemIndex(19, 1) = 64 'item texture x cord
 ItemIndex(19, 2) = 16 'item texture y cord
-ItemIndex(19, 3) = 1 'crafting ID
-ItemIndex(19, 4) = 0 'minimum table
+ItemIndex(19, 3) = 0 '
+ItemIndex(19, 4) = 0 '
 ItemIndex(19, 5) = 0 '
 ItemIndex(19, 6) = 0 '
 ItemIndex(19, 7) = 1 'current stack
@@ -237,4 +237,175 @@ ItemIndex(20, 4) = 1 'layer
 ItemIndex(20, 7) = 1 'current stack
 ItemIndex(20, 8) = 100 'max stack
 ItemIndex(20, 9) = 20 'Item ID
+
+ItemName(21, 0) = "Crafting Station"
+ItemName(21, 1) = "Placeholder"
+ItemIndex(21, 0) = 0 'type
+ItemIndex(21, 1) = 96 'ssx
+ItemIndex(21, 2) = 16 'ssy
+ItemIndex(21, 3) = 15 'tileID
+ItemIndex(21, 4) = 1 'layer
+ItemIndex(21, 7) = 1 'current stack
+ItemIndex(21, 8) = 100 'max stack
+ItemIndex(21, 9) = 21 'Item ID
+
+ItemName(22, 0) = "Tool Handle"
+ItemName(22, 1) = "Crafting Material"
+ItemIndex(22, 0) = 3 'item type (1 means tool)
+ItemIndex(22, 1) = 112 'item texture x cord
+ItemIndex(22, 2) = 16 'item texture y cord
+ItemIndex(22, 3) = 0 '
+ItemIndex(22, 4) = 0 '
+ItemIndex(22, 5) = 0 '
+ItemIndex(22, 6) = 0 '
+ItemIndex(22, 7) = 1 'current stack
+ItemIndex(22, 8) = 100 'max stack
+ItemIndex(22, 9) = 22 'Item ID
+
+ItemName(23, 0) = "Red Berries"
+ItemName(23, 1) = "Food Item"
+ItemIndex(23, 0) = 4 'item type (4 means consumable)
+ItemIndex(23, 1) = 128 'item texture x cord
+ItemIndex(23, 2) = 16 'item texture y cord
+ItemIndex(23, 3) = 0 'consumable type
+ItemIndex(23, 4) = 0 '
+ItemIndex(23, 5) = 0 '
+ItemIndex(23, 6) = 0 '
+ItemIndex(23, 7) = 1 'current stack
+ItemIndex(23, 8) = 100 'max stack
+ItemIndex(23, 9) = 23 'Item ID
+
+ItemName(24, 0) = "Health Wheel"
+ItemName(24, 1) = "Consumable, increases max health by 8"
+ItemIndex(24, 0) = 4 'item type (4 means consumable)
+ItemIndex(24, 1) = 144 'item texture x cord
+ItemIndex(24, 2) = 16 'item texture y cord
+ItemIndex(24, 3) = 1 'consumable type
+ItemIndex(24, 4) = 0 '
+ItemIndex(24, 5) = 0 '
+ItemIndex(24, 6) = 0 '
+ItemIndex(24, 7) = 1 'current stack
+ItemIndex(24, 8) = 100 'max stack
+ItemIndex(24, 9) = 24 'Item ID
+
+ItemName(25, 0) = "Wooden Ladder" 'Name of the tile
+ItemName(25, 1) = "Placeholder" 'tooltip
+ItemIndex(25, 0) = 0 'Item type
+ItemIndex(25, 1) = 160 'x position on tilesheet
+ItemIndex(25, 2) = 16 'y position on tilesheet
+ItemIndex(25, 3) = 16 'tile id
+ItemIndex(25, 4) = 0 'Layer
+ItemIndex(25, 7) = 1 'current stack
+ItemIndex(25, 8) = 100 'max stack
+ItemIndex(25, 9) = 25 'Item ID
+
+ItemName(26, 0) = "Carrot"
+ItemName(26, 1) = "Food Item"
+ItemIndex(26, 0) = 4 'item type (4 means consumable)
+ItemIndex(26, 1) = 176 'item texture x cord
+ItemIndex(26, 2) = 16 'item texture y cord
+ItemIndex(26, 3) = 0 'consumable type
+ItemIndex(26, 4) = 0 '
+ItemIndex(26, 5) = 0 '
+ItemIndex(26, 6) = 0 '
+ItemIndex(26, 7) = 1 'current stack
+ItemIndex(26, 8) = 100 'max stack
+ItemIndex(26, 9) = 26 'Item ID
+
+'27 ice
+ItemName(27, 0) = "Ice"
+ItemName(27, 1) = "Placeholder"
+ItemIndex(27, 0) = 0 'type
+ItemIndex(27, 1) = 192 'ssx
+ItemIndex(27, 2) = 16 'ssy
+ItemIndex(27, 3) = 14 'tileID
+ItemIndex(27, 4) = 0 'layer
+ItemIndex(27, 7) = 1 'current stack
+ItemIndex(27, 8) = 100 'max stack
+ItemIndex(27, 9) = 27 'Item ID
+
+'28 stone wall
+ItemName(28, 0) = "Stone Wall"
+ItemName(28, 1) = "Placeholder"
+ItemIndex(28, 0) = 0 'type
+ItemIndex(28, 1) = 208 'ssx
+ItemIndex(28, 2) = 16 'ssy
+ItemIndex(28, 3) = 19 'tileID
+ItemIndex(28, 4) = 1 'layer
+ItemIndex(28, 7) = 1 'current stack
+ItemIndex(28, 8) = 100 'max stack
+ItemIndex(28, 9) = 28 'Item ID
+
+'29 raw stone
+ItemName(29, 0) = "Raw Stone"
+ItemName(29, 1) = "Crafting Material"
+ItemIndex(29, 0) = 0 'item type (1 means tool)
+ItemIndex(29, 1) = 224 'item texture x cord
+ItemIndex(29, 2) = 16 'item texture y cord
+ItemIndex(29, 3) = 20 '
+ItemIndex(29, 4) = 1 '
+ItemIndex(29, 5) = 0 '
+ItemIndex(29, 6) = 0 '
+ItemIndex(29, 7) = 1 'current stack
+ItemIndex(29, 8) = 100 'max stack
+ItemIndex(29, 9) = 29 'Item ID
+
+'30 blank
+'31-34 stone toolset
+
+ItemName(15, 0) = "Wood Shovel"
+ItemName(15, 1) = "Allows you to break ground tiles"
+ItemIndex(15, 0) = 1 'item type (1 means tool)
+ItemIndex(15, 1) = 0 'item texture x cord
+ItemIndex(15, 2) = 16 'item texture y cord
+ItemIndex(15, 3) = 100 'tool max durabillity
+ItemIndex(15, 4) = 100 'tool current durrabillity
+ItemIndex(15, 5) = 0 'tool type
+ItemIndex(15, 6) = 32 'tool strength
+ItemIndex(15, 7) = 1 'current stack
+ItemIndex(15, 8) = 1 'max stack
+ItemIndex(15, 9) = 15 'Item ID
+
+ItemName(16, 0) = "Wooden Axe"
+ItemName(16, 1) = "Allows you to break wall tiles"
+ItemIndex(16, 0) = 1 'item type (1 means tool)
+ItemIndex(16, 1) = 16 'item texture x cord
+ItemIndex(16, 2) = 16 'item texture y cord
+ItemIndex(16, 3) = 100 'tool max durabillity
+ItemIndex(16, 4) = 100 'tool current durrabillity
+ItemIndex(16, 5) = 1 'tool type
+ItemIndex(16, 6) = 32 'tool strength
+ItemIndex(16, 7) = 1 'current stack
+ItemIndex(16, 8) = 1 'max stack
+ItemIndex(16, 9) = 16 'Item ID
+
+ItemName(17, 0) = "Wooden Pickaxe"
+ItemName(17, 1) = "Allows you to mine"
+ItemIndex(17, 0) = 1 'item type (1 means tool)
+ItemIndex(17, 1) = 32 'item texture x cord
+ItemIndex(17, 2) = 16 'item texture y cord
+ItemIndex(17, 3) = 100 'tool max durabillity
+ItemIndex(17, 4) = 100 'tool current durrabillity
+ItemIndex(17, 5) = 2 'tool type
+ItemIndex(17, 6) = 32 'tool strength
+ItemIndex(17, 7) = 1 'current stack
+ItemIndex(17, 8) = 1 'max stack
+ItemIndex(17, 9) = 17 'Item ID
+
+ItemName(18, 0) = "Wooden Sword"
+ItemName(18, 1) = "Allows you to fight"
+ItemIndex(18, 0) = 2 'item type (1 means tool)
+ItemIndex(18, 1) = 48 'item texture x cord
+ItemIndex(18, 2) = 16 'item texture y cord
+ItemIndex(18, 3) = 100 'tool max durabillity
+ItemIndex(18, 4) = 100 'tool current durrabillity
+ItemIndex(18, 5) = .01 'swing delay
+ItemIndex(18, 6) = 100 'attack strength
+ItemIndex(18, 7) = 1 'current stack
+ItemIndex(18, 8) = 1 'max stack
+ItemIndex(18, 9) = 18 'item id
+ItemIndex(18, 10) = 10 'range
+ItemIndex(18, 11) = 3 'speed
+
+
 

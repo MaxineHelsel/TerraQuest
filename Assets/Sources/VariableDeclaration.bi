@@ -10,6 +10,11 @@ Dim Shared Debug As Debug
 'Constants
 const TileParameters=13
 const InvParameters=11
+const EffectParameters=4
+const MaxEffects=20
+Const MaxCraftLevel = 5
+const CreativePages = 5
+
 
 'Map Variables
 Dim Shared GroundTile(41, 31) As Unsigned Integer
@@ -21,7 +26,14 @@ Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
 
-dim shared Container(20,invparameters)
+dim shared Container(20,20,invparameters)
+Dim Shared CursorHoverX, CursorHoverY, CursorHoverPage, CursorSelectedX, CursorSelectedY, CursorSelectedPage, CursorMode
+
+Dim Shared ContainerSizeX, ContainerSizeY, ContainerOTU
+Dim Shared ContainerParams(4)
+
+dim shared ImmunityFlash as unsigned bit
+
 
 
 Dim Shared SavedMapX As Integer64
@@ -42,6 +54,9 @@ dim shared OverlayLightLevel as byte
                                          dim shared GameTime as long
                                          dim shared TimeMode as byte
 
+dim shared ScreenRezX
+dim shared ScreenRezY
+
 Dim Shared CurrentTick As Unsigned Integer64
 
 dim shared OGLFPS as single
@@ -55,19 +70,29 @@ Dim Shared GameMode As Byte
 Dim Shared DefaultRenderMode as Byte
 
 Dim Shared Inventory(3, 5,invparameters)
-dim shared CreativeInventory(2,5,invparameters,1)
+dim shared CreativeInventory(2,5,invparameters,CreativePages)
+dim shared CraftingGrid(5, 5,invparameters)
+dim shared CraftingResult(invparameters)
+
 
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
 Dim Shared Game.Buildinfo As String
-Dim Shared Game.FCV As String
+Dim Shared Game.FCV As integer
 Dim Shared Game.HostOS As String
 Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
+dim shared Game.MapProtocol as integer
+dim shared Game.ManifestProtocol as integer
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
 
+Const EntityLimit = 1560
+Const EntityParameters = 20
+Dim Shared CurrentEntities
+Dim Shared entity(EntityLimit, EntityParameters) as single
+dim shared EffectArray(20,EffectParameters,EntityLimit) as integer
 
 
 'Flags
@@ -84,13 +109,14 @@ dim shared Flag.CastShadows as unsigned bit
 dim shared Flag.OpenCommand as byte
 dim shared Flag.RenderOverride as unsigned bit
 dim shared Flag.InitialRender as byte
+dim shared Flag.ContainerOpen as byte
 Dim Shared bgdraw As Unsigned Bit
-                                    dim shared RenderMode as byte
+dim shared RenderMode as byte
 
 Dim Shared new As Unsigned Bit 'has not been updated, because might not exist
 
 
-
+                             dim shared SwimOffset as byte
 
 
 Type Debug
@@ -113,6 +139,9 @@ Dim Shared prevfolder As String 'temp
 
 Type File
     PlayerSprites As String
+    PlayerSheet as string
+    ZombieSheet as string
+    DuckSheet as string
     TileSheet As String
     ItemSheet as string
     HudSprites As String
@@ -121,6 +150,10 @@ End Type
 
 Type Texture
     PlayerSprites As Long
+    PlayerSheet as long
+    ZombieSheet as long
+    DuckSheet as long
+
     TileSheet As Long
     ItemSheet as long
     HudSprites As Long
@@ -129,6 +162,9 @@ End Type
 
 Type Sounds
     error As String
+    walk_grass as string
+    damage_bush as string
+    walk_water as string
 End Type
 
 
@@ -149,6 +185,10 @@ Type Character
     type As Byte
     tilecontact as byte
 
+    CraftingLevel as byte
+
+    MaxHealth as Byte
+
     level As Byte
     health As Byte
     points As Byte
@@ -162,6 +202,7 @@ End Type
 Type Settings
     FrameRate As Integer
     TickRate As Single
+    FullScreen as byte
 End Type
 
 

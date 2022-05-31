@@ -72,7 +72,7 @@ TileIndexData(4, 2) = 0 'blocks shadow
 TileIndexData(4, 3) = 0 'has interior shadow
 TileIndexData(4, 4) = 17 'resistance
 TileIndexData(4, 5) = 1 'is solid
-TileIndexData(4, 9) = 0.8 'Friction
+TileIndexData(4, 9) = 0.2 'Friction
 TileIndexData(4, 10) = 0.8
 
 
@@ -105,11 +105,12 @@ TileIndexData(6, 3) = 0 'has interior shadow
 TileIndexData(6, 4) = 25 'resistance
 TileIndexData(6, 5) = 0 'is solid
 TileIndexData(6, 7) = 1 'is container
-ContainerData(6, 0) = 11 'number of slots  -1
-ContainerData(6, 1) = 0 'dissapears on empty
+ContainerData(6, 0) = 5 'number of slots  -1
+ContainerData(6, 1) = 2 'number of rows
+ContainerData(6, 2) = 0 'dissapears on empty
 
 
-TileName(7, 0) = "Stone Wall" 'Name of the tile
+TileName(7, 0) = "CobbleStone Wall" 'Name of the tile
 TileName(7, 1) = "Placeholder" 'tooltip
 TileIndex(7, 0) = 1 'layer definition
 TileIndex(7, 1) = 112 'x position on tilesheet
@@ -179,7 +180,8 @@ TileIndexData(11, 5) = 0 'is solid
 TileIndexData(11, 6) = 0 'light casts
 TileIndexData(11, 7) = 1 'is container
 ContainerData(11, 0) = 0 'number of slots -1
-ContainerData(11, 1) = 1 'dissapears on empty
+ContainerData(11, 1) = 0 'number of slots -1
+ContainerData(11, 2) = 1 'dissapears on empty
 
 TileName(12, 0) = "Berry Bush" 'Name of the tile
 TileName(12, 1) = "Placeholder" 'tooltip
@@ -193,7 +195,7 @@ TileIndexData(12, 2) = 1 'blocks shadow
 TileIndexData(12, 3) = 0 'has interior shadow
 TileIndexData(12, 4) = 25 'resistance
 TileIndexData(12, 5) = 0 'is solid
-TileIndexData(12, 8) = 1 'damage on contact
+
 
 TileName(13, 0) = "Water"
 TileName(13, 1) = ""
@@ -201,14 +203,14 @@ TileIndex(13, 0) = 0
 TileIndex(13, 1) = 208 'x position on tilesheet
 TileIndex(13, 2) = 0 'y position on tilesheet
 TileIndex(13, 3) = -1 'itemid
-TileIndexData(13, 0) = 1 'collision
+TileIndexData(13, 0) = 0 'collision
 TileIndexData(13, 1) = 0 'casts shadow
 TileIndexData(13, 2) = 0 'blocks shadow
 TileIndexData(13, 3) = 0 'has interior shadow
 TileIndexData(13, 4) = 1000 'resistance
 TileIndexData(13, 5) = 0 'is solid
-TileIndexData(13, 9) = 0.01 'friction
-TileIndexData(13, 10) = 2 'max speed
+TileIndexData(13, 9) = 0.04 'friction
+TileIndexData(13, 10) = 0.4 'max speed
 TileIndexData(13, 11) = 1 'tile spread
 
 TileName(14, 0) = "Ice"
@@ -227,7 +229,71 @@ TileIndexData(14, 9) = 0.01 'friction
 TileIndexData(14, 10) = 2 'max speed
 TileIndexData(14, 11) = 0 'tile spread
 
+TileName(15, 0) = "Crafting Station" 'Name of the tile
+TileName(15, 1) = "Placeholder" 'tooltip
+TileIndex(15, 0) = 1 'layer definition
+TileIndex(15, 1) = 240 'x position on tilesheet
+TileIndex(15, 2) = 0 'y position on tilesheet
+TileIndex(15, 3) = 21 'itemid
+TileIndexData(15, 0) = 1 'collision
+TileIndexData(15, 1) = 1 'casts shadow
+TileIndexData(15, 2) = 1 'blocks shadow
+TileIndexData(15, 3) = 0 'has interior shadow
+TileIndexData(15, 4) = 25 'resistance
+TileIndexData(15, 5) = 1 'is soli
+TileIndexData(15, 8) = 3
 
+TileName(16, 0) = "Wooden Ladder" 'Name of the tile
+TileName(16, 1) = "Placeholder" 'tooltip
+TileIndex(16, 0) = 0 'layer definition
+TileIndex(16, 1) = 0 'x position on tilesheet
+TileIndex(16, 2) = 16 'y position on tilesheet
+TileIndex(16, 3) = 25 'itemid
+TileIndexData(16, 0) = 1 'collision
+TileIndexData(16, 1) = 0 'casts shadow
+TileIndexData(16, 2) = 1 'blocks shadow
+TileIndexData(16, 3) = 1 'has interior shadow
+TileIndexData(16, 4) = 30 'resistance
+TileIndexData(16, 5) = 1 'is solid
+TileIndexData(16, 9) = 0.8 'Friction
+TileIndexData(16, 10) = 0.8
 
+TileName(17, 0) = "Carrot" 'Name of the tile
+TileName(17, 1) = "Placeholder" 'tooltip
+TileIndex(17, 0) = 1 'layer definition
+TileIndex(17, 1) = 16 'x position on tilesheet
+TileIndex(17, 2) = 16 'y position on tilesheet
+TileIndex(17, 3) = 26 'itemid
+TileIndexData(17, 0) = 0 'collision
+TileIndexData(17, 1) = 0 'casts shadow
+TileIndexData(17, 2) = 1 'blocks shadow
+TileIndexData(17, 3) = 0 'has interior shadow
+TileIndexData(17, 4) = 5 'resistance
+TileIndexData(17, 5) = 0 'is solid
 
+TileName(18, 0) = "Stone Wall" 'Name of the tile
+TileName(18, 1) = "Placeholder" 'tooltip
+TileIndex(19, 0) = 1 'layer definition
+TileIndex(19, 1) = 32 'x position on tilesheet
+TileIndex(19, 2) = 16 'y position on tilesheet
+TileIndex(19, 3) = 28 'itemid
+TileIndexData(19, 0) = 1 'collision
+TileIndexData(19, 1) = 1 'casts shadow
+TileIndexData(19, 2) = 1 'blocks shadow
+TileIndexData(19, 3) = 0 'has interior shadow
+TileIndexData(19, 4) = 50 'resistance
+TileIndexData(19, 5) = 1 'is solid
+
+TileName(20, 0) = "Stone Path" 'Name of the tile
+TileName(20, 1) = "Placeholder" 'tooltip
+TileIndex(20, 0) = 1 'layer definition
+TileIndex(20, 1) = 48 'x position on tilesheet
+TileIndex(20, 2) = 16 'y position on tilesheet
+TileIndex(20, 3) = 29 'itemid
+TileIndexData(20, 0) = 0 'collision
+TileIndexData(20, 1) = 0 'casts shadow
+TileIndexData(20, 2) = 1 'blocks shadow
+TileIndexData(20, 3) = 0 'has interior shadow
+TileIndexData(20, 4) = 10 'resistance
+TileIndexData(20, 5) = 0 'is solid
 

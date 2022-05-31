@@ -1,0 +1,64 @@
+Alpha Version 22/Beta Version 1.0
+
+#Bugs
+New worlds have corrupt map -1,0 - E1
+Wall Tiles placed on ground air dissapear - E3
+Wall Tiles able to be placed on water - E3
+
+
+#Features
+Berry Bushes and campfires now deal damage on contact - E2
+Entering water will allow you to swim - E4
+Sound effects - E5
+You can now use Space to use items in the hotbar when tabbed into it with the inventory open - E6
+Player now has a max health, and will always show health wheels up to max health, even if fully empty - E6
+Player can now have boost health, which is any health above max will be shown in golden wheels, rather than pink - E6
+Added /give /item command, gives the player items of specified ID and Quantity - E7
+Added entities, pig and zombie - E7
+Added 3 second respawn immunity - 220408A
+
+#Tiles and items
+Red berries, heals for 1 point - E7
+Health wheel, perminantly increases player health by 8 - E7
+Tool handle, crafting ingredient - E7
+Wooden Ladder, used to decend into the depths - E7
+Crafting Station, grants access to 3x3 recipies - E6
+Carrots, heals for 3 health and generates rarely - E8
+
+#Other Changes
+Changed water stats to support swimming - E4
+Health wheel now rainbow when in creative - E5
+Other resolutions supported - E5
+ReWrote HUD - E5
+Berry bushes now generate twice as frequently - E7
+Old Worlds will now be converted any time the map protocol is updated - E7
+
+
+
+Alpha Version 21
+
+#Bugs
+Memory leak when minimized - fix implimented but not working fully
+NO Linux version locked to 30FPS - Unknown cause
+
+#Items
+
+#Tiles
+Added berry bush, will be used as a way to get food, as well as take damage
+Added water
+Added ice, very slippery
+
+#Features
+Debug Menu data viewer can now see whats in inventory slot 1
+Worlds now have seeds
+added player velocity, different tiles have effects on speed and acceleration
+added /fill command set: /fillgt /fillwt /fillct
+added globalPOS to player data tracker
+Added lake terrain generation
+
+#Other Changes
+All blank textures now have a "missing texture" texture
+All hardcoded references to 9 parameters for tiles and items have been updated to constants
+
+
+
