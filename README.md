@@ -1,7 +1,5 @@
 # TerraQuest
 
-### WARNING This is the edge branch, meaning this version could be incomplete, unstable, untested, broken, etc. If you are looking for the latest released version, switch to stable.
-
 # Download instructions
 
 - Click 'Branch' and choose which version you want
