@@ -3,11 +3,11 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta Version 1.0"
-Game.Version = "b1.0
+Game.Buildinfo = "Beta Version 1.1 Edge Build 220601A"
+Game.Version = "b1.1-220601A
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
-Game.Designation = "Stable"
+Game.Designation = "Edge"
 Game.FCV = 1
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file

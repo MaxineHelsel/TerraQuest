@@ -1,6 +1,6 @@
 $NoPrefix
 Option Explicit
-'On Error GoTo ERRORHANDLE
+On Error GoTo ERRORHANDLE
 Randomize Using Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
@@ -25,7 +25,7 @@ Rem'$include: 'Assets\Sources\CraftingIndex.bi'
 Dim Shared ImmunityTimer
 Dim Shared CreativePage As Byte
 Dim Shared WorldReadOnly As Byte
-
+Dim Shared HealthWheelOffset
 
 INITIALIZE
 'TitleScreen
@@ -700,9 +700,9 @@ Sub DisplayHealth
                 While TMPHeal > 0
                     If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
                     If TMPHeal <= 8 Then
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0)-((TMPHeal - 1) * 32 + 31, 31)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
                     Else
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0)-(7 * 32 + 31, 31)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
                     End If
                     TMPHeal = TMPHeal - 8
                     Token = Token + 1
@@ -1615,9 +1615,31 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
             End If
         Case 4 'max health increase
             Player.MaxHealth = Player.MaxHealth + Val1
-        Case 5
+        Case 5 'Immunity
             ImmunityTimer = ImmunityTimer + 1
             If ImmunityTimer > Val1 + 1 Then ImmunityTimer = 1: ImmunityFlash = ImmunityFlash + 1
+        Case 6 'poison
+            If Entity = 0 Then
+                HealthWheelOffset = 64
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+
+        Case 7 'regen
+            If Entity = 0 Then
+                HealthWheelOffset = 96
+                If GameMode <> 1 Then
+                    If Player.health < (Player.MaxHealth + 1) * 8 Then
+                        Player.health = Player.health + Val1
+                    End If
+                End If
+
+            Else
+            End If
+
+
+
     End Select
 
 
@@ -1719,6 +1741,19 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 3
                     EffectIndex = 3 'value
             End Select
+        Case "Consume Eggplant"
+            Select Case Value
+                Case 0
+                    EffectIndex = 7 'effectid
+                Case 1
+                    EffectIndex = 482 'frameduration
+                Case 2
+                    EffectIndex = 0 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+                Case 4
+                    EffectIndex = 120 'framedelay
+            End Select
 
         Case Else
             EffectIndex = 0
@@ -1731,11 +1766,13 @@ Sub EffectEnd (EffectID As Integer, EffectSlot As Integer, Entity As Single)
     Select Case EffectID
         Case 1
         Case 2
-            SwimOffset = 0
+            If Entity = 0 Then SwimOffset = 0 Else entity(Entity, 17) = 0
         Case 3
         Case 4
         Case 5
             ImmunityTimer = 0: ImmunityFlash = 0
+        Case 6, 7
+            HealthWheelOffset = 0
     End Select
 
     For i = 0 To EffectParameters
@@ -1756,7 +1793,13 @@ Sub Effects (Command As Byte, Sources As String, Entity As Single)
                 If EffectArray(i, 1, Entity) > 0 Then EffectArray(i, 1, Entity) = EffectArray(i, 1, Entity) - Settings.TickRate
                 If EffectArray(i, 2, Entity) > 0 Then EffectArray(i, 2, Entity) = EffectArray(i, 2, Entity) - Settings.TickRate
                 If EffectArray(i, 1, Entity) > 0 Then
-                    EffectExecute EffectArray(i, 0, Entity), EffectArray(i, 3, Entity), Entity
+                    If EffectArray(i, 4, Entity) > 0 Then
+                        If EffectArray(i, 1, Entity) Mod EffectArray(i, 4, Entity) = 0 Then
+                            EffectExecute EffectArray(i, 0, Entity), EffectArray(i, 3, Entity), Entity
+                        End If
+                    Else
+                        EffectExecute EffectArray(i, 0, Entity), EffectArray(i, 3, Entity), Entity
+                    End If
                 End If
                 If EffectArray(i, 1, Entity) <= 0 And EffectArray(i, 2, Entity) <= 0 Then
                     EffectEnd EffectArray(i, 0, Entity), i, Entity
@@ -1976,6 +2019,7 @@ Function FacingY
 End Function
 Sub UseItem (Slot)
     Static ConsumeCooldown
+    Static ToolDelay
     Select Case Inventory(0, Slot, 0)
         Case 0 'Block placing
             Select Case Inventory(0, Slot, 4)
@@ -2019,8 +2063,12 @@ Sub UseItem (Slot)
                             SpreadLight (1)
                             Exit Select
                         End If
-                        TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
-                        TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
                         If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
                         If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
                     End If
@@ -2036,8 +2084,12 @@ Sub UseItem (Slot)
                             SpreadLight (1)
                             Exit Select
                         End If
-                        TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
-                        TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
                         If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
                         If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
                     End If
@@ -2503,7 +2555,7 @@ Sub DEV
                 Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.movingx; Player.movingy
-                Print Player.lastx; Player.lasty
+                Print "Health:"; Player.health
             Case "inv", "inventory", "2"
                 Print "Inventory Data"
                 If CursorHoverPage = 1 Then
@@ -2525,6 +2577,38 @@ Sub DEV
                 'For i = 0 To InvParameters
                 '    Print Inventory(0, 0, i);
                 'Next
+            Case "3"
+                Print "Entity Data"
+                For i = 1 To CurrentEntities
+                    Print i;
+                    For ii = 0 To EntityParameters
+                        Print entity(i, ii);
+                    Next
+                    Print
+                Next
+            Case "4"
+                Print "Status Effect Data"
+                For i = 0 To MaxEffects
+                    Print i;
+                    For ii = 0 To EffectParameters
+                        Print EffectArray(i, ii, 0);
+                    Next
+                    Print
+                Next
+            Case "4a"
+                Print "Status Effect Data (Active)"
+                For i = 0 To MaxEffects
+                    While EffectArray(i, 0, 0) = 0
+                        i = i + 1
+                        If i > 20 Then Exit Case
+                    Wend
+                    Print i;
+                    For ii = 0 To EffectParameters
+                        Print EffectArray(i, ii, 0);
+                    Next
+                    Print
+                Next
+
             Case Else
                 Print "Unrecognized Tile or Entity"
         End Select

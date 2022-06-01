@@ -90,9 +90,10 @@ Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
 Const EntityLimit = 1560
 Const EntityParameters = 20
+
 Dim Shared CurrentEntities
 Dim Shared entity(EntityLimit, EntityParameters) as single
-dim shared EffectArray(20,EffectParameters,EntityLimit) as integer
+dim shared EffectArray(maxeffects,EffectParameters,EntityLimit) as integer
 
 
 'Flags
