@@ -19,13 +19,44 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
+'constants to make code more readable
+Const EntityID = 0
+Const EntityHealth = 1
+Const EntitySpeedMod = 2
+Const EntityAI = 3
+Const EntityX = 4
+Const EntityY = 5
+Const EntityAction = 6
+Const EntityTimerAct = 7
+Const EntityVX = 8
+Const EntityVY = 9
+Const EntityMX = 10 'These 2 values are redundant, could just be calculated if vx and vy != 0
+Const EntityMY = 11
+Const EntityMaxHealth = 12
+Const EntityLX = 13
+Const EntityLY = 14
+Const EntityTimerDespawn = 15
+Const EntityFacing = 16
+Const EntitySpOffY = 17
 
-Rem'$include: 'Assets\Sources\CraftingIndex.bi'
+Const TileLayer = 0
+Const TileSX = 1
+Const TileSY = 2
+Const TileItemID = 3
 
-Dim Shared ImmunityTimer
-Dim Shared CreativePage As Byte
-Dim Shared WorldReadOnly As Byte
-Dim Shared HealthWheelOffset
+Const TileDataCollision = 0
+Const TileDataCastShadow = 1
+Const TileDataBlockShadow = 2
+Const TileDataIntShadow = 3
+Const TileDataResistance = 4
+Const TileDataSolid = 5
+Const TileDataLightCast = 6
+Const TileDataContainer = 7
+Const TileDataCraftingLevel = 8
+Const TileDataFriction = 9
+Const TileDataMaxSpeed = 10
+
+
 
 INITIALIZE
 'TitleScreen
@@ -98,6 +129,135 @@ Do
 Loop
 
 Error 102
+
+Sub TileTickUpdates
+
+End Sub
+
+Sub UseItem (Slot)
+    Static ConsumeCooldown
+    Static ToolDelay
+    Select Case Inventory(0, Slot, 0)
+        Case 0 'Block placing
+            Select Case Inventory(0, Slot, 4)
+                Case 0
+                    If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
+                        GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        TileData(FacingX, FacingY, 4) = 255
+                        If GameMode <> 1 Then
+                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                        End If
+                        UpdateTile FacingX, FacingY
+                        SpreadLight (1)
+                    End If
+                Case 1
+                    If WallTile(FacingX, FacingY) = 1 And GroundTile(FacingX, FacingY) <> 0 And GroundTile(FacingX, FacingY) <> 13 Then
+                        WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
+                            NewContainer SavedMapX, SavedMapY, FacingX, FacingY
+                        End If
+                        TileData(FacingX, FacingY, 5) = 255
+                        If GameMode <> 1 Then
+                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                        End If
+                        UpdateTile FacingX, FacingY
+                        SpreadLight (1)
+                    End If
+            End Select
+        Case 1 'Tools
+            Select Case Inventory(0, Slot, 5)
+                Case 0
+                    If GroundTile(FacingX, FacingY) <> 0 Then
+                        If TileData(FacingX, FacingY, 4) <= 0 Then
+                            If GameMode <> 1 Then
+                                If PickUpItem(TileIndex(GroundTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                            End If
+                            GroundTile(FacingX, FacingY) = 0
+                            TileData(FacingX, FacingY, 4) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
+                        If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
+                        If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
+                    End If
+                Case 1
+                    If WallTile(FacingX, FacingY) <> 1 Then
+                        If TileData(FacingX, FacingY, 5) <= 0 Then
+                            If GameMode <> 1 Then
+                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                            End If
+                            WallTile(FacingX, FacingY) = 1
+                            TileData(FacingX, FacingY, 5) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
+                        If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
+                        If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
+                    End If
+                Case 3
+                    If TileIndex(GroundTile(FacingX, FacingY), 4) <> 0 Then
+                        If TileData(FacingX, FacingY, 4) <= 0 Then
+                            GroundTile(FacingX, FacingY) = TileIndex(GroundTile(FacingX, FacingY), 4)
+                            TileData(FacingX, FacingY, 4) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
+                        If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
+                        If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
+                    End If
+
+            End Select
+
+        Case 4 'consumables
+            If CurrentTick >= ConsumeCooldown Then
+                If EffectIndex("Consume " + ItemName(Inventory(0, Slot, 9), 0), 0) = 3 Then
+                    If Player.health >= ((Player.MaxHealth + 1) * 8) Then Exit Select
+                End If
+                Effects 1, "Consume " + ItemName(Inventory(0, Slot, 9), 0), 0
+
+                If GameMode <> 1 Then
+                    Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                    If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                End If
+
+                ConsumeCooldown = CurrentTick + 10
+            End If
+
+    End Select
+
+
+    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
+        WallTile(FacingX, FacingY) = 1
+        UpdateTile FacingX, FacingY
+        SpreadLight (1)
+
+    End If
+End Sub
+
+
 
 Sub DebugShowEffects
     Dim i, ii
@@ -1748,7 +1908,7 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 1
                     EffectIndex = 482 'frameduration
                 Case 2
-                    EffectIndex = 0 'framecooldown
+                    EffectIndex = 482 'framecooldown
                 Case 3
                     EffectIndex = 1 'value
                 Case 4
@@ -2017,110 +2177,6 @@ Function FacingY
     End Select
 
 End Function
-Sub UseItem (Slot)
-    Static ConsumeCooldown
-    Static ToolDelay
-    Select Case Inventory(0, Slot, 0)
-        Case 0 'Block placing
-            Select Case Inventory(0, Slot, 4)
-                Case 0
-                    If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
-                        GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
-                        TileData(FacingX, FacingY, 4) = 255
-                        If GameMode <> 1 Then
-                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
-                        End If
-                        UpdateTile FacingX, FacingY
-                        SpreadLight (1)
-                    End If
-                Case 1
-                    If WallTile(FacingX, FacingY) = 1 And GroundTile(FacingX, FacingY) <> 0 And GroundTile(FacingX, FacingY) <> 13 Then
-                        WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
-                        If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
-                            NewContainer SavedMapX, SavedMapY, FacingX, FacingY
-                        End If
-                        TileData(FacingX, FacingY, 5) = 255
-                        If GameMode <> 1 Then
-                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
-                        End If
-                        UpdateTile FacingX, FacingY
-                        SpreadLight (1)
-                    End If
-            End Select
-        Case 1 'Tools
-            Select Case Inventory(0, Slot, 5)
-                Case 0
-                    If GroundTile(FacingX, FacingY) <> 0 Then
-                        If TileData(FacingX, FacingY, 4) <= 0 Then
-                            If GameMode <> 1 Then
-                                If PickUpItem(TileIndex(GroundTile(FacingX, FacingY), 3)) = 1 Then Exit Select
-                            End If
-                            GroundTile(FacingX, FacingY) = 0
-                            TileData(FacingX, FacingY, 4) = 255
-                            UpdateTile FacingX, FacingY
-                            SpreadLight (1)
-                            Exit Select
-                        End If
-                        ToolDelay = ToolDelay + 1
-                        If ToolDelay > 10 Then
-                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
-                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
-                            ToolDelay = 0
-                        End If
-                        If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
-                        If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
-                    End If
-                Case 1
-                    If WallTile(FacingX, FacingY) <> 1 Then
-                        If TileData(FacingX, FacingY, 5) <= 0 Then
-                            If GameMode <> 1 Then
-                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
-                            End If
-                            WallTile(FacingX, FacingY) = 1
-                            TileData(FacingX, FacingY, 5) = 255
-                            UpdateTile FacingX, FacingY
-                            SpreadLight (1)
-                            Exit Select
-                        End If
-                        ToolDelay = ToolDelay + 1
-                        If ToolDelay > 10 Then
-                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
-                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
-                            ToolDelay = 0
-                        End If
-                        If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
-                        If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
-                    End If
-
-            End Select
-        Case 4 'consumables
-            If CurrentTick >= ConsumeCooldown Then
-                If EffectIndex("Consume " + ItemName(Inventory(0, Slot, 9), 0), 0) = 3 Then
-                    If Player.health >= ((Player.MaxHealth + 1) * 8) Then Exit Select
-                End If
-                Effects 1, "Consume " + ItemName(Inventory(0, Slot, 9), 0), 0
-
-                If GameMode <> 1 Then
-                    Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                    If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
-                End If
-
-                ConsumeCooldown = CurrentTick + 10
-            End If
-
-    End Select
-
-
-    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
-        WallTile(FacingX, FacingY) = 1
-        UpdateTile FacingX, FacingY
-        SpreadLight (1)
-
-    End If
-End Sub
-
 
 Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TickDelay
@@ -2208,6 +2264,7 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
     TileData(TileX, TileY, 9) = TileIndexData(GroundTile(TileX, TileY), 9)
     TileData(TileX, TileY, 10) = TileIndexData(GroundTile(TileX, TileY), 10)
+
 End Sub
 'For i = TileData(TileX, TileY, 8) To 0 Step -1
 
@@ -2271,6 +2328,17 @@ Sub Crafting
 
             Case "-1 19 -1 |-1 19 -1 |-1 22 -1 |" 'wooden sword
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
+
+            Case "-1 29 -1 |-1 22 -1 |-1 22 -1 |" 'stone shovel
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(31, i)
+
+            Case "29 29 -1 |29 22 -1 |-1 22 -1 |" 'stone axe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(32, i)
+
+            Case "-1 29 -1 |-1 29 -1 |-1 22 -1 |" 'stone sword
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(34, i)
+
+
 
             Case "-1 -1 -1 |-1 19 -1 |-1 19 -1 |" 'Tool Handle
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(22, i)
@@ -2636,18 +2704,7 @@ Sub DEV
                     Locate 28, 1: Print "               "
                     Locate 28, 1: Input "Teleport y: ", dv
                     Player.y = dv * 16
-                Case "craft"
-                    Dim testx, testy, testitem
-                    Locate 28, 1: Print "               "
-                    Locate 28, 1: Input "Teleport x: ", testx
-                    Locate 28, 1: Print "               "
-                    Locate 28, 1: Input "Teleport x: ", testy
-                    Locate 28, 1: Print "               "
-                    Locate 28, 1: Input "Teleport x: ", testitem
 
-                    For i = 0 To InvParameters
-                        CraftingGrid(testx, testy, i) = ItemIndex(testitem, i)
-                    Next
 
                 Case "res", "resolution"
                     Locate 28, 1: Print "               "
@@ -3062,7 +3119,7 @@ End Sub
 
 Sub ConvertMap (OldVersion As Integer, MapCord As String)
     Print "Converting Map from Protocol"; OldVersion; "To"; Game.MapProtocol
-    Dim i, ii, iii
+    Dim i, ii, iii, iiii
     Dim j, jj, jjj
     Dim total
     Dim NewX, NewY
@@ -3128,6 +3185,22 @@ Sub ConvertMap (OldVersion As Integer, MapCord As String)
             Close #1
             Close #2
             OldVersion = 1
+        Case 1
+            Open "Assets\Worlds\" + WorldName + "\Maps\" + MapCord + "-3.cdf" As #1
+            For i = 1 To 30
+                For ii = 1 To 40
+                    For iiii = 0 To 13
+                        Get #1, iii, TileData(ii, i, iiii)
+                        iii = iii + 1
+                    Next
+
+                Next
+            Next
+            Get #1, iii, map.name
+            Close #1
+            iii = 1
+
+
 
         Case Else
             Open "Assets\Worlds\" + WorldName + "\Maps\" + MapCord + ".cdf" As #1
@@ -3898,6 +3971,19 @@ Sub GenerateMap
                     Container(0, 0, 7) = Ceil(Rnd * 3)
                     CloseContainer SavedMapX, SavedMapY, ii, i
                 End If
+
+                'generate raw stone
+                If Ceil(Rnd * 300) = 150 Then
+                    WallTile(ii, i) = 11
+                    NewContainer SavedMapX, SavedMapY, ii, i
+                    OpenContainer SavedMapX, SavedMapY, ii, i
+                    For iii = 0 To InvParameters
+                        Container(0, 0, iii) = ItemIndex(29, iii)
+                    Next
+                    Container(0, 0, 7) = Ceil(Rnd * 2)
+                    CloseContainer SavedMapX, SavedMapY, ii, i
+                End If
+
 
                 'generate berry bushes
                 If Ceil(Rnd * 250) = 125 Then

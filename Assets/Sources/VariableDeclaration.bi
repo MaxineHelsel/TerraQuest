@@ -87,13 +87,17 @@ dim shared Game.ManifestProtocol as integer
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
+Dim Shared ImmunityTimer
+Dim Shared CreativePage As Byte
+Dim Shared WorldReadOnly As Byte
+Dim Shared HealthWheelOffset
 
 Const EntityLimit = 1560
 Const EntityParameters = 20
 
 Dim Shared CurrentEntities
 Dim Shared entity(EntityLimit, EntityParameters) as single
-dim shared EffectArray(maxeffects,EffectParameters,EntityLimit) as integer
+dim shared EffectArray(maxeffects,EffectParameters,EntityLimit) as single
 
 
 'Flags

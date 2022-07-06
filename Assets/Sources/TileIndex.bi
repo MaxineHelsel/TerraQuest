@@ -1,5 +1,5 @@
 
-Dim Shared TileIndex(1000, 4)
+Dim Shared TileIndex(1000, 5)
 Dim Shared TileIndexData(1000, TileParameters) As Single
 Dim Shared ContainerData(1000, 3)
 Dim Shared TileName(1000, 3) As String
@@ -36,6 +36,7 @@ TileIndex(2, 0) = 0 'layer definition
 TileIndex(2, 1) = 32 'x position on tilesheet
 TileIndex(2, 2) = 0 'y position on tilesheet
 TileIndex(2, 3) = 2 'itemid
+TileIndex(2, 4) = 3 'transformation tile
 TileIndexData(2, 0) = 0 'collision
 TileIndexData(2, 1) = 0 'casts shadow
 TileIndexData(2, 2) = 0 'blocks shadow
@@ -51,6 +52,7 @@ TileIndex(3, 0) = 0 'layer definition
 TileIndex(3, 1) = 48 'x position on tilesheet
 TileIndex(3, 2) = 0 'y position on tilesheet
 TileIndex(3, 3) = 3 'itemid
+TileIndex(3, 4) = 4 'transformation tile
 TileIndexData(3, 0) = 0 'collision
 TileIndexData(3, 1) = 0 'casts shadow
 TileIndexData(3, 2) = 0 'blocks shadow
@@ -66,6 +68,7 @@ TileIndex(4, 0) = 0 'layer definition
 TileIndex(4, 1) = 64 'x position on tilesheet
 TileIndex(4, 2) = 0 'y position on tilesheet
 TileIndex(4, 3) = 4 'itemid
+TileIndex(4, 4) = 0 'transformation tile
 TileIndexData(4, 0) = 0 'collision
 TileIndexData(4, 1) = 0 'casts shadow
 TileIndexData(4, 2) = 0 'blocks shadow
@@ -74,8 +77,6 @@ TileIndexData(4, 4) = 4 'resistance
 TileIndexData(4, 5) = 1 'is solid
 TileIndexData(4, 9) = 0.2 'Friction
 TileIndexData(4, 10) = 0.8
-
-
 
 
 TileName(5, 0) = "Bush" 'Name of the tile
@@ -193,7 +194,7 @@ TileIndexData(12, 0) = 1 'collision
 TileIndexData(12, 1) = 0 'casts shadow
 TileIndexData(12, 2) = 1 'blocks shadow
 TileIndexData(12, 3) = 0 'has interior shadow
-TileIndexData(12, 4) = 19 'resistance
+TileIndexData(12, 4) = 11 'resistance
 TileIndexData(12, 5) = 0 'is solid
 
 
