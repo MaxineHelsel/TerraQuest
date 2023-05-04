@@ -3,8 +3,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta Version 1.1 Edge Build 220705A"
-Game.Version = "b1.1-220705A
+Game.Buildinfo = "Beta Version 1.1 Edge Build 230504A"
+Game.Version = "b1.1-230504A
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -15,19 +15,19 @@ Settings.FrameRate = 60
 Settings.TickRate = 1
 
 'File name locations
-File.PlayerSprites = "Assets\Sprites\Entities\character.png"
-File.PlayerSheet = "Assets\Sprites\Entities\Player.png"
-File.ZombieSheet = "Assets\Sprites\Entities\Zombie.png"
-File.DuckSheet = "Assets\Sprites\Entities\Duck.png"
-File.TileSheet = "Assets\Sprites\Tiles\Tiles.png"
-File.ItemSheet = "Assets\Sprites\Items\Items.png"
-File.HudSprites = "Assets\Sprites\Other\HUD.png"
-File.Shadows = "Assets\Sprites\Other\Shadows.png"
+File.PlayerSprites = "Assets/Sprites/Entities/character.png"
+File.PlayerSheet = "Assets/Sprites/Entities/Player.png"
+File.ZombieSheet = "Assets/Sprites/Entities/Zombie.png"
+File.DuckSheet = "Assets/Sprites/Entities/Duck.png"
+File.TileSheet = "Assets/Sprites/Tiles/Tiles.png"
+File.ItemSheet = "Assets/Sprites/Items/Items.png"
+File.HudSprites = "Assets/Sprites/Other/HUD.png"
+File.Shadows = "Assets/Sprites/Other/Shadows.png"
 
-Sounds.error = "Assets\Sounds\error.wav"
-Sounds.walk_grass = "Assets\Sounds\walk_grass.mp3"
-Sounds.damage_bush = "Assets\Sounds\damage_bush.mp3"
-Sounds.walk_water = "Assets\Sounds\walk_water.mp3"
+Sounds.error = "Assets/Sounds/error.wav"
+Sounds.walk_grass = "Assets/Sounds/walk_grass.mp3"
+Sounds.damage_bush = "Assets/Sounds/damage_bush.mp3"
+Sounds.walk_water = "Assets/Sounds/walk_water.mp3"
 
 'Debug values that are only set here for testing purposes
 Player.health = 8

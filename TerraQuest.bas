@@ -62,6 +62,7 @@ INITIALIZE
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
 CENTERPRINT "Temporary title screen"
+CENTERPRINT Game.Buildinfo
 Print
 Dim InputString As String
 Input "(L)oad world, (C)reate new world, (V)iew WIP Title Screen: ", InputString
@@ -76,17 +77,26 @@ For i = 0 To 31
     Next
 Next
 If LCase$(InputString) = "v" Then TitleScreen
+
 SpreadLight (1)
+
 GoTo game
 
 Error 102
 
-ERRORHANDLE: ErrorHandler
+ERRORHANDLE:
+ErrorHandler
+Resume Next
+
 DisplayOrder GLRender , Hardware , Software
 game:
 KeyClear
-SwitchRender 0 'these 2 statements are important to prevent a dumb bug
-SwitchRender 1
+
+If DefaultRenderMode = 2 Then
+    SwitchRender 0 'these 2 statements are important to prevent a dumb bug
+    SwitchRender 1
+End If
+
 Do
     For i = 0 To CurrentEntities
         OnTopEffect i
@@ -230,6 +240,8 @@ Sub UseItem (Slot)
                     End If
 
             End Select
+        Case 2 'Weapons
+
 
         Case 4 'consumables
             If CurrentTick >= ConsumeCooldown Then
@@ -446,7 +458,7 @@ Sub Entities (Command As Byte)
             Select Case TimeMode
                 Case 0 'day time
                     Select Case Ceil(Rnd * 100000)
-                        Case 0 TO 250 'pig
+                        Case 0 To 250 'pig
                             If CurrentEntities < 15 Then
                                 CurrentEntities = CurrentEntities + 1
                                 ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
@@ -457,7 +469,7 @@ Sub Entities (Command As Byte)
                     End Select
                 Case 1 'night time
                     Select Case Ceil(Rnd * 100000)
-                        Case 0 TO 120 'zombie
+                        Case 0 To 120 'zombie
                             If CurrentEntities < 15 Then
                                 CurrentEntities = CurrentEntities + 1
                                 ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
@@ -839,9 +851,14 @@ End Sub
 
 Sub DisplayHealth
     Dim As Byte i, ii, iii
-    Dim As Byte Token, TMPHeal
+    Dim As Integer Token, TMPHeal, rToken
     Dim As Single HealthX, HealthY
+    Dim As Single FullWheels
+    Dim As Byte BonusWheel
+    Dim As Byte BigHealOffset
+    Dim healthtextx, healthtexty
     Token = 1
+    BigHealOffset = 0
     HealthX = (ScreenRezX / 4 / 2) + 8
     HealthY = (ScreenRezY / 4 / 2) - 11
 
@@ -852,21 +869,108 @@ Sub DisplayHealth
             Case 1
                 PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (4 * 32, 32)-(4 * 32 + 31, 63)
             Case 2
-                For i = 0 To Player.MaxHealth
-                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
-                    Token = Token + 1
-                Next
-                Token = 1
-                While TMPHeal > 0
-                    If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
-                    If TMPHeal <= 8 Then
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
-                    Else
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                If Player.MaxHealth * 16 + 8 > HealthY * 2 Then
+
+                    If Player.health > 8 Then BigHealOffset = 0
+                    'draw full health wheel
+                    For i = 0 To BigHealOffset
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                    Next
+                    'print full wheel text "wheels (points)"
+                    If Player.health > 8 Then
+                        healthtextx = ScreenRezX - 35 - Len(Str$(Int((Player.health - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 1) / 8) * 8)) + ")") * 4
+                        healthtexty = 75 - 15
+                        Color RGB(0, 0, 0)
+                        For i = 0 To 2
+                            For ii = 0 To 2
+                                If Player.health - 8 <= Player.MaxHealth * 8 Then
+                                    PrintString (healthtextx + (i - 1), healthtexty + (ii - 1)), Str$(Int((Player.health - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 1) / 8) * 8)) + ")"
+                                Else
+                                    PrintString (healthtextx + (i - 1), healthtexty + (ii - 1)), Str$(Int((Player.health - 8 - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 8 - 1) / 8) * 8)) + ")"
+                                End If
+                            Next
+                        Next
+                        Color RGB(255, 255, 255)
+
+                        If Player.health - 8 <= Player.MaxHealth * 8 Then
+                            PrintString (healthtextx, healthtexty), Str$(Int((Player.health - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 1) / 8) * 8)) + ")"
+                        Else
+                            PrintString (healthtextx, healthtexty), Str$(Int((Player.health - 8 - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 8 - 1) / 8) * 8)) + ")"
+                        End If
+
                     End If
-                    TMPHeal = TMPHeal - 8
+
                     Token = Token + 1
-                Wend
+                    If Player.health <= 8 Then Token = Token - 1
+
+                    'draw current wheel     (honestly, idk how i managed to get this shit to work, but it does, DONT FUCKING TOUCH IT
+                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                    TMPHeal = TMPHeal - 8 * Int(Player.health / 8)
+                    If Player.health > (Player.MaxHealth + 1) * 8 Then TMPHeal = 8: BonusWheel = 1
+                    If TMPHeal > 8 Then TMPHeal = 8
+                    If TMPHeal > 0 And TMPHeal < 8 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
+                    If TMPHeal = 0 Or TMPHeal = 8 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                    Token = Token + 1
+
+                    'if empty wheel then
+                    '   draw empty wheel
+                    If Player.health - 1 < Player.MaxHealth * 8 Then
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+
+                        '   print empty wheel text
+                        healthtextx = ScreenRezX - 35 - Len(Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")") * 4
+                        If Player.health > 8 Then healthtexty = 188 Else healthtexty = 123
+                        Color RGB(0, 0, 0)
+                        For i = 0 To 2
+                            For ii = 0 To 2
+                                PrintString (healthtextx + (i - 1), healthtexty + (ii - 1)), Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")"
+                            Next
+                        Next
+                        Color RGB(255, 255, 255)
+
+                        PrintString (healthtextx, healthtexty), Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")"
+
+                    End If
+
+                    'endif
+
+                    'draw bonus wheels as normal
+                    Token = 3
+                    TMPHeal = Player.health - (Player.MaxHealth + 1) * 8
+                    While TMPHeal > 0
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
+                        If TMPHeal <= 8 Then
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
+                        Else
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                        End If
+                        TMPHeal = TMPHeal - 8
+                        Token = Token + 1
+                    Wend
+
+
+                Else
+                    For i = 0 To Player.MaxHealth
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        Token = Token + 1
+                    Next
+                    Token = 1
+                    While TMPHeal > 0
+                        If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
+                        If TMPHeal <= 8 Then
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
+                        Else
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                        End If
+                        TMPHeal = TMPHeal - 8
+                        Token = Token + 1
+                    Wend
+                End If
+
+
+
+
         End Select
     End If
 End Sub
@@ -936,7 +1040,7 @@ Sub DisplayCrafting
     Crafting
 
     Select Case Player.CraftingLevel
-        Case 0 TO 5
+        Case 0 To 5
             For iii = 0 To Player.CraftingLevel - 1
                 For iiii = 0 To Player.CraftingLevel - 1
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (0, 32)-(31, 63)
@@ -1058,7 +1162,7 @@ Sub NewStack (ItemID, StackNumber)
     Select Case CursorHoverPage
 
 
-        Case 0 TO 1
+        Case 0 To 1
             For i = 0 To 3
                 For ii = 0 To 5
                     If Inventory(i, ii, 9) = -1 Then
@@ -2092,6 +2196,7 @@ End Sub
 
 
 Sub MinMemFix 'this subroutine is specifically to try to fix a memory leak that occurs when in hardware accelerated mode, and the game is minimized. by simply turning off hardware acceleration.
+    'Exit Sub
     Static Last
     Select Case ScreenIcon
         Case -1
@@ -2539,6 +2644,7 @@ End Sub
 
 
 Sub DEV
+    'Exit Sub
     If Flag.DebugMode = 1 Or CurrentTick < 1 Then
         PrintMode FillBackground
         Color , RGBA(0, 0, 0, 128)
@@ -2580,6 +2686,8 @@ Sub DEV
         If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
         If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
         If Flag.CastShadows = 1 Then ENDPRINT "Shadows Disabled"
+        If Flag.FrameRateLock = 1 Then ENDPRINT "Engine Tickrate Unlocked"
+        If Flag.FullRender = 1 Then ENDPRINT "Render Optimizations Disabled"
 
 
         Locate 1, 1
@@ -2595,6 +2703,8 @@ Sub DEV
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Current Entities: "; CurrentEntities
+
+
 
         Print "Gamemode: ";
         Select Case GameMode
@@ -2687,7 +2797,6 @@ Sub DEV
             Flag.OpenCommand = 1
             If Flag.RenderOverride = 0 Then SwitchRender (0)
         End If
-
         If Flag.OpenCommand = 2 Then
             KeyClear
             Locate 28, 1: Input "/", comin
@@ -2723,6 +2832,8 @@ Sub DEV
                     Flag.FreeCam = Flag.FreeCam + 1
                 Case "noclip", "nc"
                     Flag.NoClip = Flag.NoClip + 1
+                Case "fullrender", "fr"
+                    Flag.FullRender = Flag.FullRender + 1
                 Case "exit"
                     System
                 Case "error"
@@ -2732,6 +2843,8 @@ Sub DEV
                     Locate 28, 1: Input "Change Gamemode to: ", GameMode
                 Case "health"
                     Locate 28, 1: Input "Set Health to: ", Player.health
+                Case "maxhealth"
+                    Locate 28, 1: Input "Set MaxHealth to: ", Player.MaxHealth
                 Case "track", "tr"
                     Locate 28, 1: Print "                               "
                     Locate 28, 1: Input "Track Entity ID or Tile ID: ", Debug.Tracking
@@ -2910,8 +3023,13 @@ Sub DEV
             If Flag.RenderOverride = 0 Then SwitchRender (1)
         End If
         Color , RGBA(0, 0, 0, 0)
+
         PrintMode KeepBackground
     End If
+End Sub
+
+Sub WorldCommands (CommandString As String)
+
 End Sub
 
 
@@ -2959,6 +3077,7 @@ Function SpawnMap$
 End Function
 
 Sub LOADWORLD
+    Print "began loading world"
     Dim defaultmap As String
     Dim As Byte i, ii
     Dim As Integer iii
@@ -2966,10 +3085,10 @@ Sub LOADWORLD
     Dim MapProtocol As Integer
     Dim ManifestProtocol As Integer
     prevfolder = map.foldername
-
-
+    Print "dimmed local values"
+    Print "opening manifest"
     Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-
+    Print "successful, reading manifest data"
     Get #1, 1, GameTime
     Get #1, 2, ManifestProtocol
     If ManifestProtocol < Game.ManifestProtocol Then Close #1: ConvertManifest (ManifestProtocol): Exit Sub
@@ -2985,12 +3104,13 @@ Sub LOADWORLD
     Get #1, 12, SpawnMapY
     Get #1, 13, WorldSeed
     Close #1
+    Print "Opening player"
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
     i = 0
     ii = 0
     iii = 0
-
+    Print "Loading player"
     While i < 4
         Get #1, total, Inventory(i, ii, iii)
         iii = iii + 1
@@ -3012,7 +3132,7 @@ Sub LOADWORLD
     Player.y = SavePointY
 
     'GET #1, 4, map.protected
-
+    Print "World data loaded, loading local map"
     LOADMAP (SavedMap)
 End Sub
 
@@ -3024,15 +3144,15 @@ Sub LOADMAP (file As String)
     Dim MapProtocol As Integer
 
     iii = 1
-
+    Print "locating existing map data"
     'TODO make this a sub with 2 parameterss, 1
     If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
-
+        Print "loading map data"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf" As #1
         Get #1, 1, MapProtocol
         Close #1
         If MapProtocol <> Game.MapProtocol Then ConvertMap MapProtocol, file: Exit Sub
-
+        Print "0%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
@@ -3042,7 +3162,7 @@ Sub LOADMAP (file As String)
         Next
         Close #1
         iii = 1
-
+        Print "20%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
@@ -3052,7 +3172,7 @@ Sub LOADMAP (file As String)
         Next
         Close #1
         iii = 1
-
+        Print "40%"
 
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
         For i = 1 To 30
@@ -3064,7 +3184,7 @@ Sub LOADMAP (file As String)
         Close #1
         iii = 1
 
-
+        Print "60%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
@@ -3078,7 +3198,7 @@ Sub LOADMAP (file As String)
         Get #1, iii, map.name
         Close #1
         iii = 1
-
+        Print "80%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-E.cdf" As #1
         Get #1, 1, CurrentEntities
         iii = iii + 1
@@ -3090,6 +3210,8 @@ Sub LOADMAP (file As String)
         Next
         Close #1
         iii = 1
+        Print "100%"
+        Print "Finished loading, starting game"
 
 
     Else
@@ -3241,9 +3363,9 @@ Sub SAVEMAP
     SavePointY = Player.y
     If TimeMode = 1 Then GameTime = GameTime + 43200
     Put #1, 1, GameTime
-    Put #1, 1, Game.ManifestProtocol
-    Put #1, 3, Game.Version
+    Put #1, 2, Game.ManifestProtocol
 
+    Put #1, 3, Game.Version
     Put #1, 5, SpawnPointX
     Put #1, 6, SpawnPointY
     Put #1, 7, SavePointX
@@ -3352,41 +3474,42 @@ Sub CastShadow
         Dim ii As Byte
         For i = 1 To 30
             For ii = 1 To 40
-
-                If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-                End If
-
-                If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-                End If
-
-                If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-                End If
-
-                If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-                End If
-
-                If TileData(ii, i, 3) = 1 Then
-
-                    If TileData(ii, i + 1, 3) = 0 Then
+                If VisibleCheck(ii, i) = 1 Then
+                    If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
                     End If
 
-                    If TileData(ii + 1, i, 3) = 0 Then
+                    If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
                     End If
 
-                    If TileData(ii - 1, i, 3) = 0 Then
+                    If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
                     End If
 
-                    If TileData(ii, i - 1, 3) = 0 Then
+                    If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
                     End If
 
+                    If TileData(ii, i, 3) = 1 Then
+
+                        If TileData(ii, i + 1, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
+                        End If
+
+                        If TileData(ii + 1, i, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
+                        End If
+
+                        If TileData(ii - 1, i, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
+                        End If
+
+                        If TileData(ii, i - 1, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
+                        End If
+
+                    End If
                 End If
             Next
         Next
@@ -3557,73 +3680,74 @@ Sub ErrorHandler
     Print "Error Code:"; Err
     Locate 2, 1
     ENDPRINT "Error Line:" + Str$(ErrorLine)
-    Print "--------------------------------------------------------------------------------"
+    Dim i
+    For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
+    '    Print "--------------------------------------------------------------------------------"
     Print
     '       PRINT "--------------------------------------------------------------------------------"
     Select Case Err
         Case 100
-            Print "Assets folder is incomplete, this error can be triggered by one or more of the"
-            Print "following conditions:"
-            Print
-            Print
-            Print "     The assets folder is missing"
-            Print
-            Print "     Sub-directories in the Assets folder are missing"
-            Print
-            Print "     The contents of assets, or the directory itself is corrupted"
-            Print
-            Print "     You do not have proper permissions to access the assets directory"
-            Print
-            Print
-            Print "Make sure the entireity of the assets folder is present and accessible to your"
-            Print "user account and, if necessary, redownload the assets folder."
-            Print
-            Print "The assets folder, and its contents are necessary for the game to load, as it"
-            Print "contains all sprite and texture files, sounds and music, user saved data, and"
-            Print "world files. Without these, the game will not play correctly. It is advised to"
-            Print "not continue."
+            CENTERPRINT "Assets folder is incomplete, this error can be triggered by one or more of the"
+            CENTERPRINT "following conditions:"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "The assets folder is missing"
+            CENTERPRINT ""
+            CENTERPRINT "Sub-directories in the Assets folder are missing"
+            CENTERPRINT ""
+            CENTERPRINT "The contents of assets, or the directory itself is corrupted"
+            CENTERPRINT ""
+            CENTERPRINT "You do not have proper permissions to access the assets directory"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "Make sure the entireity of the assets folder is present and accessible to your"
+            CENTERPRINT "user account and, if necessary, redownload the assets folder."
+            CENTERPRINT ""
+            CENTERPRINT "The assets folder, and its contents are necessary for the game to load, as it"
+            CENTERPRINT "contains all sprite and texture files, sounds and music, user saved data, and"
+            CENTERPRINT "world files. Without these, the game will not play correctly. It is advised to"
+            CENTERPRINT "not continue."
             CONTPROMPT
 
         Case 101
-            Print "This is a legacy error code, and should never be triggered in game, if it has"
-            Print "been triggered, not due to the /error command, please contact the developer"
+            CENTERPRINT "This is a legacy error code, and should never be triggered in game, if it has"
+            CENTERPRINT "been triggered, not due to the /error command, please contact the developer"
             CONTPROMPT
 
         Case 102
-            Print "Invalid Code Position, This error occurs when the program flow enters an area"
-            Print "that it should not be, This is most likely a programming issue, and not an end"
-            Print "user issue."
-            Print ""
-            Print "There is no user solution to this issue, if this is reproducable, please file"
-            Print "a bug report to the github, including the line number and what you were doing"
-            Print "when it occured."
+            CENTERPRINT "Invalid Code Position, This error occurs when the program flow enters an area"
+            CENTERPRINT "that it should not be, This is most likely a programming issue, and not an end"
+            CENTERPRINT "user issue."
+            CENTERPRINT ""
+            CENTERPRINT "There is no user solution to this issue, if this is reproducable, please file"
+            CENTERPRINT "a bug report to the github, including the line number and what you were doing"
+            CENTERPRINT "when it occured."
             CONTPROMPT
         Case 258
-            Print "Invalid handle, An handle used for an image, sound, font etc. was invalid."
-            Print "Be sure to check the return values of functions like _LOADFONT and _LOADIMAGE."
+            CENTERPRINT "Invalid handle, An handle used for an image, sound, font etc. was invalid."
+            CENTERPRINT "Be sure to check the return values of functions like _LOADFONT and _LOADIMAGE."
 
         Case 103
-            Print "This world was not made for this version of "; Game.Title; ". This means one of"
-            Print "the following cases is true:"
-            Print
-            Print
-            Print "     You are attempting to load an out of date world"
-            Print
-            Print "     You are attempting to load a world designed for a newer version of"
-            Print "     "; Game.Title
-            Print
-            Print "     Your world manifest is corrupted"
-            Print
-            Print
-            Print "Double check the world version and game version."
-            Print "World: ("; mapversion; ") Game: ("; Game.Version; ")"
-            Print
-            Print "If you are certain that this is a mistake, you may try to update the manifest"
-            Print "here. Note that this does not update old worlds, just broken manifest files"
-            Print "Otherwise you can try to load a different world. "; Game.Title; ""
-            Print "does not support loading out of version worlds."
-            Print
-            Print
+            CENTERPRINT "This world was not made for this version of " + Game.Title + ". This means one of"
+            CENTERPRINT "the following cases is true:"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "You are attempting to load an out of date world"
+            CENTERPRINT ""
+            CENTERPRINT "You are attempting to load a world designed for a newer version of " + Game.Title
+            CENTERPRINT ""
+            CENTERPRINT "Your world manifest is corrupted"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "Double check the world version and game version."
+            CENTERPRINT "World: (" + mapversion + ") Game: (" + Game.Version + ")"
+            CENTERPRINT ""
+            CENTERPRINT "If you are certain that this is a mistake, you may try to update the manifest"
+            CENTERPRINT "here. Note that this does not update old worlds, just broken manifest files"
+            CENTERPRINT "Otherwise you can try to load a different world. " + Game.Title + ""
+            CENTERPRINT "does not support loading out of version worlds."
+            CENTERPRINT ""
+            CENTERPRINT ""
             CENTERPRINT "(U)pdate manifest, (R)eturn to existing map, (Q)uit to desktop."
             Do
                 If KeyDown(113) Then System
@@ -3638,37 +3762,36 @@ Sub ErrorHandler
                 End If
             Loop
         Case 2
-            Print "Syntax error, READ attempted to read a number but could not parse the next"
-            Print "DATA item."
-            Print
+            CENTERPRINT "Syntax error, READ attempted to read a number but could not parse the next"
+            CENTERPRINT "DATA item."
+            CENTERPRINT ""
             CONTPROMPT
         Case 3
-            Print "RETURN without GOSUB, The RETURN statement was encounted without first"
-            Print " executing a corresponding GOSUB."
-            Print
+            CENTERPRINT "RETURN without GOSUB, The RETURN statement was encounted without first"
+            CENTERPRINT " executing a corresponding GOSUB."
+            CENTERPRINT ""
             CONTPROMPT
         Case 4
-            Print "Out of DATA, The READ statement has read past the end of a DATA block."
-            Print " Use RESTORE to change the current data item if necessary."
-            Print
+            CENTERPRINT "Out of DATA, The READ statement has read past the end of a DATA block."
+            CENTERPRINT " Use RESTORE to change the current data item if necessary."
+            CENTERPRINT ""
             CONTPROMPT
 
         Case 9
-            Print "Subscript out of range, this error occurs when an array exceeds its bounds"
-            Print "This is most likely a programming error, please let the developer know."
-            Print
+            CENTERPRINT "Subscript out of range, this error occurs when an array exceeds its bounds"
+            CENTERPRINT "This is most likely a programming error, please let the developer know."
+            CENTERPRINT ""
             CONTPROMPT
 
 
         Case Else
-            Print "Unrecognized error, contact developers"
+            CENTERPRINT "Unrecognized error, contact developers"
             CONTPROMPT
 
     End Select
 
     KeyClear
     Cls
-    Resume Next
 End Sub
 
 Sub CONTPROMPT
@@ -3729,7 +3852,9 @@ Sub SetBG
         Dim ii As Integer
         For i = 0 To 30
             For ii = 0 To 40
-                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
+                If VisibleCheck(ii, i) = 1 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
+                End If
             Next
         Next
     End If
@@ -3741,15 +3866,32 @@ Sub SetMap
     Dim ii As Integer
     For i = 1 To 30
         For ii = 1 To 40
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 5) / 32) * 16, 32)-((Int(TileData(ii, i, 5) / 32) * 16) + 15, 47)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
+            If VisibleCheck(ii, i) = 1 Then
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 5) / 32) * 16, 32)-((Int(TileData(ii, i, 5) / 32) * 16) + 15, 47)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
+            End If
         Next
     Next
 End Sub
+
+Function VisibleCheck (TileX As Integer, TileY As Integer)
+
+    '    If CameraPositionX - (ScreenRezX / 4 / 2) + 8 < 0 Then CameraPositionX = (ScreenRezX / 4 / 2) - 8
+    '   If CameraPositionY - (ScreenRezY / 4 / 2) + 8 < 0 Then CameraPositionY = (ScreenRezY / 4 / 2) - 8
+    '  If CameraPositionX + (ScreenRezX / 4 / 2) + 8 > 640 Then CameraPositionX = 640 - ((ScreenRezX / 4 / 2) + 8)
+    ' If CameraPositionY + (ScreenRezY / 4 / 2) + 8 > 480 Then CameraPositionY = 480 - ((ScreenRezY / 4 / 2) + 8)
+    VisibleCheck = 1
+    If Flag.FullRender = 1 Then Exit Function
+    If TileX * 16 > (CameraPositionX + (ScreenRezX / 4 / 2)) + 16 + 8 Then VisibleCheck = 0
+    If TileX * 16 < (CameraPositionX - (ScreenRezX / 4 / 2)) - 0 Then VisibleCheck = 0
+    If TileY * 16 > (CameraPositionY + (ScreenRezY / 4 / 2)) + 16 + 8 Then VisibleCheck = 0
+    If TileY * 16 < (CameraPositionY - (ScreenRezY / 4 / 2)) - 0 Then VisibleCheck = 0
+
+End Function
 
 Sub SwitchRender (mode As Byte)
     Static FirstSkip As Byte
@@ -3764,6 +3906,7 @@ Sub SwitchRender (mode As Byte)
         FreeImage Texture.ItemSheet
         FreeImage Texture.HudSprites
         FreeImage Texture.Shadows
+
     End If
 
     Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
@@ -3919,6 +4062,8 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     SpawnMapX = SavedMapX
     SpawnMapY = SavedMapY
     SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
+    Print "map generated, loading world"
+    Delay 0.5
     LOADWORLD
 End Sub
 
@@ -3956,12 +4101,12 @@ Sub GenerateMap
             If GroundTile(ii, i) <> 13 Then
 
                 'generate bushes
-                If Ceil(Rnd * 10) = 5 Then
+                If Ceil(Rnd * 10) = 1 Then
                     WallTile(ii, i) = 5
                 End If
 
                 'generate ground wood items
-                If Ceil(Rnd * 100) = 50 Then
+                If Ceil(Rnd * 300) = 1 Then
                     WallTile(ii, i) = 11
                     NewContainer SavedMapX, SavedMapY, ii, i
                     OpenContainer SavedMapX, SavedMapY, ii, i
@@ -3973,7 +4118,7 @@ Sub GenerateMap
                 End If
 
                 'generate raw stone
-                If Ceil(Rnd * 300) = 150 Then
+                If Ceil(Rnd * 450) = 1 Then
                     WallTile(ii, i) = 11
                     NewContainer SavedMapX, SavedMapY, ii, i
                     OpenContainer SavedMapX, SavedMapY, ii, i
@@ -3986,12 +4131,12 @@ Sub GenerateMap
 
 
                 'generate berry bushes
-                If Ceil(Rnd * 250) = 125 Then
+                If Ceil(Rnd * 250) = 1 Then
                     WallTile(ii, i) = 12
                 End If
 
                 'generate carrots
-                If Ceil(Rnd * 600) = 300 Then
+                If Ceil(Rnd * 600) = 1 Then
                     WallTile(ii, i) = 17
                 End If
             End If

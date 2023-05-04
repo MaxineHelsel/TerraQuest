@@ -115,6 +115,7 @@ dim shared Flag.OpenCommand as byte
 dim shared Flag.RenderOverride as unsigned bit
 dim shared Flag.InitialRender as byte
 dim shared Flag.ContainerOpen as byte
+dim shared Flag.FullRender as unsigned bit
 Dim Shared bgdraw As Unsigned Bit
 dim shared RenderMode as byte
 
@@ -192,10 +193,10 @@ Type Character
 
     CraftingLevel as byte
 
-    MaxHealth as Byte
+    MaxHealth as integer
 
     level As Byte
-    health As Byte
+    health As integer
     points As Byte
     experience As Long
     gold As Long

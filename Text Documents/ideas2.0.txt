@@ -12,3 +12,4 @@ title screen
 
 mouse control for inventory
 
+mob drops
