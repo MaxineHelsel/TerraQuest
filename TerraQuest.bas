@@ -241,6 +241,11 @@ Sub UseItem (Slot)
 
             End Select
         Case 2 'Weapons
+            Select Case Inventory(0, Slot, 4)
+                Case 0
+
+                Case 1
+            End Select
 
 
         Case 4 'consumables
@@ -594,6 +599,7 @@ End Sub
 Function SummonEntity (ID, Parameter)
     Select Case ID
         Case 1 'Pig
+
             Select Case Parameter
                 Case 0 'ID
                     SummonEntity = ID
@@ -2703,7 +2709,10 @@ Sub DEV
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Current Entities: "; CurrentEntities
-
+        Dim fuck
+        Do While MouseInput
+        Loop
+        Print MouseX, MouseY, MouseButton(1), MouseWheel
 
 
         Print "Gamemode: ";
@@ -2822,7 +2831,8 @@ Sub DEV
                     Locate 28, 1: Input "Resolution Y: ", ScreenRezY
                     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
 
-
+                Case "cv01"
+                    Error 104
 
                 Case "stillcam", "sc"
                     Flag.StillCam = Flag.StillCam + 1
@@ -2970,10 +2980,21 @@ Sub DEV
                     NewStack DMapX, DMapY
                 Case "summon"
                     Dim temp As Integer
+                    Dim cord As Byte
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "EntityID to summon ", DMapX
                     Locate 28, 1: Print "                                            "
                     Locate 28, 1: Input "Number of this entity to spawn ", temp
+                    Locate 28, 1: Print "                                            "
+                    Locate 28, 1: Input "Set(0) or Rand(1) Cords ", cord
+                    If cord = 1 Then
+                        Dim entx, enty
+                        Locate 28, 1: Print "                              "
+                        Locate 28, 1: Input "X Cord ", entx
+                        Locate 28, 1: Print "                                            "
+                        Locate 28, 1: Input "Y Cord ", enty
+                    End If
+
 
                     '  For DMapY = 0 To 100
 
@@ -2982,6 +3003,10 @@ Sub DEV
                         For i = 0 To EntityParameters
                             entity(CurrentEntities, i) = SummonEntity(DMapX, i)
                         Next
+                        If cord = 1 Then
+                            entity(CurrentEntities, 4) = entx
+                            entity(CurrentEntities, 5) = enty
+                        End If
                     Next
                     ' Next
                 Case "kill"
@@ -3726,7 +3751,7 @@ Sub ErrorHandler
         Case 258
             CENTERPRINT "Invalid handle, An handle used for an image, sound, font etc. was invalid."
             CENTERPRINT "Be sure to check the return values of functions like _LOADFONT and _LOADIMAGE."
-
+            CONTPROMPT
         Case 103
             CENTERPRINT "This world was not made for this version of " + Game.Title + ". This means one of"
             CENTERPRINT "the following cases is true:"
@@ -3761,6 +3786,26 @@ Sub ErrorHandler
 
                 End If
             Loop
+        Case 104
+            CENTERPRINT "No, Landyn. I'm not adding a miku easter egg"
+            CENTERPRINT ""
+            CENTERPRINT "...i guess this is one, you win"
+            CENTERPRINT "_"
+            CENTERPRINT "/   \"
+            CENTERPRINT "/       \"
+            CENTERPRINT "/     o     \"
+            CENTERPRINT "/             \"
+            CENTERPRINT "/_______________\"
+            CENTERPRINT "|                 |"
+            CENTERPRINT "|    HATSUNE      |"
+            CENTERPRINT "|      MIKU       |"
+            CENTERPRINT "|_________________|"
+            CENTERPRINT "/                   \"
+            CENTERPRINT "/                     \"
+            CENTERPRINT "/                       \"
+            CENTERPRINT "/_________________________\"
+            CONTPROMPT
+
         Case 2
             CENTERPRINT "Syntax error, READ attempted to read a number but could not parse the next"
             CENTERPRINT "DATA item."
@@ -3880,10 +3925,6 @@ End Sub
 
 Function VisibleCheck (TileX As Integer, TileY As Integer)
 
-    '    If CameraPositionX - (ScreenRezX / 4 / 2) + 8 < 0 Then CameraPositionX = (ScreenRezX / 4 / 2) - 8
-    '   If CameraPositionY - (ScreenRezY / 4 / 2) + 8 < 0 Then CameraPositionY = (ScreenRezY / 4 / 2) - 8
-    '  If CameraPositionX + (ScreenRezX / 4 / 2) + 8 > 640 Then CameraPositionX = 640 - ((ScreenRezX / 4 / 2) + 8)
-    ' If CameraPositionY + (ScreenRezY / 4 / 2) + 8 > 480 Then CameraPositionY = 480 - ((ScreenRezY / 4 / 2) + 8)
     VisibleCheck = 1
     If Flag.FullRender = 1 Then Exit Function
     If TileX * 16 > (CameraPositionX + (ScreenRezX / 4 / 2)) + 16 + 8 Then VisibleCheck = 0
@@ -3937,7 +3978,9 @@ Sub ZOOM
 End Sub
 
 Sub PlaySound (nam$)
-    _SndPlayFile nam$, , 1
+    Dim sndhnd As Long
+    sndhnd = SndOpen(nam$)
+    SndPlay sndhnd
 End Sub
 
 
