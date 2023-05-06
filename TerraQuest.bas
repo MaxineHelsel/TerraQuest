@@ -146,6 +146,7 @@ End Sub
 
 Sub UseItem (Slot)
     Static ConsumeCooldown
+    Static WeaponCooldown
     Static ToolDelay
     Select Case Inventory(0, Slot, 0)
         Case 0 'Block placing
@@ -240,12 +241,26 @@ Sub UseItem (Slot)
                     End If
 
             End Select
-        Case 2 'Weapons
-            Select Case Inventory(0, Slot, 4)
-                Case 0
+        Case 2 'Weapons                  5=cooldown 6=damage
+            Dim i
+            'check if cooldown has expired
+            If CurrentTick >= WeaponCooldown Then
+                For i = 1 To CurrentEntities
+                    Select Case Player.facing
+                        Case 0, 1 'up down
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 Then DamageEntity (i)
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                        Case 2, 3 'left right
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 Then DamageEntity (i)
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                    End Select
+                Next
+                'apply weapon cooldown
+                WeaponCooldown = CurrentTick + Inventory(0, Slot, 5)
 
-                Case 1
-            End Select
+            End If
 
 
         Case 4 'consumables
@@ -274,6 +289,45 @@ Sub UseItem (Slot)
     End If
 End Sub
 
+Sub DamageEntity (entityID)
+    Effects 1, "Melee Damage", entityID
+End Sub
+
+Function EFacingX (entityID)
+    Select Case Player.facing
+        Case 0
+            EFacingX = Int((entity(entityID, 4) + 8) / 16) + 1
+
+        Case 1
+            EFacingX = Int((entity(entityID, 4) + 8) / 16) + 1
+
+        Case 2
+            EFacingX = Int((entity(entityID, 4) + 8 - 16) / 16) + 1
+
+        Case 3
+            EFacingX = Int((entity(entityID, 4) + 8 + 16) / 16) + 1
+
+    End Select
+
+End Function
+
+Function EFacingY (entityID)
+    Select Case Player.facing
+        Case 0
+
+            EFacingY = Int((entity(entityID, 5) + 8 - 16) / 16) + 1
+        Case 1
+
+            EFacingY = Int((entity(entityID, 5) + 8 + 16) / 16) + 1
+        Case 2
+
+            EFacingY = Int((entity(entityID, 5) + 8) / 16) + 1
+        Case 3
+
+            EFacingY = Int((entity(entityID, 5) + 8) / 16) + 1
+    End Select
+
+End Function
 
 
 Sub DebugShowEffects
@@ -700,36 +754,43 @@ Sub UseHotBar
     If Flag.InventoryOpen = 0 Then
 
         If Item1 Then
+            CursorHoverX = 0
             UseItem 0
             iii = 0
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
+
         End If
         If Item2 Then
+            CursorHoverX = 1
             UseItem 1
             iii = 1
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item3 Then
+            CursorHoverX = 2
             UseItem 2
             iii = 2
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item4 Then
+            CursorHoverX = 3
             UseItem 3
             iii = 3
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item5 Then
+            CursorHoverX = 4
             UseItem 4
             iii = 4
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item6 Then
+            CursorHoverX = 5
             UseItem 5
             iii = 5
             hbtimeout = CurrentTick + 10
@@ -1907,6 +1968,15 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
 
             Else
             End If
+        Case 8 'Melee damage
+            If Entity = 0 Then
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                'possibly move damage sound here, and play a different sound for entity??
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+            If ImmunityTimer = 0 Then PlaySound Sounds.damage_melee
+
 
 
 
@@ -1917,7 +1987,18 @@ End Sub
 
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
-        Case "Cooldown Wooden Sword"
+        Case "Melee Damage"
+            Select Case Value
+                Case 0
+                    EffectIndex = 8
+                Case 1
+                    EffectIndex = 2
+                Case 2
+                    EffectIndex = 0
+                Case 3
+                    EffectIndex = Inventory(0, CursorHoverX, 6)
+            End Select
+
         Case "Immunity Respawn"
             Select Case Value
                 Case 0
@@ -2709,10 +2790,11 @@ Sub DEV
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Current Entities: "; CurrentEntities
-        Dim fuck
-        Do While MouseInput
-        Loop
-        Print MouseX, MouseY, MouseButton(1), MouseWheel
+
+        ' Do While MouseInput
+        ' Loop
+        ' Print MouseX, MouseY, MouseButton(1), MouseWheel
+        ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
 
 
         Print "Gamemode: ";
@@ -3979,7 +4061,7 @@ End Sub
 
 Sub PlaySound (nam$)
     Dim sndhnd As Long
-    sndhnd = SndOpen(nam$)
+    sndhnd = SndOpen(nam$ + Str$(Int(Rnd * 2)))
     SndPlay sndhnd
 End Sub
 
