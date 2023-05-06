@@ -1,5 +1,5 @@
 
-Dim Shared TileIndex(1000, 4)
+Dim Shared TileIndex(1000, 5)
 Dim Shared TileIndexData(1000, TileParameters) As Single
 Dim Shared ContainerData(1000, 3)
 Dim Shared TileName(1000, 3) As String
@@ -36,11 +36,12 @@ TileIndex(2, 0) = 0 'layer definition
 TileIndex(2, 1) = 32 'x position on tilesheet
 TileIndex(2, 2) = 0 'y position on tilesheet
 TileIndex(2, 3) = 2 'itemid
+TileIndex(2, 4) = 3 'transformation tile
 TileIndexData(2, 0) = 0 'collision
 TileIndexData(2, 1) = 0 'casts shadow
 TileIndexData(2, 2) = 0 'blocks shadow
 TileIndexData(2, 3) = 0 'has interior shadow
-TileIndexData(2, 4) = 20 'resistance
+TileIndexData(2, 4) = 5 'resistance
 TileIndexData(2, 5) = 1 'is solid
 TileIndexData(2, 9) = 0.25 'friction
 TileIndexData(2, 10) = 1
@@ -51,11 +52,12 @@ TileIndex(3, 0) = 0 'layer definition
 TileIndex(3, 1) = 48 'x position on tilesheet
 TileIndex(3, 2) = 0 'y position on tilesheet
 TileIndex(3, 3) = 3 'itemid
+TileIndex(3, 4) = 4 'transformation tile
 TileIndexData(3, 0) = 0 'collision
 TileIndexData(3, 1) = 0 'casts shadow
 TileIndexData(3, 2) = 0 'blocks shadow
 TileIndexData(3, 3) = 0 'has interior shadow
-TileIndexData(3, 4) = 20 'resistance
+TileIndexData(3, 4) = 5 'resistance
 TileIndexData(3, 5) = 1 'is solid
 TileIndexData(3, 9) = 0.25 'Friction
 TileIndexData(3, 10) = 1.2
@@ -66,16 +68,15 @@ TileIndex(4, 0) = 0 'layer definition
 TileIndex(4, 1) = 64 'x position on tilesheet
 TileIndex(4, 2) = 0 'y position on tilesheet
 TileIndex(4, 3) = 4 'itemid
+TileIndex(4, 4) = 21 'transformation tile
 TileIndexData(4, 0) = 0 'collision
 TileIndexData(4, 1) = 0 'casts shadow
 TileIndexData(4, 2) = 0 'blocks shadow
 TileIndexData(4, 3) = 0 'has interior shadow
-TileIndexData(4, 4) = 17 'resistance
+TileIndexData(4, 4) = 4 'resistance
 TileIndexData(4, 5) = 1 'is solid
 TileIndexData(4, 9) = 0.2 'Friction
 TileIndexData(4, 10) = 0.8
-
-
 
 
 TileName(5, 0) = "Bush" 'Name of the tile
@@ -88,7 +89,7 @@ TileIndexData(5, 0) = 1 'collision
 TileIndexData(5, 1) = 0 'casts shadow
 TileIndexData(5, 2) = 1 'blocks shadow
 TileIndexData(5, 3) = 0 'has interior shadow
-TileIndexData(5, 4) = 25 'resistance
+TileIndexData(5, 4) = 10 'resistance
 TileIndexData(5, 5) = 0 'is solid
 TileIndexData(0, 9) = 0 'Friction
 
@@ -102,7 +103,7 @@ TileIndexData(6, 0) = 1 'collision
 TileIndexData(6, 1) = 0 'casts shadow
 TileIndexData(6, 2) = 1 'blocks shadow
 TileIndexData(6, 3) = 0 'has interior shadow
-TileIndexData(6, 4) = 25 'resistance
+TileIndexData(6, 4) = 14 'resistance
 TileIndexData(6, 5) = 0 'is solid
 TileIndexData(6, 7) = 1 'is container
 ContainerData(6, 0) = 5 'number of slots  -1
@@ -120,7 +121,7 @@ TileIndexData(7, 0) = 1 'collision
 TileIndexData(7, 1) = 1 'casts shadow
 TileIndexData(7, 2) = 1 'blocks shadow
 TileIndexData(7, 3) = 0 'has interior shadow
-TileIndexData(7, 4) = 40 'resistance
+TileIndexData(7, 4) = 24 'resistance
 TileIndexData(7, 5) = 1 'is solid
 
 
@@ -134,7 +135,7 @@ TileIndexData(8, 0) = 1 'collision
 TileIndexData(8, 1) = 1 'casts shadow
 TileIndexData(8, 2) = 1 'blocks shadow
 TileIndexData(8, 3) = 0 'has interior shadow
-TileIndexData(8, 4) = 30 'resistance
+TileIndexData(8, 4) = 19 'resistance
 TileIndexData(8, 5) = 1 'is solid
 
 
@@ -193,7 +194,7 @@ TileIndexData(12, 0) = 1 'collision
 TileIndexData(12, 1) = 0 'casts shadow
 TileIndexData(12, 2) = 1 'blocks shadow
 TileIndexData(12, 3) = 0 'has interior shadow
-TileIndexData(12, 4) = 25 'resistance
+TileIndexData(12, 4) = 11 'resistance
 TileIndexData(12, 5) = 0 'is solid
 
 
@@ -239,7 +240,7 @@ TileIndexData(15, 0) = 1 'collision
 TileIndexData(15, 1) = 1 'casts shadow
 TileIndexData(15, 2) = 1 'blocks shadow
 TileIndexData(15, 3) = 0 'has interior shadow
-TileIndexData(15, 4) = 25 'resistance
+TileIndexData(15, 4) = 19 'resistance
 TileIndexData(15, 5) = 1 'is soli
 TileIndexData(15, 8) = 3
 
@@ -253,7 +254,7 @@ TileIndexData(16, 0) = 1 'collision
 TileIndexData(16, 1) = 0 'casts shadow
 TileIndexData(16, 2) = 1 'blocks shadow
 TileIndexData(16, 3) = 1 'has interior shadow
-TileIndexData(16, 4) = 30 'resistance
+TileIndexData(16, 4) = 19 'resistance
 TileIndexData(16, 5) = 1 'is solid
 TileIndexData(16, 9) = 0.8 'Friction
 TileIndexData(16, 10) = 0.8
@@ -281,7 +282,7 @@ TileIndexData(19, 0) = 1 'collision
 TileIndexData(19, 1) = 1 'casts shadow
 TileIndexData(19, 2) = 1 'blocks shadow
 TileIndexData(19, 3) = 0 'has interior shadow
-TileIndexData(19, 4) = 50 'resistance
+TileIndexData(19, 4) = 29 'resistance
 TileIndexData(19, 5) = 1 'is solid
 
 TileName(20, 0) = "Stone Path" 'Name of the tile
@@ -296,4 +297,20 @@ TileIndexData(20, 2) = 1 'blocks shadow
 TileIndexData(20, 3) = 0 'has interior shadow
 TileIndexData(20, 4) = 10 'resistance
 TileIndexData(20, 5) = 0 'is solid
+
+TileName(21, 0) = "Farmland" 'Name of the tile
+TileName(21, 1) = "Placeholder" 'tooltip
+TileIndex(21, 0) = 0 'layer definition
+TileIndex(21, 1) = 160 'x position on tilesheet
+TileIndex(21, 2) = 16 'y position on tilesheet
+TileIndex(21, 3) = 14 'itemid
+TileIndex(21, 4) = 0 'transformation tile
+TileIndexData(21, 0) = 0 'collision
+TileIndexData(21, 1) = 0 'casts shadow
+TileIndexData(21, 2) = 0 'blocks shadow
+TileIndexData(21, 3) = 0 'has interior shadow
+TileIndexData(21, 4) = 4 'resistance
+TileIndexData(21, 5) = 1 'is solid
+TileIndexData(21, 9) = 0.08 'Friction
+TileIndexData(21, 10) = 0.72
 

@@ -1,0 +1,15 @@
+terraquest beta 2.0 and beyond ideas and goals
+
+impliment internal server, use to make multiplayer mode 
+
+dimensions, underground, SOMETHING
+
+ores
+
+farming
+
+title screen
+
+mouse control for inventory
+
+mob drops

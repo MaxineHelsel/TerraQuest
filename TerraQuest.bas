@@ -1,6 +1,6 @@
 $NoPrefix
 Option Explicit
-'On Error GoTo ERRORHANDLE
+On Error GoTo ERRORHANDLE
 Randomize Using Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
@@ -19,18 +19,50 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
+'constants to make code more readable
+Const EntityID = 0
+Const EntityHealth = 1
+Const EntitySpeedMod = 2
+Const EntityAI = 3
+Const EntityX = 4
+Const EntityY = 5
+Const EntityAction = 6
+Const EntityTimerAct = 7
+Const EntityVX = 8
+Const EntityVY = 9
+Const EntityMX = 10 'These 2 values are redundant, could just be calculated if vx and vy != 0
+Const EntityMY = 11
+Const EntityMaxHealth = 12
+Const EntityLX = 13
+Const EntityLY = 14
+Const EntityTimerDespawn = 15
+Const EntityFacing = 16
+Const EntitySpOffY = 17
 
-Rem'$include: 'Assets\Sources\CraftingIndex.bi'
+Const TileLayer = 0
+Const TileSX = 1
+Const TileSY = 2
+Const TileItemID = 3
 
-Dim Shared ImmunityTimer
-Dim Shared CreativePage As Byte
-Dim Shared WorldReadOnly As Byte
+Const TileDataCollision = 0
+Const TileDataCastShadow = 1
+Const TileDataBlockShadow = 2
+Const TileDataIntShadow = 3
+Const TileDataResistance = 4
+Const TileDataSolid = 5
+Const TileDataLightCast = 6
+Const TileDataContainer = 7
+Const TileDataCraftingLevel = 8
+Const TileDataFriction = 9
+Const TileDataMaxSpeed = 10
+
 
 
 INITIALIZE
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
 CENTERPRINT "Temporary title screen"
+CENTERPRINT Game.Buildinfo
 Print
 Dim InputString As String
 Input "(L)oad world, (C)reate new world, (V)iew WIP Title Screen: ", InputString
@@ -45,17 +77,26 @@ For i = 0 To 31
     Next
 Next
 If LCase$(InputString) = "v" Then TitleScreen
+
 SpreadLight (1)
+
 GoTo game
 
 Error 102
 
-ERRORHANDLE: ErrorHandler
+ERRORHANDLE:
+ErrorHandler
+Resume Next
+
 DisplayOrder GLRender , Hardware , Software
 game:
 KeyClear
-SwitchRender 0 'these 2 statements are important to prevent a dumb bug
-SwitchRender 1
+
+If DefaultRenderMode = 2 Then
+    SwitchRender 0 'these 2 statements are important to prevent a dumb bug
+    SwitchRender 1
+End If
+
 Do
     For i = 0 To CurrentEntities
         OnTopEffect i
@@ -98,6 +139,196 @@ Do
 Loop
 
 Error 102
+
+Sub TileTickUpdates
+
+End Sub
+
+Sub UseItem (Slot)
+    Static ConsumeCooldown
+    Static WeaponCooldown
+    Static ToolDelay
+    Select Case Inventory(0, Slot, 0)
+        Case 0 'Block placing
+            Select Case Inventory(0, Slot, 4)
+                Case 0
+                    If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
+                        GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        TileData(FacingX, FacingY, 4) = 255
+                        If GameMode <> 1 Then
+                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                        End If
+                        UpdateTile FacingX, FacingY
+                        SpreadLight (1)
+                    End If
+                Case 1
+                    If WallTile(FacingX, FacingY) = 1 And GroundTile(FacingX, FacingY) <> 0 And GroundTile(FacingX, FacingY) <> 13 Then
+                        WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
+                        If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
+                            NewContainer SavedMapX, SavedMapY, FacingX, FacingY
+                        End If
+                        TileData(FacingX, FacingY, 5) = 255
+                        If GameMode <> 1 Then
+                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                        End If
+                        UpdateTile FacingX, FacingY
+                        SpreadLight (1)
+                    End If
+            End Select
+        Case 1 'Tools
+            Select Case Inventory(0, Slot, 5)
+                Case 0
+                    If GroundTile(FacingX, FacingY) <> 0 Then
+                        If TileData(FacingX, FacingY, 4) <= 0 Then
+                            If GameMode <> 1 Then
+                                If PickUpItem(TileIndex(GroundTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                            End If
+                            GroundTile(FacingX, FacingY) = 0
+                            TileData(FacingX, FacingY, 4) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
+                        If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
+                        If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
+                    End If
+                Case 1
+                    If WallTile(FacingX, FacingY) <> 1 Then
+                        If TileData(FacingX, FacingY, 5) <= 0 Then
+                            If GameMode <> 1 Then
+                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                            End If
+                            WallTile(FacingX, FacingY) = 1
+                            TileData(FacingX, FacingY, 5) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
+                        If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
+                        If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
+                    End If
+                Case 3
+                    If TileIndex(GroundTile(FacingX, FacingY), 4) <> 0 Then
+                        If TileData(FacingX, FacingY, 4) <= 0 Then
+                            GroundTile(FacingX, FacingY) = TileIndex(GroundTile(FacingX, FacingY), 4)
+                            TileData(FacingX, FacingY, 4) = 255
+                            UpdateTile FacingX, FacingY
+                            SpreadLight (1)
+                            Exit Select
+                        End If
+                        ToolDelay = ToolDelay + 1
+                        If ToolDelay > 10 Then
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            ToolDelay = 0
+                        End If
+                        If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
+                        If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
+                    End If
+
+            End Select
+        Case 2 'Weapons                  5=cooldown 6=damage
+            Dim i
+            'check if cooldown has expired
+            If CurrentTick >= WeaponCooldown Then
+                For i = 1 To CurrentEntities
+                    Select Case Player.facing
+                        Case 0, 1 'up down
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 Then DamageEntity (i)
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                        Case 2, 3 'left right
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 Then DamageEntity (i)
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                    End Select
+                Next
+                'apply weapon cooldown
+                WeaponCooldown = CurrentTick + Inventory(0, Slot, 5)
+
+            End If
+
+
+        Case 4 'consumables
+            If CurrentTick >= ConsumeCooldown Then
+                If EffectIndex("Consume " + ItemName(Inventory(0, Slot, 9), 0), 0) = 3 Then
+                    If Player.health >= ((Player.MaxHealth + 1) * 8) Then Exit Select
+                End If
+                Effects 1, "Consume " + ItemName(Inventory(0, Slot, 9), 0), 0
+
+                If GameMode <> 1 Then
+                    Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
+                    If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
+                End If
+
+                ConsumeCooldown = CurrentTick + 10
+            End If
+
+    End Select
+
+
+    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
+        WallTile(FacingX, FacingY) = 1
+        UpdateTile FacingX, FacingY
+        SpreadLight (1)
+
+    End If
+End Sub
+
+Sub DamageEntity (entityID)
+    Effects 1, "Melee Damage", entityID
+End Sub
+
+Function EFacingX (entityID)
+    Select Case Player.facing
+        Case 0
+            EFacingX = Int((entity(entityID, 4) + 8) / 16) + 1
+
+        Case 1
+            EFacingX = Int((entity(entityID, 4) + 8) / 16) + 1
+
+        Case 2
+            EFacingX = Int((entity(entityID, 4) + 8 - 16) / 16) + 1
+
+        Case 3
+            EFacingX = Int((entity(entityID, 4) + 8 + 16) / 16) + 1
+
+    End Select
+
+End Function
+
+Function EFacingY (entityID)
+    Select Case Player.facing
+        Case 0
+
+            EFacingY = Int((entity(entityID, 5) + 8 - 16) / 16) + 1
+        Case 1
+
+            EFacingY = Int((entity(entityID, 5) + 8 + 16) / 16) + 1
+        Case 2
+
+            EFacingY = Int((entity(entityID, 5) + 8) / 16) + 1
+        Case 3
+
+            EFacingY = Int((entity(entityID, 5) + 8) / 16) + 1
+    End Select
+
+End Function
+
 
 Sub DebugShowEffects
     Dim i, ii
@@ -286,7 +517,7 @@ Sub Entities (Command As Byte)
             Select Case TimeMode
                 Case 0 'day time
                     Select Case Ceil(Rnd * 100000)
-                        Case 0 TO 250 'pig
+                        Case 0 To 250 'pig
                             If CurrentEntities < 15 Then
                                 CurrentEntities = CurrentEntities + 1
                                 ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
@@ -297,7 +528,7 @@ Sub Entities (Command As Byte)
                     End Select
                 Case 1 'night time
                     Select Case Ceil(Rnd * 100000)
-                        Case 0 TO 120 'zombie
+                        Case 0 To 120 'zombie
                             If CurrentEntities < 15 Then
                                 CurrentEntities = CurrentEntities + 1
                                 ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
@@ -422,6 +653,7 @@ End Sub
 Function SummonEntity (ID, Parameter)
     Select Case ID
         Case 1 'Pig
+
             Select Case Parameter
                 Case 0 'ID
                     SummonEntity = ID
@@ -522,36 +754,43 @@ Sub UseHotBar
     If Flag.InventoryOpen = 0 Then
 
         If Item1 Then
+            CursorHoverX = 0
             UseItem 0
             iii = 0
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
+
         End If
         If Item2 Then
+            CursorHoverX = 1
             UseItem 1
             iii = 1
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item3 Then
+            CursorHoverX = 2
             UseItem 2
             iii = 2
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item4 Then
+            CursorHoverX = 3
             UseItem 3
             iii = 3
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item5 Then
+            CursorHoverX = 4
             UseItem 4
             iii = 4
             hbtimeout = CurrentTick + 10
             flashtimeout = 5
         End If
         If Item6 Then
+            CursorHoverX = 5
             UseItem 5
             iii = 5
             hbtimeout = CurrentTick + 10
@@ -679,9 +918,14 @@ End Sub
 
 Sub DisplayHealth
     Dim As Byte i, ii, iii
-    Dim As Byte Token, TMPHeal
+    Dim As Integer Token, TMPHeal, rToken
     Dim As Single HealthX, HealthY
+    Dim As Single FullWheels
+    Dim As Byte BonusWheel
+    Dim As Byte BigHealOffset
+    Dim healthtextx, healthtexty
     Token = 1
+    BigHealOffset = 0
     HealthX = (ScreenRezX / 4 / 2) + 8
     HealthY = (ScreenRezY / 4 / 2) - 11
 
@@ -692,21 +936,108 @@ Sub DisplayHealth
             Case 1
                 PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (4 * 32, 32)-(4 * 32 + 31, 63)
             Case 2
-                For i = 0 To Player.MaxHealth
-                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
-                    Token = Token + 1
-                Next
-                Token = 1
-                While TMPHeal > 0
-                    If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
-                    If TMPHeal <= 8 Then
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0)-((TMPHeal - 1) * 32 + 31, 31)
-                    Else
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0)-(7 * 32 + 31, 31)
+                If Player.MaxHealth * 16 + 8 > HealthY * 2 Then
+
+                    If Player.health > 8 Then BigHealOffset = 0
+                    'draw full health wheel
+                    For i = 0 To BigHealOffset
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                    Next
+                    'print full wheel text "wheels (points)"
+                    If Player.health > 8 Then
+                        healthtextx = ScreenRezX - 35 - Len(Str$(Int((Player.health - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 1) / 8) * 8)) + ")") * 4
+                        healthtexty = 75 - 15
+                        Color RGB(0, 0, 0)
+                        For i = 0 To 2
+                            For ii = 0 To 2
+                                If Player.health - 8 <= Player.MaxHealth * 8 Then
+                                    PrintString (healthtextx + (i - 1), healthtexty + (ii - 1)), Str$(Int((Player.health - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 1) / 8) * 8)) + ")"
+                                Else
+                                    PrintString (healthtextx + (i - 1), healthtexty + (ii - 1)), Str$(Int((Player.health - 8 - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 8 - 1) / 8) * 8)) + ")"
+                                End If
+                            Next
+                        Next
+                        Color RGB(255, 255, 255)
+
+                        If Player.health - 8 <= Player.MaxHealth * 8 Then
+                            PrintString (healthtextx, healthtexty), Str$(Int((Player.health - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 1) / 8) * 8)) + ")"
+                        Else
+                            PrintString (healthtextx, healthtexty), Str$(Int((Player.health - 8 - 1) / 8)) + " (" + Trim$(Str$(Int((Player.health - 8 - 1) / 8) * 8)) + ")"
+                        End If
+
                     End If
-                    TMPHeal = TMPHeal - 8
+
                     Token = Token + 1
-                Wend
+                    If Player.health <= 8 Then Token = Token - 1
+
+                    'draw current wheel     (honestly, idk how i managed to get this shit to work, but it does, DONT FUCKING TOUCH IT
+                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                    TMPHeal = TMPHeal - 8 * Int(Player.health / 8)
+                    If Player.health > (Player.MaxHealth + 1) * 8 Then TMPHeal = 8: BonusWheel = 1
+                    If TMPHeal > 8 Then TMPHeal = 8
+                    If TMPHeal > 0 And TMPHeal < 8 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
+                    If TMPHeal = 0 Or TMPHeal = 8 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                    Token = Token + 1
+
+                    'if empty wheel then
+                    '   draw empty wheel
+                    If Player.health - 1 < Player.MaxHealth * 8 Then
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+
+                        '   print empty wheel text
+                        healthtextx = ScreenRezX - 35 - Len(Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")") * 4
+                        If Player.health > 8 Then healthtexty = 188 Else healthtexty = 123
+                        Color RGB(0, 0, 0)
+                        For i = 0 To 2
+                            For ii = 0 To 2
+                                PrintString (healthtextx + (i - 1), healthtexty + (ii - 1)), Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")"
+                            Next
+                        Next
+                        Color RGB(255, 255, 255)
+
+                        PrintString (healthtextx, healthtexty), Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")"
+
+                    End If
+
+                    'endif
+
+                    'draw bonus wheels as normal
+                    Token = 3
+                    TMPHeal = Player.health - (Player.MaxHealth + 1) * 8
+                    While TMPHeal > 0
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
+                        If TMPHeal <= 8 Then
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
+                        Else
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                        End If
+                        TMPHeal = TMPHeal - 8
+                        Token = Token + 1
+                    Wend
+
+
+                Else
+                    For i = 0 To Player.MaxHealth
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        Token = Token + 1
+                    Next
+                    Token = 1
+                    While TMPHeal > 0
+                        If Token > Player.MaxHealth + 1 Then PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (5 * 32, 32)-(5 * 32 + 31, 63)
+                        If TMPHeal <= 8 Then
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , ((TMPHeal - 1) * 32, 0 + HealthWheelOffset)-((TMPHeal - 1) * 32 + 31, 31 + HealthWheelOffset)
+                        Else
+                            PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
+                        End If
+                        TMPHeal = TMPHeal - 8
+                        Token = Token + 1
+                    Wend
+                End If
+
+
+
+
         End Select
     End If
 End Sub
@@ -776,7 +1107,7 @@ Sub DisplayCrafting
     Crafting
 
     Select Case Player.CraftingLevel
-        Case 0 TO 5
+        Case 0 To 5
             For iii = 0 To Player.CraftingLevel - 1
                 For iiii = 0 To Player.CraftingLevel - 1
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (0, 32)-(31, 63)
@@ -898,7 +1229,7 @@ Sub NewStack (ItemID, StackNumber)
     Select Case CursorHoverPage
 
 
-        Case 0 TO 1
+        Case 0 To 1
             For i = 0 To 3
                 For ii = 0 To 5
                     If Inventory(i, ii, 9) = -1 Then
@@ -1615,9 +1946,40 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
             End If
         Case 4 'max health increase
             Player.MaxHealth = Player.MaxHealth + Val1
-        Case 5
+        Case 5 'Immunity
             ImmunityTimer = ImmunityTimer + 1
             If ImmunityTimer > Val1 + 1 Then ImmunityTimer = 1: ImmunityFlash = ImmunityFlash + 1
+        Case 6 'poison
+            If Entity = 0 Then
+                HealthWheelOffset = 64
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+
+        Case 7 'regen
+            If Entity = 0 Then
+                HealthWheelOffset = 96
+                If GameMode <> 1 Then
+                    If Player.health < (Player.MaxHealth + 1) * 8 Then
+                        Player.health = Player.health + Val1
+                    End If
+                End If
+
+            Else
+            End If
+        Case 8 'Melee damage
+            If Entity = 0 Then
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                'possibly move damage sound here, and play a different sound for entity??
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+            If ImmunityTimer = 0 Then PlaySound Sounds.damage_melee
+
+
+
+
     End Select
 
 
@@ -1625,7 +1987,18 @@ End Sub
 
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
-        Case "Cooldown Wooden Sword"
+        Case "Melee Damage"
+            Select Case Value
+                Case 0
+                    EffectIndex = 8
+                Case 1
+                    EffectIndex = 2
+                Case 2
+                    EffectIndex = 0
+                Case 3
+                    EffectIndex = Inventory(0, CursorHoverX, 6)
+            End Select
+
         Case "Immunity Respawn"
             Select Case Value
                 Case 0
@@ -1719,6 +2092,19 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 3
                     EffectIndex = 3 'value
             End Select
+        Case "Consume Eggplant"
+            Select Case Value
+                Case 0
+                    EffectIndex = 7 'effectid
+                Case 1
+                    EffectIndex = 482 'frameduration
+                Case 2
+                    EffectIndex = 482 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+                Case 4
+                    EffectIndex = 120 'framedelay
+            End Select
 
         Case Else
             EffectIndex = 0
@@ -1731,11 +2117,13 @@ Sub EffectEnd (EffectID As Integer, EffectSlot As Integer, Entity As Single)
     Select Case EffectID
         Case 1
         Case 2
-            SwimOffset = 0
+            If Entity = 0 Then SwimOffset = 0 Else entity(Entity, 17) = 0
         Case 3
         Case 4
         Case 5
             ImmunityTimer = 0: ImmunityFlash = 0
+        Case 6, 7
+            HealthWheelOffset = 0
     End Select
 
     For i = 0 To EffectParameters
@@ -1756,7 +2144,13 @@ Sub Effects (Command As Byte, Sources As String, Entity As Single)
                 If EffectArray(i, 1, Entity) > 0 Then EffectArray(i, 1, Entity) = EffectArray(i, 1, Entity) - Settings.TickRate
                 If EffectArray(i, 2, Entity) > 0 Then EffectArray(i, 2, Entity) = EffectArray(i, 2, Entity) - Settings.TickRate
                 If EffectArray(i, 1, Entity) > 0 Then
-                    EffectExecute EffectArray(i, 0, Entity), EffectArray(i, 3, Entity), Entity
+                    If EffectArray(i, 4, Entity) > 0 Then
+                        If EffectArray(i, 1, Entity) Mod EffectArray(i, 4, Entity) = 0 Then
+                            EffectExecute EffectArray(i, 0, Entity), EffectArray(i, 3, Entity), Entity
+                        End If
+                    Else
+                        EffectExecute EffectArray(i, 0, Entity), EffectArray(i, 3, Entity), Entity
+                    End If
                 End If
                 If EffectArray(i, 1, Entity) <= 0 And EffectArray(i, 2, Entity) <= 0 Then
                     EffectEnd EffectArray(i, 0, Entity), i, Entity
@@ -1889,6 +2283,7 @@ End Sub
 
 
 Sub MinMemFix 'this subroutine is specifically to try to fix a memory leak that occurs when in hardware accelerated mode, and the game is minimized. by simply turning off hardware acceleration.
+    'Exit Sub
     Static Last
     Select Case ScreenIcon
         Case -1
@@ -1974,101 +2369,6 @@ Function FacingY
     End Select
 
 End Function
-Sub UseItem (Slot)
-    Static ConsumeCooldown
-    Select Case Inventory(0, Slot, 0)
-        Case 0 'Block placing
-            Select Case Inventory(0, Slot, 4)
-                Case 0
-                    If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
-                        GroundTile(FacingX, FacingY) = Inventory(0, Slot, 3)
-                        TileData(FacingX, FacingY, 4) = 255
-                        If GameMode <> 1 Then
-                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
-                        End If
-                        UpdateTile FacingX, FacingY
-                        SpreadLight (1)
-                    End If
-                Case 1
-                    If WallTile(FacingX, FacingY) = 1 And GroundTile(FacingX, FacingY) <> 0 And GroundTile(FacingX, FacingY) <> 13 Then
-                        WallTile(FacingX, FacingY) = Inventory(0, Slot, 3)
-                        If TileIndexData(WallTile(FacingX, FacingY), 7) = 1 Then
-                            NewContainer SavedMapX, SavedMapY, FacingX, FacingY
-                        End If
-                        TileData(FacingX, FacingY, 5) = 255
-                        If GameMode <> 1 Then
-                            Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                            If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
-                        End If
-                        UpdateTile FacingX, FacingY
-                        SpreadLight (1)
-                    End If
-            End Select
-        Case 1 'Tools
-            Select Case Inventory(0, Slot, 5)
-                Case 0
-                    If GroundTile(FacingX, FacingY) <> 0 Then
-                        If TileData(FacingX, FacingY, 4) <= 0 Then
-                            If GameMode <> 1 Then
-                                If PickUpItem(TileIndex(GroundTile(FacingX, FacingY), 3)) = 1 Then Exit Select
-                            End If
-                            GroundTile(FacingX, FacingY) = 0
-                            TileData(FacingX, FacingY, 4) = 255
-                            UpdateTile FacingX, FacingY
-                            SpreadLight (1)
-                            Exit Select
-                        End If
-                        TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
-                        TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
-                        If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
-                        If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
-                    End If
-                Case 1
-                    If WallTile(FacingX, FacingY) <> 1 Then
-                        If TileData(FacingX, FacingY, 5) <= 0 Then
-                            If GameMode <> 1 Then
-                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
-                            End If
-                            WallTile(FacingX, FacingY) = 1
-                            TileData(FacingX, FacingY, 5) = 255
-                            UpdateTile FacingX, FacingY
-                            SpreadLight (1)
-                            Exit Select
-                        End If
-                        TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
-                        TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
-                        If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
-                        If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
-                    End If
-
-            End Select
-        Case 4 'consumables
-            If CurrentTick >= ConsumeCooldown Then
-                If EffectIndex("Consume " + ItemName(Inventory(0, Slot, 9), 0), 0) = 3 Then
-                    If Player.health >= ((Player.MaxHealth + 1) * 8) Then Exit Select
-                End If
-                Effects 1, "Consume " + ItemName(Inventory(0, Slot, 9), 0), 0
-
-                If GameMode <> 1 Then
-                    Inventory(0, Slot, 7) = Inventory(0, Slot, 7) - 1
-                    If Inventory(0, Slot, 7) = 0 Then EmptySlot Slot, 0
-                End If
-
-                ConsumeCooldown = CurrentTick + 10
-            End If
-
-    End Select
-
-
-    If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
-        WallTile(FacingX, FacingY) = 1
-        UpdateTile FacingX, FacingY
-        SpreadLight (1)
-
-    End If
-End Sub
-
 
 Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TickDelay
@@ -2156,6 +2456,7 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
     TileData(TileX, TileY, 9) = TileIndexData(GroundTile(TileX, TileY), 9)
     TileData(TileX, TileY, 10) = TileIndexData(GroundTile(TileX, TileY), 10)
+
 End Sub
 'For i = TileData(TileX, TileY, 8) To 0 Step -1
 
@@ -2219,6 +2520,17 @@ Sub Crafting
 
             Case "-1 19 -1 |-1 19 -1 |-1 22 -1 |" 'wooden sword
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
+
+            Case "-1 29 -1 |-1 22 -1 |-1 22 -1 |" 'stone shovel
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(31, i)
+
+            Case "29 29 -1 |29 22 -1 |-1 22 -1 |" 'stone axe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(32, i)
+
+            Case "-1 29 -1 |-1 29 -1 |-1 22 -1 |" 'stone sword
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(34, i)
+
+
 
             Case "-1 -1 -1 |-1 19 -1 |-1 19 -1 |" 'Tool Handle
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(22, i)
@@ -2419,6 +2731,7 @@ End Sub
 
 
 Sub DEV
+    'Exit Sub
     If Flag.DebugMode = 1 Or CurrentTick < 1 Then
         PrintMode FillBackground
         Color , RGBA(0, 0, 0, 128)
@@ -2460,6 +2773,8 @@ Sub DEV
         If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
         If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
         If Flag.CastShadows = 1 Then ENDPRINT "Shadows Disabled"
+        If Flag.FrameRateLock = 1 Then ENDPRINT "Engine Tickrate Unlocked"
+        If Flag.FullRender = 1 Then ENDPRINT "Render Optimizations Disabled"
 
 
         Locate 1, 1
@@ -2475,6 +2790,12 @@ Sub DEV
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Current Entities: "; CurrentEntities
+
+        ' Do While MouseInput
+        ' Loop
+        ' Print MouseX, MouseY, MouseButton(1), MouseWheel
+        ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
+
 
         Print "Gamemode: ";
         Select Case GameMode
@@ -2503,7 +2824,7 @@ Sub DEV
                 Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.movingx; Player.movingy
-                Print Player.lastx; Player.lasty
+                Print "Health:"; Player.health
             Case "inv", "inventory", "2"
                 Print "Inventory Data"
                 If CursorHoverPage = 1 Then
@@ -2525,6 +2846,38 @@ Sub DEV
                 'For i = 0 To InvParameters
                 '    Print Inventory(0, 0, i);
                 'Next
+            Case "3"
+                Print "Entity Data"
+                For i = 1 To CurrentEntities
+                    Print i;
+                    For ii = 0 To EntityParameters
+                        Print entity(i, ii);
+                    Next
+                    Print
+                Next
+            Case "4"
+                Print "Status Effect Data"
+                For i = 0 To MaxEffects
+                    Print i;
+                    For ii = 0 To EffectParameters
+                        Print EffectArray(i, ii, 0);
+                    Next
+                    Print
+                Next
+            Case "4a"
+                Print "Status Effect Data (Active)"
+                For i = 0 To MaxEffects
+                    While EffectArray(i, 0, 0) = 0
+                        i = i + 1
+                        If i > 20 Then Exit Case
+                    Wend
+                    Print i;
+                    For ii = 0 To EffectParameters
+                        Print EffectArray(i, ii, 0);
+                    Next
+                    Print
+                Next
+
             Case Else
                 Print "Unrecognized Tile or Entity"
         End Select
@@ -2535,7 +2888,6 @@ Sub DEV
             Flag.OpenCommand = 1
             If Flag.RenderOverride = 0 Then SwitchRender (0)
         End If
-
         If Flag.OpenCommand = 2 Then
             KeyClear
             Locate 28, 1: Input "/", comin
@@ -2552,18 +2904,7 @@ Sub DEV
                     Locate 28, 1: Print "               "
                     Locate 28, 1: Input "Teleport y: ", dv
                     Player.y = dv * 16
-                Case "craft"
-                    Dim testx, testy, testitem
-                    Locate 28, 1: Print "               "
-                    Locate 28, 1: Input "Teleport x: ", testx
-                    Locate 28, 1: Print "               "
-                    Locate 28, 1: Input "Teleport x: ", testy
-                    Locate 28, 1: Print "               "
-                    Locate 28, 1: Input "Teleport x: ", testitem
 
-                    For i = 0 To InvParameters
-                        CraftingGrid(testx, testy, i) = ItemIndex(testitem, i)
-                    Next
 
                 Case "res", "resolution"
                     Locate 28, 1: Print "               "
@@ -2572,7 +2913,8 @@ Sub DEV
                     Locate 28, 1: Input "Resolution Y: ", ScreenRezY
                     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
 
-
+                Case "cv01"
+                    Error 104
 
                 Case "stillcam", "sc"
                     Flag.StillCam = Flag.StillCam + 1
@@ -2582,6 +2924,8 @@ Sub DEV
                     Flag.FreeCam = Flag.FreeCam + 1
                 Case "noclip", "nc"
                     Flag.NoClip = Flag.NoClip + 1
+                Case "fullrender", "fr"
+                    Flag.FullRender = Flag.FullRender + 1
                 Case "exit"
                     System
                 Case "error"
@@ -2591,6 +2935,8 @@ Sub DEV
                     Locate 28, 1: Input "Change Gamemode to: ", GameMode
                 Case "health"
                     Locate 28, 1: Input "Set Health to: ", Player.health
+                Case "maxhealth"
+                    Locate 28, 1: Input "Set MaxHealth to: ", Player.MaxHealth
                 Case "track", "tr"
                     Locate 28, 1: Print "                               "
                     Locate 28, 1: Input "Track Entity ID or Tile ID: ", Debug.Tracking
@@ -2716,10 +3062,21 @@ Sub DEV
                     NewStack DMapX, DMapY
                 Case "summon"
                     Dim temp As Integer
+                    Dim cord As Byte
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "EntityID to summon ", DMapX
                     Locate 28, 1: Print "                                            "
                     Locate 28, 1: Input "Number of this entity to spawn ", temp
+                    Locate 28, 1: Print "                                            "
+                    Locate 28, 1: Input "Set(0) or Rand(1) Cords ", cord
+                    If cord = 1 Then
+                        Dim entx, enty
+                        Locate 28, 1: Print "                              "
+                        Locate 28, 1: Input "X Cord ", entx
+                        Locate 28, 1: Print "                                            "
+                        Locate 28, 1: Input "Y Cord ", enty
+                    End If
+
 
                     '  For DMapY = 0 To 100
 
@@ -2728,6 +3085,10 @@ Sub DEV
                         For i = 0 To EntityParameters
                             entity(CurrentEntities, i) = SummonEntity(DMapX, i)
                         Next
+                        If cord = 1 Then
+                            entity(CurrentEntities, 4) = entx
+                            entity(CurrentEntities, 5) = enty
+                        End If
                     Next
                     ' Next
                 Case "kill"
@@ -2769,8 +3130,13 @@ Sub DEV
             If Flag.RenderOverride = 0 Then SwitchRender (1)
         End If
         Color , RGBA(0, 0, 0, 0)
+
         PrintMode KeepBackground
     End If
+End Sub
+
+Sub WorldCommands (CommandString As String)
+
 End Sub
 
 
@@ -2818,6 +3184,7 @@ Function SpawnMap$
 End Function
 
 Sub LOADWORLD
+    Print "began loading world"
     Dim defaultmap As String
     Dim As Byte i, ii
     Dim As Integer iii
@@ -2825,10 +3192,10 @@ Sub LOADWORLD
     Dim MapProtocol As Integer
     Dim ManifestProtocol As Integer
     prevfolder = map.foldername
-
-
+    Print "dimmed local values"
+    Print "opening manifest"
     Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-
+    Print "successful, reading manifest data"
     Get #1, 1, GameTime
     Get #1, 2, ManifestProtocol
     If ManifestProtocol < Game.ManifestProtocol Then Close #1: ConvertManifest (ManifestProtocol): Exit Sub
@@ -2844,12 +3211,13 @@ Sub LOADWORLD
     Get #1, 12, SpawnMapY
     Get #1, 13, WorldSeed
     Close #1
+    Print "Opening player"
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
     i = 0
     ii = 0
     iii = 0
-
+    Print "Loading player"
     While i < 4
         Get #1, total, Inventory(i, ii, iii)
         iii = iii + 1
@@ -2871,7 +3239,7 @@ Sub LOADWORLD
     Player.y = SavePointY
 
     'GET #1, 4, map.protected
-
+    Print "World data loaded, loading local map"
     LOADMAP (SavedMap)
 End Sub
 
@@ -2883,15 +3251,15 @@ Sub LOADMAP (file As String)
     Dim MapProtocol As Integer
 
     iii = 1
-
+    Print "locating existing map data"
     'TODO make this a sub with 2 parameterss, 1
     If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
-
+        Print "loading map data"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf" As #1
         Get #1, 1, MapProtocol
         Close #1
         If MapProtocol <> Game.MapProtocol Then ConvertMap MapProtocol, file: Exit Sub
-
+        Print "0%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
@@ -2901,7 +3269,7 @@ Sub LOADMAP (file As String)
         Next
         Close #1
         iii = 1
-
+        Print "20%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
@@ -2911,7 +3279,7 @@ Sub LOADMAP (file As String)
         Next
         Close #1
         iii = 1
-
+        Print "40%"
 
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
         For i = 1 To 30
@@ -2923,7 +3291,7 @@ Sub LOADMAP (file As String)
         Close #1
         iii = 1
 
-
+        Print "60%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
@@ -2937,7 +3305,7 @@ Sub LOADMAP (file As String)
         Get #1, iii, map.name
         Close #1
         iii = 1
-
+        Print "80%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-E.cdf" As #1
         Get #1, 1, CurrentEntities
         iii = iii + 1
@@ -2949,6 +3317,8 @@ Sub LOADMAP (file As String)
         Next
         Close #1
         iii = 1
+        Print "100%"
+        Print "Finished loading, starting game"
 
 
     Else
@@ -2978,7 +3348,7 @@ End Sub
 
 Sub ConvertMap (OldVersion As Integer, MapCord As String)
     Print "Converting Map from Protocol"; OldVersion; "To"; Game.MapProtocol
-    Dim i, ii, iii
+    Dim i, ii, iii, iiii
     Dim j, jj, jjj
     Dim total
     Dim NewX, NewY
@@ -3044,6 +3414,22 @@ Sub ConvertMap (OldVersion As Integer, MapCord As String)
             Close #1
             Close #2
             OldVersion = 1
+        Case 1
+            Open "Assets\Worlds\" + WorldName + "\Maps\" + MapCord + "-3.cdf" As #1
+            For i = 1 To 30
+                For ii = 1 To 40
+                    For iiii = 0 To 13
+                        Get #1, iii, TileData(ii, i, iiii)
+                        iii = iii + 1
+                    Next
+
+                Next
+            Next
+            Get #1, iii, map.name
+            Close #1
+            iii = 1
+
+
 
         Case Else
             Open "Assets\Worlds\" + WorldName + "\Maps\" + MapCord + ".cdf" As #1
@@ -3084,9 +3470,9 @@ Sub SAVEMAP
     SavePointY = Player.y
     If TimeMode = 1 Then GameTime = GameTime + 43200
     Put #1, 1, GameTime
-    Put #1, 1, Game.ManifestProtocol
-    Put #1, 3, Game.Version
+    Put #1, 2, Game.ManifestProtocol
 
+    Put #1, 3, Game.Version
     Put #1, 5, SpawnPointX
     Put #1, 6, SpawnPointY
     Put #1, 7, SavePointX
@@ -3195,41 +3581,42 @@ Sub CastShadow
         Dim ii As Byte
         For i = 1 To 30
             For ii = 1 To 40
-
-                If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
-                End If
-
-                If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
-                End If
-
-                If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
-                End If
-
-                If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
-                End If
-
-                If TileData(ii, i, 3) = 1 Then
-
-                    If TileData(ii, i + 1, 3) = 0 Then
+                If VisibleCheck(ii, i) = 1 Then
+                    If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
                     End If
 
-                    If TileData(ii + 1, i, 3) = 0 Then
+                    If TileData(ii + 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
                     End If
 
-                    If TileData(ii - 1, i, 3) = 0 Then
+                    If TileData(ii - 1, i, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
                     End If
 
-                    If TileData(ii, i - 1, 3) = 0 Then
+                    If TileData(ii, i - 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
                     End If
 
+                    If TileData(ii, i, 3) = 1 Then
+
+                        If TileData(ii, i + 1, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
+                        End If
+
+                        If TileData(ii + 1, i, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (16, 0)-(31, 15)
+                        End If
+
+                        If TileData(ii - 1, i, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (32, 0)-(47, 15)
+                        End If
+
+                        If TileData(ii, i - 1, 3) = 0 Then
+                            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (48, 0)-(63, 15)
+                        End If
+
+                    End If
                 End If
             Next
         Next
@@ -3400,73 +3787,74 @@ Sub ErrorHandler
     Print "Error Code:"; Err
     Locate 2, 1
     ENDPRINT "Error Line:" + Str$(ErrorLine)
-    Print "--------------------------------------------------------------------------------"
+    Dim i
+    For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
+    '    Print "--------------------------------------------------------------------------------"
     Print
     '       PRINT "--------------------------------------------------------------------------------"
     Select Case Err
         Case 100
-            Print "Assets folder is incomplete, this error can be triggered by one or more of the"
-            Print "following conditions:"
-            Print
-            Print
-            Print "     The assets folder is missing"
-            Print
-            Print "     Sub-directories in the Assets folder are missing"
-            Print
-            Print "     The contents of assets, or the directory itself is corrupted"
-            Print
-            Print "     You do not have proper permissions to access the assets directory"
-            Print
-            Print
-            Print "Make sure the entireity of the assets folder is present and accessible to your"
-            Print "user account and, if necessary, redownload the assets folder."
-            Print
-            Print "The assets folder, and its contents are necessary for the game to load, as it"
-            Print "contains all sprite and texture files, sounds and music, user saved data, and"
-            Print "world files. Without these, the game will not play correctly. It is advised to"
-            Print "not continue."
+            CENTERPRINT "Assets folder is incomplete, this error can be triggered by one or more of the"
+            CENTERPRINT "following conditions:"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "The assets folder is missing"
+            CENTERPRINT ""
+            CENTERPRINT "Sub-directories in the Assets folder are missing"
+            CENTERPRINT ""
+            CENTERPRINT "The contents of assets, or the directory itself is corrupted"
+            CENTERPRINT ""
+            CENTERPRINT "You do not have proper permissions to access the assets directory"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "Make sure the entireity of the assets folder is present and accessible to your"
+            CENTERPRINT "user account and, if necessary, redownload the assets folder."
+            CENTERPRINT ""
+            CENTERPRINT "The assets folder, and its contents are necessary for the game to load, as it"
+            CENTERPRINT "contains all sprite and texture files, sounds and music, user saved data, and"
+            CENTERPRINT "world files. Without these, the game will not play correctly. It is advised to"
+            CENTERPRINT "not continue."
             CONTPROMPT
 
         Case 101
-            Print "This is a legacy error code, and should never be triggered in game, if it has"
-            Print "been triggered, not due to the /error command, please contact the developer"
+            CENTERPRINT "This is a legacy error code, and should never be triggered in game, if it has"
+            CENTERPRINT "been triggered, not due to the /error command, please contact the developer"
             CONTPROMPT
 
         Case 102
-            Print "Invalid Code Position, This error occurs when the program flow enters an area"
-            Print "that it should not be, This is most likely a programming issue, and not an end"
-            Print "user issue."
-            Print ""
-            Print "There is no user solution to this issue, if this is reproducable, please file"
-            Print "a bug report to the github, including the line number and what you were doing"
-            Print "when it occured."
+            CENTERPRINT "Invalid Code Position, This error occurs when the program flow enters an area"
+            CENTERPRINT "that it should not be, This is most likely a programming issue, and not an end"
+            CENTERPRINT "user issue."
+            CENTERPRINT ""
+            CENTERPRINT "There is no user solution to this issue, if this is reproducable, please file"
+            CENTERPRINT "a bug report to the github, including the line number and what you were doing"
+            CENTERPRINT "when it occured."
             CONTPROMPT
         Case 258
-            Print "Invalid handle, An handle used for an image, sound, font etc. was invalid."
-            Print "Be sure to check the return values of functions like _LOADFONT and _LOADIMAGE."
-
+            CENTERPRINT "Invalid handle, An handle used for an image, sound, font etc. was invalid."
+            CENTERPRINT "Be sure to check the return values of functions like _LOADFONT and _LOADIMAGE."
+            CONTPROMPT
         Case 103
-            Print "This world was not made for this version of "; Game.Title; ". This means one of"
-            Print "the following cases is true:"
-            Print
-            Print
-            Print "     You are attempting to load an out of date world"
-            Print
-            Print "     You are attempting to load a world designed for a newer version of"
-            Print "     "; Game.Title
-            Print
-            Print "     Your world manifest is corrupted"
-            Print
-            Print
-            Print "Double check the world version and game version."
-            Print "World: ("; mapversion; ") Game: ("; Game.Version; ")"
-            Print
-            Print "If you are certain that this is a mistake, you may try to update the manifest"
-            Print "here. Note that this does not update old worlds, just broken manifest files"
-            Print "Otherwise you can try to load a different world. "; Game.Title; ""
-            Print "does not support loading out of version worlds."
-            Print
-            Print
+            CENTERPRINT "This world was not made for this version of " + Game.Title + ". This means one of"
+            CENTERPRINT "the following cases is true:"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "You are attempting to load an out of date world"
+            CENTERPRINT ""
+            CENTERPRINT "You are attempting to load a world designed for a newer version of " + Game.Title
+            CENTERPRINT ""
+            CENTERPRINT "Your world manifest is corrupted"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "Double check the world version and game version."
+            CENTERPRINT "World: (" + mapversion + ") Game: (" + Game.Version + ")"
+            CENTERPRINT ""
+            CENTERPRINT "If you are certain that this is a mistake, you may try to update the manifest"
+            CENTERPRINT "here. Note that this does not update old worlds, just broken manifest files"
+            CENTERPRINT "Otherwise you can try to load a different world. " + Game.Title + ""
+            CENTERPRINT "does not support loading out of version worlds."
+            CENTERPRINT ""
+            CENTERPRINT ""
             CENTERPRINT "(U)pdate manifest, (R)eturn to existing map, (Q)uit to desktop."
             Do
                 If KeyDown(113) Then System
@@ -3480,38 +3868,57 @@ Sub ErrorHandler
 
                 End If
             Loop
+        Case 104
+            CENTERPRINT "No, Landyn. I'm not adding a miku easter egg"
+            CENTERPRINT ""
+            CENTERPRINT "...i guess this is one, you win"
+            CENTERPRINT "_"
+            CENTERPRINT "/   \"
+            CENTERPRINT "/       \"
+            CENTERPRINT "/     o     \"
+            CENTERPRINT "/             \"
+            CENTERPRINT "/_______________\"
+            CENTERPRINT "|                 |"
+            CENTERPRINT "|    HATSUNE      |"
+            CENTERPRINT "|      MIKU       |"
+            CENTERPRINT "|_________________|"
+            CENTERPRINT "/                   \"
+            CENTERPRINT "/                     \"
+            CENTERPRINT "/                       \"
+            CENTERPRINT "/_________________________\"
+            CONTPROMPT
+
         Case 2
-            Print "Syntax error, READ attempted to read a number but could not parse the next"
-            Print "DATA item."
-            Print
+            CENTERPRINT "Syntax error, READ attempted to read a number but could not parse the next"
+            CENTERPRINT "DATA item."
+            CENTERPRINT ""
             CONTPROMPT
         Case 3
-            Print "RETURN without GOSUB, The RETURN statement was encounted without first"
-            Print " executing a corresponding GOSUB."
-            Print
+            CENTERPRINT "RETURN without GOSUB, The RETURN statement was encounted without first"
+            CENTERPRINT " executing a corresponding GOSUB."
+            CENTERPRINT ""
             CONTPROMPT
         Case 4
-            Print "Out of DATA, The READ statement has read past the end of a DATA block."
-            Print " Use RESTORE to change the current data item if necessary."
-            Print
+            CENTERPRINT "Out of DATA, The READ statement has read past the end of a DATA block."
+            CENTERPRINT " Use RESTORE to change the current data item if necessary."
+            CENTERPRINT ""
             CONTPROMPT
 
         Case 9
-            Print "Subscript out of range, this error occurs when an array exceeds its bounds"
-            Print "This is most likely a programming error, please let the developer know."
-            Print
+            CENTERPRINT "Subscript out of range, this error occurs when an array exceeds its bounds"
+            CENTERPRINT "This is most likely a programming error, please let the developer know."
+            CENTERPRINT ""
             CONTPROMPT
 
 
         Case Else
-            Print "Unrecognized error, contact developers"
+            CENTERPRINT "Unrecognized error, contact developers"
             CONTPROMPT
 
     End Select
 
     KeyClear
     Cls
-    Resume Next
 End Sub
 
 Sub CONTPROMPT
@@ -3572,7 +3979,9 @@ Sub SetBG
         Dim ii As Integer
         For i = 0 To 30
             For ii = 0 To 40
-                PutImage (ii * 16, i * 16)-((ii * 16) + 15.75, (i * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
+                If VisibleCheck(ii, i) = 1 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
+                End If
             Next
         Next
     End If
@@ -3584,15 +3993,28 @@ Sub SetMap
     Dim ii As Integer
     For i = 1 To 30
         For ii = 1 To 40
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 5) / 32) * 16, 32)-((Int(TileData(ii, i, 5) / 32) * 16) + 15, 47)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
-            PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
+            If VisibleCheck(ii, i) = 1 Then
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 5) / 32) * 16, 32)-((Int(TileData(ii, i, 5) / 32) * 16) + 15, 47)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
+            End If
         Next
     Next
 End Sub
+
+Function VisibleCheck (TileX As Integer, TileY As Integer)
+
+    VisibleCheck = 1
+    If Flag.FullRender = 1 Then Exit Function
+    If TileX * 16 > (CameraPositionX + (ScreenRezX / 4 / 2)) + 16 + 8 Then VisibleCheck = 0
+    If TileX * 16 < (CameraPositionX - (ScreenRezX / 4 / 2)) - 0 Then VisibleCheck = 0
+    If TileY * 16 > (CameraPositionY + (ScreenRezY / 4 / 2)) + 16 + 8 Then VisibleCheck = 0
+    If TileY * 16 < (CameraPositionY - (ScreenRezY / 4 / 2)) - 0 Then VisibleCheck = 0
+
+End Function
 
 Sub SwitchRender (mode As Byte)
     Static FirstSkip As Byte
@@ -3607,6 +4029,7 @@ Sub SwitchRender (mode As Byte)
         FreeImage Texture.ItemSheet
         FreeImage Texture.HudSprites
         FreeImage Texture.Shadows
+
     End If
 
     Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
@@ -3637,7 +4060,9 @@ Sub ZOOM
 End Sub
 
 Sub PlaySound (nam$)
-    _SndPlayFile nam$, , 1
+    Dim sndhnd As Long
+    sndhnd = SndOpen(nam$ + Str$(Int(Rnd * 2)))
+    SndPlay sndhnd
 End Sub
 
 
@@ -3762,6 +4187,8 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     SpawnMapX = SavedMapX
     SpawnMapY = SavedMapY
     SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
+    Print "map generated, loading world"
+    Delay 0.5
     LOADWORLD
 End Sub
 
@@ -3799,12 +4226,12 @@ Sub GenerateMap
             If GroundTile(ii, i) <> 13 Then
 
                 'generate bushes
-                If Ceil(Rnd * 10) = 5 Then
+                If Ceil(Rnd * 10) = 1 Then
                     WallTile(ii, i) = 5
                 End If
 
                 'generate ground wood items
-                If Ceil(Rnd * 100) = 50 Then
+                If Ceil(Rnd * 300) = 1 Then
                     WallTile(ii, i) = 11
                     NewContainer SavedMapX, SavedMapY, ii, i
                     OpenContainer SavedMapX, SavedMapY, ii, i
@@ -3815,13 +4242,26 @@ Sub GenerateMap
                     CloseContainer SavedMapX, SavedMapY, ii, i
                 End If
 
+                'generate raw stone
+                If Ceil(Rnd * 450) = 1 Then
+                    WallTile(ii, i) = 11
+                    NewContainer SavedMapX, SavedMapY, ii, i
+                    OpenContainer SavedMapX, SavedMapY, ii, i
+                    For iii = 0 To InvParameters
+                        Container(0, 0, iii) = ItemIndex(29, iii)
+                    Next
+                    Container(0, 0, 7) = Ceil(Rnd * 2)
+                    CloseContainer SavedMapX, SavedMapY, ii, i
+                End If
+
+
                 'generate berry bushes
-                If Ceil(Rnd * 250) = 125 Then
+                If Ceil(Rnd * 250) = 1 Then
                     WallTile(ii, i) = 12
                 End If
 
                 'generate carrots
-                If Ceil(Rnd * 600) = 300 Then
+                If Ceil(Rnd * 600) = 1 Then
                     WallTile(ii, i) = 17
                 End If
             End If
