@@ -74,6 +74,8 @@ dim shared CreativeInventory(2,5,invparameters,CreativePages)
 dim shared CraftingGrid(5, 5,invparameters)
 dim shared CraftingResult(invparameters)
 
+                                           dim shared BloodmoonSpawnrate as integer
+                                           dim shared EntityNatSpawnLim
 
 Dim Shared Game.Title As String
 Dim Shared Game.Version As String
@@ -116,6 +118,7 @@ dim shared Flag.RenderOverride as unsigned bit
 dim shared Flag.InitialRender as byte
 dim shared Flag.ContainerOpen as byte
 dim shared Flag.FullRender as unsigned bit
+dim shared Flag.IsBloodmoon as unsigned bit
 Dim Shared bgdraw As Unsigned Bit
 dim shared RenderMode as byte
 
@@ -152,6 +155,7 @@ Type File
     ItemSheet as string
     HudSprites As String
     Shadows As String
+    Shadows_Bloodmoon as string
 End Type
 
 Type Texture
@@ -164,6 +168,7 @@ Type Texture
     ItemSheet as long
     HudSprites As Long
     Shadows As Long
+    Shadows_Bloodmoon as long
 End Type
 
 Type Sounds
@@ -172,6 +177,7 @@ Type Sounds
     damage_bush as string
     damage_melee as string
     walk_water as string
+    bloodmoon_spawn as string
 End Type
 
 

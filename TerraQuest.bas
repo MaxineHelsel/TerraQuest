@@ -518,7 +518,7 @@ Sub Entities (Command As Byte)
                 Case 0 'day time
                     Select Case Ceil(Rnd * 100000)
                         Case 0 To 250 'pig
-                            If CurrentEntities < 15 Then
+                            If CurrentEntities < EntityNatSpawnLim Then
                                 CurrentEntities = CurrentEntities + 1
                                 ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
                                 For i = 0 To EntityParameters
@@ -527,15 +527,31 @@ Sub Entities (Command As Byte)
                             End If
                     End Select
                 Case 1 'night time
-                    Select Case Ceil(Rnd * 100000)
-                        Case 0 To 120 'zombie
-                            If CurrentEntities < 15 Then
-                                CurrentEntities = CurrentEntities + 1
-                                ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                                For i = 0 To EntityParameters
-                                    entity(CurrentEntities, i) = SummonEntity(2, i)
-                                Next
-                            End If
+                    Select Case Flag.IsBloodmoon
+                        Case 0
+                            Select Case Ceil(Rnd * 100000)
+                                Case 0 To 120 'zombie
+                                    If CurrentEntities < EntityNatSpawnLim Then
+                                        CurrentEntities = CurrentEntities + 1
+                                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
+                                        For i = 0 To EntityParameters
+                                            entity(CurrentEntities, i) = SummonEntity(2, i)
+                                        Next
+                                    End If
+                            End Select
+                        Case 1
+                            Select Case Ceil(Rnd * 50000)
+                                Case 0 To 120 'zombie
+                                    If CurrentEntities < EntityNatSpawnLim * 2 Then
+                                        CurrentEntities = CurrentEntities + 1
+                                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
+                                        For i = 0 To EntityParameters
+                                            entity(CurrentEntities, i) = SummonEntity(2, i)
+                                        Next
+                                    End If
+                            End Select
+
+
                     End Select
 
             End Select
@@ -2775,6 +2791,7 @@ Sub DEV
         If Flag.CastShadows = 1 Then ENDPRINT "Shadows Disabled"
         If Flag.FrameRateLock = 1 Then ENDPRINT "Engine Tickrate Unlocked"
         If Flag.FullRender = 1 Then ENDPRINT "Render Optimizations Disabled"
+        If Flag.IsBloodmoon = 1 Then ENDPRINT "Blood Moon is Active"
 
 
         Locate 1, 1
@@ -2929,6 +2946,10 @@ Sub DEV
 
                 Case "cv01"
                     Error 104
+                Case "togglebloodmoon", "tbm"
+                    Flag.IsBloodmoon = Flag.IsBloodmoon + 1
+                    Swap Texture.Shadows, Texture.Shadows_Bloodmoon
+                    If Flag.IsBloodmoon = 1 Then PlaySound Sounds.bloodmoon_spawn
 
                 Case "stillcam", "sc"
                     Flag.StillCam = Flag.StillCam + 1
@@ -3706,10 +3727,26 @@ Sub SetLighting
     Next
 End Sub
 
+
+
 Sub DayLightCycle
     '86400
     GameTime = GameTime + Settings.TickRate
-    If GameTime > 43200 Then GameTime = GameTime - 43200: TimeMode = TimeMode + 1
+    If GameTime > 43200 Then
+        GameTime = GameTime - 43200: TimeMode = TimeMode + 1
+        If TimeMode = 1 Then
+            If Int(Rnd * 100) < BloodmoonSpawnrate Then
+                Flag.IsBloodmoon = 1
+                Swap Texture.Shadows, Texture.Shadows_Bloodmoon
+                PlaySound Sounds.bloodmoon_spawn
+            End If
+        Else
+            If Flag.IsBloodmoon = 1 Then
+                Flag.IsBloodmoon = 0
+                Swap Texture.Shadows, Texture.Shadows_Bloodmoon
+            End If
+        End If
+    End If
     If TimeMode > 1 Then TimeMode = 0
 
     Select Case TimeMode
@@ -4046,8 +4083,12 @@ Sub SwitchRender (mode As Byte)
         FreeImage Texture.ItemSheet
         FreeImage Texture.HudSprites
         FreeImage Texture.Shadows
+        FreeImage Texture.Shadows_Bloodmoon
 
     End If
+
+    Texture.Shadows = 0
+    Texture.Shadows_Bloodmoon = 0
 
     Texture.PlayerSprites = LoadImage(File.PlayerSprites, mode + 32)
     Texture.PlayerSheet = LoadImage(File.PlayerSheet, mode + 32)
@@ -4057,6 +4098,9 @@ Sub SwitchRender (mode As Byte)
     Texture.ItemSheet = LoadImage(File.ItemSheet, mode + 32)
     Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)
     Texture.Shadows = LoadImage(File.Shadows, mode + 32)
+    Texture.Shadows_Bloodmoon = LoadImage(File.Shadows_Bloodmoon, mode + 32)
+
+    If Flag.IsBloodmoon = 1 Then Swap Texture.Shadows, Texture.Shadows_Bloodmoon
 
     FirstSkip = 1
 
