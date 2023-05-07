@@ -57,7 +57,7 @@ Const TileDataFriction = 9
 Const TileDataMaxSpeed = 10
 
 
-
+temptitle:
 INITIALIZE
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
@@ -2877,6 +2877,20 @@ Sub DEV
                     Next
                     Print
                 Next
+            Case "5"
+                Print "Mouse Data Tracker"
+                Do While MouseInput: Loop
+                Print "Mouse Coordinates:" + Trim$(Str$(MouseX)) + ","; Trim$(Str$(MouseY))
+                If MouseButton(1) Then Print "Left Click"
+                If MouseButton(2) Then Print "Right Click"
+                If MouseButton(3) Then Print "Middle Click"
+                If MouseWheel = -1 Then Print "Scroll Down"
+                If MouseWheel = 1 Then Print "Scroll Up"
+            Case "6"
+                Print "Combat Tile Tracker"
+                Print"   (WIP)
+                ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
+
 
             Case Else
                 Print "Unrecognized Tile or Entity"
@@ -3194,7 +3208,11 @@ Sub LOADWORLD
     prevfolder = map.foldername
     Print "dimmed local values"
     Print "opening manifest"
-    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+    If FileExists("Assets\Worlds\" + WorldName + "\Manifest.cdf") Then
+        Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+    Else
+        Error 105
+    End If
     Print "successful, reading manifest data"
     Get #1, 1, GameTime
     Get #1, 2, ManifestProtocol
@@ -3727,6 +3745,7 @@ Sub INITIALIZE
         If DirExists("Assets\Structures") = 0 Then Error 100
         If DirExists("Assets\Worlds") = 0 Then MkDir "Assets\Worlds"
         If DirExists("Assets\SaveData") = 0 Then MkDir "Assets\SaveData": new = 1
+        If FileExists("Assets\SaveData\Settings.cdf") = 0 Then new = 1
     Else Error 100
     End If
 
@@ -3887,6 +3906,14 @@ Sub ErrorHandler
             CENTERPRINT "/                       \"
             CENTERPRINT "/_________________________\"
             CONTPROMPT
+        Case 105
+            CENTERPRINT "This world is missing files, unable to load world."
+            CENTERPRINT ""
+            CENTERPRINT "This is currently a fatal error, pres (q) to exit to desktop."
+            Do
+                If KeyDown(113) Then System
+            Loop
+
 
         Case 2
             CENTERPRINT "Syntax error, READ attempted to read a number but could not parse the next"
@@ -4061,7 +4088,7 @@ End Sub
 
 Sub PlaySound (nam$)
     Dim sndhnd As Long
-    sndhnd = SndOpen(nam$ + Str$(Int(Rnd * 2)))
+    sndhnd = SndOpen(nam$)
     SndPlay sndhnd
 End Sub
 
