@@ -1,0 +1,9 @@
+Sub OSPROBE
+
+    Game.HostOS = "Unknown OS"
+    If InStr(OS$, "WINDOWS") Then Game.HostOS = "Windows"
+    If InStr(OS$, "LINUX") Then Game.HostOS = "Linux"
+    If InStr(OS$, "MACOSX") Then Game.HostOS = "Mac OS"
+    If InStr(OS$, "32-BIT") Then Game.32Bit = 1
+
+End Sub 
