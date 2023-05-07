@@ -4061,7 +4061,7 @@ End Sub
 
 Sub PlaySound (nam$)
     Dim sndhnd As Long
-    sndhnd = SndOpen(nam$ + Str$(Int(Rnd * 2)))
+    sndhnd = SndOpen(nam$)
     SndPlay sndhnd
 End Sub
 

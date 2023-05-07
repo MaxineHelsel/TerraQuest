@@ -385,7 +385,7 @@ ItemIndex(30, 7) = 1 'current stack
 ItemIndex(30, 8) = 1 'max stack
 ItemIndex(30, 9) = 30 'Item ID
 
-'31-34 stone toolset
+'31-35 stone toolset
 
 ItemName(31, 0) = "Stone Shovel"
 ItemName(31, 1) = "Allows you to break ground tiles"
@@ -440,7 +440,7 @@ ItemIndex(34, 8) = 1 'max stack
 ItemIndex(34, 9) = 34 'item id
 
 ItemName(35, 0) = "Stone Hoe"
-ItemName(35, 1) = "Allows you to fight"
+ItemName(35, 1) = "hoe"
 ItemIndex(35, 0) = 1 'item type (1 means tool)
 ItemIndex(35, 1) = 64 'item texture x cord
 ItemIndex(35, 2) = 32 'item texture y cord
@@ -452,6 +452,7 @@ ItemIndex(35, 7) = 1 'current stack
 ItemIndex(35, 8) = 1 'max stack
 ItemIndex(35, 9) = 35 'Item ID
 
+'36 eggplant
 ItemName(36, 0) = "Eggplant"
 ItemName(36, 1) = "Food Item"
 ItemIndex(36, 0) = 4 'item type (4 means consumable)
@@ -465,4 +466,235 @@ ItemIndex(36, 7) = 1 'current stack
 ItemIndex(36, 8) = 100 'max stack
 ItemIndex(36, 9) = 36 'Item ID
 
+'37 eggplant seeds
+
+'38-45 ores
+
+ItemName(38, 0) = "Tin Ore 
+ItemName(38, 1) = "Crafting Material"
+ItemIndex(38, 0) = 3 'item type (1 means tool)
+ItemIndex(38, 1) = 112 'item texture x cord
+ItemIndex(38, 2) = 32 'item texture y cord
+ItemIndex(38, 3) = 0 '
+ItemIndex(38, 4) = 0 '
+ItemIndex(38, 5) = 0 '
+ItemIndex(38, 6) = 0 '
+ItemIndex(38, 7) = 1 'current stack
+ItemIndex(38, 8) = 100 'max stack
+ItemIndex(38, 9) = 38 'Item ID
+
+ItemName(39, 0) = "Copper Ore 
+ItemName(39, 1) = "Crafting Material"
+ItemIndex(39, 0) = 3 'item type (1 means tool)
+ItemIndex(39, 1) = 128 'item texture x cord
+ItemIndex(39, 2) = 32 'item texture y cord
+ItemIndex(39, 3) = 0 '
+ItemIndex(39, 4) = 0 '
+ItemIndex(39, 5) = 0 '
+ItemIndex(39, 6) = 0 '
+ItemIndex(39, 7) = 1 'current stack
+ItemIndex(39, 8) = 100 'max stack
+ItemIndex(39, 9) = 39 'Item ID
+
+ItemName(40, 0) = "Iron Ore 
+ItemName(40, 1) = "Crafting Material"
+ItemIndex(40, 0) = 3 'item type (1 means tool)
+ItemIndex(40, 1) = 144 'item texture x cord
+ItemIndex(40, 2) = 32 'item texture y cord
+ItemIndex(40, 3) = 0 ' 
+ItemIndex(40, 4) = 0 '
+ItemIndex(40, 5) = 0 '
+ItemIndex(40, 6) = 0 '
+ItemIndex(40, 7) = 1 'current stack
+ItemIndex(40, 8) = 100 'max stack
+ItemIndex(40, 9) = 40 'Item ID
+
+ItemName(41, 0) = "Platinum Ore 
+ItemName(41, 1) = "Crafting Material"
+ItemIndex(41, 0) = 3 'item type (1 means tool)
+ItemIndex(41, 1) = 160 'item texture x cord
+ItemIndex(41, 2) = 32 'item texture y cord
+ItemIndex(41, 3) = 0 ' 
+ItemIndex(41, 4) = 0 '
+ItemIndex(41, 5) = 0 '
+ItemIndex(41, 6) = 0 '
+ItemIndex(41, 7) = 1 'current stack
+ItemIndex(41, 8) = 100 'max stack
+ItemIndex(41, 9) = 41 'Item ID
+
+ItemName(42, 0) = "Titanium Ore 
+ItemName(42, 1) = "Crafting Material"
+ItemIndex(42, 0) = 3 'item type (1 means tool)
+ItemIndex(42, 1) = 176 'item texture x cord
+ItemIndex(42, 2) = 32 'item texture y cord
+ItemIndex(42, 3) = 0 ' 
+ItemIndex(42, 4) = 0 '
+ItemIndex(42, 5) = 0 '
+ItemIndex(42, 6) = 0 '
+ItemIndex(42, 7) = 1 'current stack
+ItemIndex(42, 8) = 100 'max stack
+ItemIndex(42, 9) = 42 'Item ID
+
+ItemName(43, 0) = "Cobalt Ore 
+ItemName(43, 1) = "Crafting Material"
+ItemIndex(43, 0) = 3 'item type (1 means tool)
+ItemIndex(43, 1) = 192 'item texture x cord
+ItemIndex(43, 2) = 32 'item texture y cord
+ItemIndex(43, 3) = 0 ' 
+ItemIndex(43, 4) = 0 '
+ItemIndex(43, 5) = 0 '
+ItemIndex(43, 6) = 0 '
+ItemIndex(43, 7) = 1 'current stack
+ItemIndex(43, 8) = 100 'max stack
+ItemIndex(43, 9) = 43 'Item ID
+
+ItemName(44, 0) = "Chromium Ore 
+ItemName(44, 1) = "Crafting Material"
+ItemIndex(44, 0) = 3 'item type (1 means tool)
+ItemIndex(44, 1) = 208 'item texture x cord
+ItemIndex(44, 2) = 32 'item texture y cord
+ItemIndex(44, 3) = 0 ' 
+ItemIndex(44, 4) = 0 '
+ItemIndex(44, 5) = 0 '
+ItemIndex(44, 6) = 0 '
+ItemIndex(44, 7) = 1 'current stack
+ItemIndex(44, 8) = 100 'max stack
+ItemIndex(44, 9) = 44 'Item ID
+
+ItemName(45, 0) = "Tungsten Ore 
+ItemName(45, 1) = "Crafting Material"
+ItemIndex(45, 0) = 3 'item type (1 means tool)
+ItemIndex(45, 1) = 224 'item texture x cord
+ItemIndex(45, 2) = 32 'item texture y cord
+ItemIndex(45, 3) = 0 ' 
+ItemIndex(45, 4) = 0 '
+ItemIndex(45, 5) = 0 '
+ItemIndex(45, 6) = 0 '
+ItemIndex(45, 7) = 1 'current stack
+ItemIndex(45, 8) = 100 'max stack
+ItemIndex(45, 9) = 45 'Item ID
+'46-53 bars
+
+
+ItemName(46, 0) = "Refined Tin
+ItemName(46, 1) = "Crafting Material"
+ItemIndex(46, 0) = 3 'item type (1 means tool)
+ItemIndex(46, 1) = 112 'item texture x cord
+ItemIndex(46, 2) = 48 'item texture y cord
+ItemIndex(46, 3) = 0 '
+ItemIndex(46, 4) = 0 '
+ItemIndex(46, 5) = 0 '
+ItemIndex(46, 6) = 0 '
+ItemIndex(46, 7) = 1 'current stack
+ItemIndex(46, 8) = 100 'max stack
+ItemIndex(46, 9) = 46 'Item ID
+
+ItemName(47, 0) = "Refined Copper 
+ItemName(47, 1) = "Crafting Material"
+ItemIndex(47, 0) = 3 'item type (1 means tool)
+ItemIndex(47, 1) = 128 'item texture x cord
+ItemIndex(47, 2) = 48 'item texture y cord
+ItemIndex(47, 3) = 0 '
+ItemIndex(47, 4) = 0 '
+ItemIndex(47, 5) = 0 '
+ItemIndex(47, 6) = 0 '
+ItemIndex(47, 7) = 1 'current stack
+ItemIndex(47, 8) = 100 'max stack
+ItemIndex(47, 9) = 47 'Item ID
+
+ItemName(48, 0) = "Refind Iron 
+ItemName(48, 1) = "Crafting Material"
+ItemIndex(48, 0) = 3 'item type (1 means tool)
+ItemIndex(48, 1) = 144 'item texture x cord
+ItemIndex(48, 2) = 48 'item texture y cord
+ItemIndex(48, 3) = 0 ' 
+ItemIndex(48, 4) = 0 '
+ItemIndex(48, 5) = 0 '
+ItemIndex(48, 6) = 0 '
+ItemIndex(48, 7) = 1 'current stack
+ItemIndex(48, 8) = 100 'max stack
+ItemIndex(48, 9) = 48 'Item ID
+
+ItemName(49, 0) = "Refind Platinum
+ItemName(49, 1) = "Crafting Material"
+ItemIndex(49, 0) = 3 'item type (1 means tool)
+ItemIndex(49, 1) = 160 'item texture x cord
+ItemIndex(49, 2) = 48 'item texture y cord
+ItemIndex(49, 3) = 0 ' 
+ItemIndex(49, 4) = 0 '
+ItemIndex(49, 5) = 0 '
+ItemIndex(49, 6) = 0 '
+ItemIndex(49, 7) = 1 'current stack
+ItemIndex(49, 8) = 100 'max stack
+ItemIndex(49, 9) = 49 'Item ID
+
+ItemName(50, 0) = "Refind Titanium
+ItemName(50, 1) = "Crafting Material"
+ItemIndex(50, 0) = 3 'item type (1 means tool)
+ItemIndex(50, 1) = 176 'item texture x cord
+ItemIndex(50, 2) = 48 'item texture y cord
+ItemIndex(50, 3) = 0 ' 
+ItemIndex(50, 4) = 0 '
+ItemIndex(50, 5) = 0 '
+ItemIndex(50, 6) = 0 '
+ItemIndex(50, 7) = 1 'current stack
+ItemIndex(50, 8) = 100 'max stack
+ItemIndex(50, 9) = 50 'Item ID
+
+ItemName(51, 0) = "Refind Cobalt
+ItemName(51, 1) = "Crafting Material"
+ItemIndex(51, 0) = 3 'item type (1 means tool)
+ItemIndex(51, 1) = 192 'item texture x cord
+ItemIndex(51, 2) = 48 'item texture y cord
+ItemIndex(51, 3) = 0 ' 
+ItemIndex(51, 4) = 0 '
+ItemIndex(51, 5) = 0 '
+ItemIndex(51, 6) = 0 '
+ItemIndex(51, 7) = 1 'current stack
+ItemIndex(51, 8) = 100 'max stack
+ItemIndex(51, 9) = 51 'Item ID
+
+ItemName(52, 0) = "Refind Chromium
+ItemName(52, 1) = "Crafting Material"
+ItemIndex(52, 0) = 3 'item type (1 means tool)
+ItemIndex(52, 1) = 208 'item texture x cord
+ItemIndex(52, 2) = 48 'item texture y cord
+ItemIndex(52, 3) = 0 ' 
+ItemIndex(52, 4) = 0 '
+ItemIndex(52, 5) = 0 '
+ItemIndex(52, 6) = 0 '
+ItemIndex(52, 7) = 1 'current stack
+ItemIndex(52, 8) = 100 'max stack
+ItemIndex(52, 9) = 52 'Item ID
+
+ItemName(53, 0) = "Refind Tungsten
+ItemName(53, 1) = "Crafting Material"
+ItemIndex(53, 0) = 3 'item type (1 means tool)
+ItemIndex(53, 1) = 224 'item texture x cord
+ItemIndex(53, 2) = 48 'item texture y cord
+ItemIndex(53, 3) = 0 ' 
+ItemIndex(53, 4) = 0 '
+ItemIndex(53, 5) = 0 '
+ItemIndex(53, 6) = 0 '
+ItemIndex(53, 7) = 1 'current stack
+ItemIndex(53, 8) = 100 'max stack
+ItemIndex(53, 9) = 53 'Item ID
+
+'54-58 tool handles
+
+'59-63 tin toolset
+
+'64-68 copper toolset
+
+'69-73 iron toolset
+
+'74-78 platinum toolset
+
+'79-83 titanium toolset
+
+'84-88 cobalt toolset
+
+'89-93 chromium toolset
+
+'94-98 tungsten toolset
 
