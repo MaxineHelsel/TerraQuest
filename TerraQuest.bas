@@ -1070,6 +1070,8 @@ Sub DisplayHotbar
     For iii = 0 To 5
         PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii), CameraPositionY + HotbarY - 16)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii), CameraPositionY + HotbarY), Texture.HudSprites, , (0, 32)-(31, 63)
         PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (Inventory(0, iii, 1), Inventory(0, iii, 2))-(Inventory(0, iii, 1) + 15, Inventory(0, iii, 2) + 15)
+        PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (128 + (8 * (Inventory(0, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(0, iii, 10) - 2)) + 15, 80 + 15)
+
         If Flag.InventoryOpen = 1 Then
             If CursorHoverPage = 1 And CursorHoverX = iii Then PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii), CameraPositionY + HotbarY - 16)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii), CameraPositionY + HotbarY), Texture.HudSprites, , (32, 32)-(63, 63)
             If CursorSelectedPage = 1 And CursorSelectedX = iii And CursorMode = 1 Then PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii), CameraPositionY + HotbarY - 16)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii), CameraPositionY + HotbarY), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
@@ -1103,6 +1105,9 @@ Sub DisplayInventory (CreativePage As Integer)
 
                 Case 2
                     PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (Inventory(iiii + 1, iii, 1), Inventory(iiii + 1, iii, 2))-(Inventory(iiii + 1, iii, 1) + 15, Inventory(iiii + 1, iii, 2) + 15)
+                    If Inventory(iiii + 1, iii, 10) > 1 Then
+                        PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
+                    End If
             End Select
         Next
     Next
@@ -1128,6 +1133,7 @@ Sub DisplayCrafting
                 For iiii = 0 To Player.CraftingLevel - 1
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (0, 32)-(31, 63)
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (CraftingGrid(iiii, iii, 1), CraftingGrid(iiii, iii, 2))-(CraftingGrid(iiii, iii, 1) + 15, CraftingGrid(iiii, iii, 2) + 15)
+                    PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (128 + (8 * (CraftingGrid(iiii, iii, 10) - 2)), 80)-(128 + (8 * (CraftingGrid(iiii, iii, 10) - 2)) + 15, 80 + 15) '            (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
 
                     If CursorHoverPage = 3 And CursorHoverX = iii And CursorHoverY = iiii Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (32, 32)-(63, 63)
                     If CursorSelectedPage = 3 And CursorSelectedX = iii And CursorSelectedY = iiii And CursorMode = 1 Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
@@ -2509,6 +2515,7 @@ Sub Crafting
         Next
         recipe = recipe + "|"
     Next
+    Print recipe
     For i = 0 To InvParameters
         CraftingGrid(0, Player.CraftingLevel, i) = -1
     Next
@@ -2537,21 +2544,103 @@ Sub Crafting
             Case "-1 19 -1 |-1 19 -1 |-1 22 -1 |" 'wooden sword
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
 
+            Case "19 19 19 |-1 22 -1 |-1 22 -1 |" 'wooden pickaxe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
+
+            Case "19 19 -1 |-1 22 -1 |-1 22 -1 |" 'wooden hoe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(30, i)
+
+
             Case "-1 29 -1 |-1 22 -1 |-1 22 -1 |" 'stone shovel
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(31, i)
 
             Case "29 29 -1 |29 22 -1 |-1 22 -1 |" 'stone axe
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(32, i)
 
+            Case "29 29 29 |-1 22 -1 |-1 22 -1 |" 'stonepickaxe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(33, i)
+
             Case "-1 29 -1 |-1 29 -1 |-1 22 -1 |" 'stone sword
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(34, i)
 
+            Case "29 29 -1 |-1 22 -1 |-1 22 -1 |" 'stone hoe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(35, i)
 
+
+            Case "-1 46 -1 |-1 22 -1 |-1 22 -1 |" 'tin shovel
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(59, i)
+
+            Case "46 46 -1 |46 22 -1 |-1 22 -1 |" 'tin axe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(60, i)
+
+            Case "46 46 46 |-1 22 -1 |-1 22 -1 |" 'tin pickaxe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(61, i)
+
+            Case "-1 46 -1 |-1 46 -1 |-1 22 -1 |" 'tin sword
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(62, i)
+
+            Case "46 46 -1 |-1 22 -1 |-1 22 -1 |" 'tin hoe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(63, i)
+
+
+            Case "-1 47 -1 |-1 22 -1 |-1 22 -1 |" 'copper shovel
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(64, i)
+
+            Case "47 47 -1 |47 22 -1 |-1 22 -1 |" 'copper axe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(65, i)
+
+            Case "47 47 47 |-1 22 -1 |-1 22 -1 |" 'copper pickaxe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(66, i)
+
+            Case "-1 47 -1 |-1 47 -1 |-1 22 -1 |" 'copper sword
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(67, i)
+
+            Case "47 47 -1 |-1 22 -1 |-1 22 -1 |" 'copper hoe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(68, i)
+
+
+            Case "-1 48 -1 |-1 22 -1 |-1 22 -1 |" 'irom shovel
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(69, i)
+
+            Case "48 48 -1 |48 22 -1 |-1 22 -1 |" 'iron axe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(70, i)
+
+            Case "48 48 48 |-1 22 -1 |-1 22 -1 |" 'iron pickaxe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(71, i)
+
+            Case "-1 48 -1 |-1 48 -1 |-1 22 -1 |" 'iron sword
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(72, i)
+
+            Case "48 48 -1 |-1 22 -1 |-1 22 -1 |" 'iron hoe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(73, i)
+
+
+            Case "-1 49 -1 |-1 54 -1 |-1 54 -1 |" 'platinum shovel
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(74, i)
+
+            Case "49 49 -1 |49 54 -1 |-1 54 -1 |" 'platinum axe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(75, i)
+
+            Case "49 49 49 |-1 54 -1 |-1 54 -1 |" 'platinum pickaxe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(76, i)
+
+            Case "-1 49 -1 |-1 49 -1 |-1 54 -1 |" 'platinum sword
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(77, i)
+
+            Case "49 49 -1 |-1 54 -1 |-1 54 -1 |" 'platinum hoe
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(78, i)
+
+
+
+
+            Case "29 29 29 |29 29 29 |29 29 29 |" 'cobblestone Wall
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(7, i)
+                CraftingGrid(0, Player.CraftingLevel, 7) = 9
 
             Case "-1 -1 -1 |-1 19 -1 |-1 19 -1 |" 'Tool Handle
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(22, i)
 
-            Case "19 19 19 |19 -1 19 |19 19 19 |" 'Wood Wall
+            Case "19 19 19 |19 -1 19 |19 19 19 |" 'Chest
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(6, i)
 
             Case "-1 -1 -1 |-1 20 -1 |-1 -1 -1 |" 'Red Berries

@@ -1,3 +1,19 @@
+Beta 1.2
+
+#Bug Fixes
+Fixed sound bug introduced in 1.1 (230506A)
+Fixed black screen and crash with empty SaveData Folder (230506A)
+Stone paths no longer block shadows (TMP:Source changed include in next build)
+
+#Features
+Added Blood Moon, more enemies, harder enemies, and faster enemies, however when enemy drops become a thing, these blood moon enemies will drop far greater loot. (230507A)
+added mouse data tracker (230506A)
+
+#Tiles and Items
+Added ores and refined ores for tool metal progression, tin > copper > iron > platinum > titanium > cobalt > chromium > tungsten (230506A)
+
+#Changes
+
 Alpha Version 22/Beta Version 1.0
 
 #Bugs

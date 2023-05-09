@@ -3,8 +3,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta Version 1.2 Edge Build 230507A
-Game.Version = "b1.2-230507A
+Game.Buildinfo = "Beta Version 1.2 Edge Build 230508A
+Game.Version = "b1.2-230508A
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"

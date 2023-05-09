@@ -87,7 +87,7 @@ ItemIndex(6, 8) = 100 'max stack
 ItemIndex(6, 9) = 6 'Item ID
 
 
-ItemName(7, 0) = "Stone Wall" 'Name of the tile
+ItemName(7, 0) = "Cobblestone Wall" 'Name of the tile
 ItemName(7, 1) = "Placeholder" 'tooltip
 ItemIndex(7, 0) = 0 'layer definition
 ItemIndex(7, 1) = 128 'x position on tilesheet
@@ -682,13 +682,338 @@ ItemIndex(53, 9) = 53 'Item ID
 
 '54-58 tool handles
 
+ItemName(54, 0) = "Iron Tool Handle 
+ItemName(54, 1) = "Crafting Material"
+ItemIndex(54, 0) = 3 'item type (1 means tool)
+ItemIndex(54, 1) = 240 'item texture x cord
+ItemIndex(54, 2) = 32 'item texture y cord
+ItemIndex(54, 3) = 0 ' 
+ItemIndex(54, 4) = 0 '
+ItemIndex(54, 5) = 0 '
+ItemIndex(54, 6) = 0 '
+ItemIndex(54, 7) = 1 'current stack
+ItemIndex(54, 8) = 100 'max stack
+ItemIndex(54, 9) = 54 'Item ID
+
+ItemName(55, 0) = "Platinum Tool Handle 
+ItemName(55, 1) = "Crafting Material"
+ItemIndex(55, 0) = 3 'item type (1 means tool)
+ItemIndex(55, 1) = 80 'item texture x cord
+ItemIndex(55, 2) = 48 'item texture y cord
+ItemIndex(55, 3) = 0 ' 
+ItemIndex(55, 4) = 0 '
+ItemIndex(55, 5) = 0 '
+ItemIndex(55, 6) = 0 '
+ItemIndex(55, 7) = 1 'current stack
+ItemIndex(55, 8) = 100 'max stack
+ItemIndex(55, 9) = 55 'Item ID
+
+ItemName(56, 0) = "Titanium Tool Handle 
+ItemName(56, 1) = "Crafting Material"
+ItemIndex(56, 0) = 3 'item type (1 means tool)
+ItemIndex(56, 1) = 96 'item texture x cord
+ItemIndex(56, 2) = 48 'item texture y cord
+ItemIndex(56, 3) = 0 ' 
+ItemIndex(56, 4) = 0 '
+ItemIndex(56, 5) = 0 '
+ItemIndex(56, 6) = 0 '
+ItemIndex(56, 7) = 1 'current stack
+ItemIndex(56, 8) = 100 'max stack
+ItemIndex(56, 9) = 56 'Item ID
+
+ItemName(57, 0) = "Cobalt Tool Handle 
+ItemName(57, 1) = "Crafting Material"
+ItemIndex(57, 0) = 3 'item type (1 means tool)
+ItemIndex(57, 1) = 240 'item texture x cord
+ItemIndex(57, 2) = 48 'item texture y cord
+ItemIndex(57, 3) = 0 ' 
+ItemIndex(57, 4) = 0 '
+ItemIndex(57, 5) = 0 '
+ItemIndex(57, 6) = 0 '
+ItemIndex(57, 7) = 1 'current stack
+ItemIndex(57, 8) = 100 'max stack
+ItemIndex(57, 9) = 57 'Item ID
+
+ItemName(58, 0) = "Chromium Tool Handle 
+ItemName(58, 1) = "Crafting Material"
+ItemIndex(58, 0) = 3 'item type (1 means tool)
+ItemIndex(58, 1) = 80 'item texture x cord
+ItemIndex(58, 2) = 64 'item texture y cord
+ItemIndex(58, 3) = 0 ' 
+ItemIndex(58, 4) = 0 '
+ItemIndex(58, 5) = 0 '
+ItemIndex(58, 6) = 0 '
+ItemIndex(58, 7) = 1 'current stack
+ItemIndex(58, 8) = 100 'max stack
+ItemIndex(58, 9) = 58 'Item ID
 '59-63 tin toolset
+
+ItemName(59, 0) = "Tin Shovel"
+ItemName(59, 1) = "Allows you to break ground tiles"
+ItemIndex(59, 0) = 1 'item type (1 means tool)
+ItemIndex(59, 1) = 0 'item texture x cord
+ItemIndex(59, 2) = 48 'item texture y cord
+ItemIndex(59, 3) = 100 'tool max durabillity
+ItemIndex(59, 4) = 100 'tool current durrabillity
+ItemIndex(59, 5) = 0 'tool type
+ItemIndex(59, 6) = 40 'tool strength
+ItemIndex(59, 7) = 1 'current stack
+ItemIndex(59, 8) = 1 'max stack
+ItemIndex(59, 9) = 59 'Item ID
+
+ItemName(60, 0) = "Tin Axe"
+ItemName(60, 1) = "Allows you to break wall tiles"
+ItemIndex(60, 0) = 1 'item type (1 means tool)
+ItemIndex(60, 1) = 16 'item texture x cord
+ItemIndex(60, 2) = 48 'item texture y cord
+ItemIndex(60, 3) = 100 'tool max durabillity
+ItemIndex(60, 4) = 100 'tool current durrabillity
+ItemIndex(60, 5) = 1 'tool type
+ItemIndex(60, 6) = 40 'tool strength
+ItemIndex(60, 7) = 1 'current stack
+ItemIndex(60, 8) = 1 'max stack
+ItemIndex(60, 9) = 60 'Item ID
+
+ItemName(61, 0) = "Tin Pickaxe"
+ItemName(61, 1) = "Allows you to mine"
+ItemIndex(61, 0) = 1 'item type (1 means tool)
+ItemIndex(61, 1) = 32 'item texture x cord
+ItemIndex(61, 2) = 48 'item texture y cord
+ItemIndex(61, 3) = 100 'tool max durabillity
+ItemIndex(61, 4) = 100 'tool current durrabillity
+ItemIndex(61, 5) = 2 'tool type
+ItemIndex(61, 6) = 40 'tool strength
+ItemIndex(61, 7) = 1 'current stack
+ItemIndex(61, 8) = 1 'max stack
+ItemIndex(61, 9) = 61 'Item ID
+
+ItemName(62, 0) = "Tin Sword"
+ItemName(62, 1) = "Allows you to fight"
+ItemIndex(62, 0) = 2 'item type (1 means tool)
+ItemIndex(62, 1) = 48 'item texture x cord
+ItemIndex(62, 2) = 48 'item texture y cord
+ItemIndex(62, 3) = 100 'tool max durabillity
+ItemIndex(62, 4) = 100 'tool current durrabillity
+ItemIndex(62, 5) = 40 'swing delay
+ItemIndex(62, 6) = 2 'attack strength
+ItemIndex(62, 7) = 1 'current stack
+ItemIndex(62, 8) = 1 'max stack
+ItemIndex(62, 9) = 62 'item id
+
+ItemName(63, 0) = "Tin Hoe"
+ItemName(63, 1) = "hoe"
+ItemIndex(63, 0) = 1 'item type (1 means tool)
+ItemIndex(63, 1) = 64 'item texture x cord
+ItemIndex(63, 2) = 48 'item texture y cord
+ItemIndex(63, 3) = 0 'tool max durabillity
+ItemIndex(63, 4) = 1 'tool current durrabillity
+ItemIndex(63, 5) = 3 '
+ItemIndex(63, 6) = 30 'attack strength
+ItemIndex(63, 7) = 1 'current stack
+ItemIndex(63, 8) = 1 'max stack
+ItemIndex(63, 9) = 63 'Item ID
 
 '64-68 copper toolset
 
-'69-73 iron toolset
+ItemName(64, 0) = "Copper Shovel"
+ItemName(64, 1) = "Allows you to break ground tiles"
+ItemIndex(64, 0) = 1 'item type (1 means tool)
+ItemIndex(64, 1) = 0 'item texture x cord
+ItemIndex(64, 2) = 64 'item texture y cord
+ItemIndex(64, 3) = 100 'tool max durabillity
+ItemIndex(64, 4) = 100 'tool current durrabillity
+ItemIndex(64, 5) = 0 'tool type
+ItemIndex(64, 6) = 50 'tool strength
+ItemIndex(64, 7) = 1 'current stack
+ItemIndex(64, 8) = 1 'max stack
+ItemIndex(64, 9) = 64 'Item ID
 
-'74-78 platinum toolset
+ItemName(65, 0) = "Copper Axe"
+ItemName(65, 1) = "Allows you to break wall tiles"
+ItemIndex(65, 0) = 1 'item type (1 means tool)
+ItemIndex(65, 1) = 16 'item texture x cord
+ItemIndex(65, 2) = 64 'item texture y cord
+ItemIndex(65, 3) = 100 'tool max durabillity
+ItemIndex(65, 4) = 100 'tool current durrabillity
+ItemIndex(65, 5) = 1 'tool type
+ItemIndex(65, 6) = 50 'tool strength
+ItemIndex(65, 7) = 1 'current stack
+ItemIndex(65, 8) = 1 'max stack
+ItemIndex(65, 9) = 65 'Item ID
+
+ItemName(66, 0) = "Copper Pickaxe"
+ItemName(66, 1) = "Allows you to mine"
+ItemIndex(66, 0) = 1 'item type (1 means tool)
+ItemIndex(66, 1) = 32 'item texture x cord
+ItemIndex(66, 2) = 64 'item texture y cord
+ItemIndex(66, 3) = 100 'tool max durabillity
+ItemIndex(66, 4) = 100 'tool current durrabillity
+ItemIndex(66, 5) = 2 'tool type
+ItemIndex(66, 6) = 50 'tool strength
+ItemIndex(66, 7) = 1 'current stack
+ItemIndex(66, 8) = 1 'max stack
+ItemIndex(66, 9) = 66 'Item ID
+
+ItemName(67, 0) = "Copper Sword"
+ItemName(67, 1) = "Allows you to fight"
+ItemIndex(67, 0) = 2 'item type (1 means tool)
+ItemIndex(67, 1) = 48 'item texture x cord
+ItemIndex(67, 2) = 64 'item texture y cord
+ItemIndex(67, 3) = 100 'tool max durabillity
+ItemIndex(67, 4) = 100 'tool current durrabillity
+ItemIndex(67, 5) = 30 'swing delay
+ItemIndex(67, 6) = 2 'attack strength
+ItemIndex(67, 7) = 1 'current stack
+ItemIndex(67, 8) = 1 'max stack
+ItemIndex(67, 9) = 67 'item id
+
+ItemName(68, 0) = "Copper Hoe"
+ItemName(68, 1) = "hoe"
+ItemIndex(68, 0) = 1 'item type (1 means tool)
+ItemIndex(68, 1) = 64 'item texture x cord
+ItemIndex(68, 2) = 64 'item texture y cord
+ItemIndex(68, 3) = 0 'tool max durabillity
+ItemIndex(68, 4) = 1 'tool current durrabillity
+ItemIndex(68, 5) = 3 '
+ItemIndex(68, 6) = 40 'attack strength
+ItemIndex(68, 7) = 1 'current stack
+ItemIndex(68, 8) = 1 'max stack
+ItemIndex(68, 9) = 68'Item ID
+
+
+'Iron Toolset (69-73)
+ItemName(69, 0) = "Iron Shovel"
+ItemName(69, 1) = "Allows you to break ground tiles"
+ItemIndex(69, 0) = 1 'item type (1 means tool)
+ItemIndex(69, 1) = 0 'item texture x cord
+ItemIndex(69, 2) = 80 'item texture y cord
+ItemIndex(69, 3) = 100 'tool max durabillity
+ItemIndex(69, 4) = 100 'tool current durrabillity
+ItemIndex(69, 5) = 0 'tool type
+ItemIndex(69, 6) = 60 'tool strength
+ItemIndex(69, 7) = 1 'current stack
+ItemIndex(69, 8) = 1 'max stack
+ItemIndex(69, 9) = 69 'Item ID
+
+ItemName(70, 0) = "Iron Axe"
+ItemName(70, 1) = "Allows you to break wall tiles"
+ItemIndex(70, 0) = 1 'item type (1 means tool)
+ItemIndex(70, 1) = 16 'item texture x cord
+ItemIndex(70, 2) = 80 'item texture y cord
+ItemIndex(70, 3) = 100 'tool max durabillity
+ItemIndex(70, 4) = 100 'tool current durrabillity
+ItemIndex(70, 5) = 1 'tool type
+ItemIndex(70, 6) = 60 'tool strength
+ItemIndex(70, 7) = 1 'current stack
+ItemIndex(70, 8) = 1 'max stack
+ItemIndex(70, 9) = 70 'Item ID
+
+ItemName(71, 0) = "Iron Pickaxe"
+ItemName(71, 1) = "Allows you to mine"
+ItemIndex(71, 0) = 1 'item type (1 means tool)
+ItemIndex(71, 1) = 32 'item texture x cord
+ItemIndex(71, 2) = 80 'item texture y cord
+ItemIndex(71, 3) = 100 'tool max durabillity
+ItemIndex(71, 4) = 100 'tool current durrabillity
+ItemIndex(71, 5) = 2 'tool type
+ItemIndex(71, 6) = 60 'tool strength
+ItemIndex(71, 7) = 1 'current stack
+ItemIndex(71, 8) = 1 'max stack
+ItemIndex(71, 9) = 71 'Item ID
+
+ItemName(72, 0) = "Iron Sword"
+ItemName(72, 1) = "Allows you to fight"
+ItemIndex(72, 0) = 2 'item type (1 means tool)
+ItemIndex(72, 1) = 48 'item texture x cord
+ItemIndex(72, 2) = 80 'item texture y cord
+ItemIndex(72, 3) = 100 'tool max durabillity
+ItemIndex(72, 4) = 100 'tool current durrabillity
+ItemIndex(72, 5) = 30 'swing delay
+ItemIndex(72, 6) = 3 'attack strength
+ItemIndex(72, 7) = 1 'current stack
+ItemIndex(72, 8) = 1 'max stack
+ItemIndex(72, 9) = 72 'item id
+
+ItemName(73, 0) = "Iron Hoe"
+ItemName(73, 1) = "hoe"
+ItemIndex(73, 0) = 1 'item type (1 means tool)
+ItemIndex(73, 1) = 64 'item texture x cord
+ItemIndex(73, 2) = 80 'item texture y cord
+ItemIndex(73, 3) = 0 'tool max durabillity
+ItemIndex(73, 4) = 1 'tool current durrabillity
+ItemIndex(73, 5) = 3 '
+ItemIndex(73, 6) = 50 'attack strength
+ItemIndex(73, 7) = 1 'current stack
+ItemIndex(73, 8) = 1 'max stack
+ItemIndex(73, 9) = 73 'Item ID
+
+'64-68 Platinum Toolset
+
+ItemName(74, 0) = "Platinum Shovel"
+ItemName(74, 1) = "Allows you to break ground tiles"
+ItemIndex(74, 0) = 1 'item type (1 means tool)
+ItemIndex(74, 1) = 0 'item texture x cord
+ItemIndex(74, 2) = 96 'item texture y cord
+ItemIndex(74, 3) = 100 'tool max durabillity
+ItemIndex(74, 4) = 100 'tool current durrabillity
+ItemIndex(74, 5) = 0 'tool type
+ItemIndex(74, 6) = 50 'tool strength
+ItemIndex(74, 7) = 1 'current stack
+ItemIndex(74, 8) = 1 'max stack
+ItemIndex(74, 9) = 74 'Item ID
+itemindex(74,10) = 1 'imbuable
+
+ItemName(75, 0) = "Platinum Axe"
+ItemName(75, 1) = "Allows you to break wall tiles"
+ItemIndex(75, 0) = 1 'item type (1 means tool)
+ItemIndex(75, 1) = 16 'item texture x cord
+ItemIndex(75, 2) = 96 'item texture y cord
+ItemIndex(75, 3) = 100 'tool max durabillity
+ItemIndex(75, 4) = 100 'tool current durrabillity
+ItemIndex(75, 5) = 1 'tool type
+ItemIndex(75, 6) = 55 'tool strength
+ItemIndex(75, 7) = 1 'current stack
+ItemIndex(75, 8) = 1 'max stack
+ItemIndex(75, 9) = 75 'Item ID
+
+ItemName(76, 0) = "Platinum Pickaxe"
+ItemName(76, 1) = "Allows you to mine"
+ItemIndex(76, 0) = 1 'item type (1 means tool)
+ItemIndex(76, 1) = 32 'item texture x cord
+ItemIndex(76, 2) = 96 'item texture y cord
+ItemIndex(76, 3) = 100 'tool max durabillity
+ItemIndex(76, 4) = 100 'tool current durrabillity
+ItemIndex(76, 5) = 2 'tool type
+ItemIndex(76, 6) = 55 'tool strength
+ItemIndex(76, 7) = 1 'current stack
+ItemIndex(76, 8) = 1 'max stack
+ItemIndex(76, 9) = 76 'Item ID
+
+ItemName(77, 0) = "Platium Sword"
+ItemName(77, 1) = "Allows you to fight"
+ItemIndex(77, 0) = 2 'item type (1 means tool)
+ItemIndex(77, 1) = 48 'item texture x cord
+ItemIndex(77, 2) = 96 'item texture y cord
+ItemIndex(77, 3) = 100 'tool max durabillity
+ItemIndex(77, 4) = 100 'tool current durrabillity
+ItemIndex(77, 5) = 40 'swing delay
+ItemIndex(77, 6) = 3 'attack strength
+ItemIndex(77, 7) = 1 'current stack
+ItemIndex(77, 8) = 1 'max stack
+ItemIndex(77, 9) = 77 'item id
+
+ItemName(78, 0) = "Platinum Hoe"
+ItemName(78, 1) = "hoe"
+ItemIndex(78, 0) = 1 'item type (1 means tool)
+ItemIndex(78, 1) = 64 'item texture x cord
+ItemIndex(78, 2) = 96 'item texture y cord
+ItemIndex(78, 3) = 0 'tool max durabillity
+ItemIndex(78, 4) = 1 'tool current durrabillity
+ItemIndex(78, 5) = 3 '
+ItemIndex(78, 6) = 45 'attack strength
+ItemIndex(78, 7) = 1 'current stack
+ItemIndex(78, 8) = 1 'max stack
+ItemIndex(78, 9) = 78'Item ID
 
 '79-83 titanium toolset
 
@@ -697,4 +1022,26 @@ ItemIndex(53, 9) = 53 'Item ID
 '89-93 chromium toolset
 
 '94-98 tungsten toolset
+ 
+ItemName(99, 0) = "Crafting Station"
+ItemName(99, 1) = "Placeholder"
+ItemIndex(99, 0) = 0 'type
+ItemIndex(99, 1) = 96 'ssx
+ItemIndex(99, 2) = 64 'ssy
+ItemIndex(99, 3) = 22 'tileID
+ItemIndex(99, 4) = 1 'layer
+ItemIndex(99, 7) = 1 'current stack
+ItemIndex(99, 8) = 100 'max stack
+ItemIndex(99, 9) = 99 'Item ID
 
+
+ItemName(100, 0) = "Wood Floor" 'Name of the Item
+ItemName(100, 1) = "Placeholder" 'tooltip
+ItemIndex(100, 0) = 0 'item type
+ItemIndex(100, 1) = 112 'x position on tilesheet
+ItemIndex(100, 2) = 64 'y position on tilesheet
+ItemIndex(100, 3) = 23 'tile id
+ItemIndex(100, 4) = 0 'layer
+ItemIndex(100, 7) = 1 'current stack
+ItemIndex(100, 8) = 100 'max stack
+ItemIndex(100, 9) = 100 'Item ID
