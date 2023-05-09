@@ -8,8 +8,8 @@ Dim Shared Sounds As Sounds
 Dim Shared Debug As Debug
 
 'Constants
-const TileParameters=13
-const InvParameters=11
+const TileParameters=16
+const InvParameters=13
 const EffectParameters=4
 const MaxEffects=20
 Const MaxCraftLevel = 5
@@ -86,6 +86,7 @@ Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
 dim shared Game.MapProtocol as integer
 dim shared Game.ManifestProtocol as integer
+dim shared Game.NetPort as         integer
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 

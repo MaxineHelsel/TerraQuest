@@ -65,18 +65,28 @@ CENTERPRINT "Temporary title screen"
 CENTERPRINT Game.Buildinfo
 Print
 Dim InputString As String
-Input "(L)oad world, (C)reate new world, (V)iew WIP Title Screen: ", InputString
-If LCase$(InputString) = "l" Then
-    Input "World name"; WorldName
-    LOADWORLD
-End If
-If LCase$(InputString) = "c" Then NewWorld
-For i = 0 To 31
-    For ii = 0 To 41
-        UpdateTile ii, i
-    Next
-Next
-If LCase$(InputString) = "v" Then TitleScreen
+Input "(L)oad world, (C)reate new world, (H)ost network game, (J)oin network game, (V)iew WIP Title Screen: ", InputString
+
+Select Case LCase$(InputString)
+    Case "l"
+        Input "World name"; WorldName
+        LOADWORLD
+
+    Case "c"
+        NewWorld
+        For i = 0 To 31
+            For ii = 0 To 41
+                UpdateTile ii, i
+            Next
+        Next
+
+    Case "h"
+    Case "j"
+    Case "v"
+        TitleScreen
+    Case Else
+        GoTo temptitle
+End Select
 
 SpreadLight (1)
 
@@ -144,6 +154,18 @@ Sub TileTickUpdates
 
 End Sub
 
+Function LootTable (tType As Byte, ID As Integer)
+    Select Case tType
+        Case 1 'tile drops
+            Select Case ID
+                Case 19
+                    LootTable = 29
+                    If Int(Rnd * 100) < 5 Then LootTable = 38
+                    If Int(Rnd * 100) < 2.5 Then LootTable = 39
+            End Select
+    End Select
+End Function
+
 Sub UseItem (Slot)
     Static ConsumeCooldown
     Static WeaponCooldown
@@ -200,11 +222,16 @@ Sub UseItem (Slot)
                         If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
                         If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
                     End If
-                Case 1
+                Case 1, 2
+                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(0, Slot, 5) - 1 Then Exit Select
                     If WallTile(FacingX, FacingY) <> 1 Then
                         If TileData(FacingX, FacingY, 5) <= 0 Then
                             If GameMode <> 1 Then
-                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                                If TileIndexData(WallTile(FacingX, FacingY), 15) = 1 Then
+                                    If PickUpItem(LootTable(1, WallTile(FacingX, FacingY))) = 1 Then Exit Select
+                                Else
+                                    If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                                End If
                             End If
                             WallTile(FacingX, FacingY) = 1
                             TileData(FacingX, FacingY, 5) = 255
@@ -221,6 +248,7 @@ Sub UseItem (Slot)
                         If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
                         If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
                     End If
+
                 Case 3
                     If TileIndex(GroundTile(FacingX, FacingY), 4) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
@@ -555,6 +583,8 @@ Sub Entities (Command As Byte)
                     End Select
 
             End Select
+            'check if entity is inside of a tile, if so, then either retry or un summon
+
         Case 1 'Calculate Entity Shit (For all entities on current map
             For i = 1 To CurrentEntities
                 Select Case entity(i, 3) 'check ai type
@@ -1070,7 +1100,10 @@ Sub DisplayHotbar
     For iii = 0 To 5
         PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii), CameraPositionY + HotbarY - 16)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii), CameraPositionY + HotbarY), Texture.HudSprites, , (0, 32)-(31, 63)
         PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (Inventory(0, iii, 1), Inventory(0, iii, 2))-(Inventory(0, iii, 1) + 15, Inventory(0, iii, 2) + 15)
-        PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (128 + (8 * (Inventory(0, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(0, iii, 10) - 2)) + 15, 80 + 15)
+
+        If Inventory(0, iii, 10) > 1 Then
+            PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (128 + (16 * (Inventory(0, iii, 10) - 2)), 80)-(128 + (16 * (Inventory(0, iii, 10) - 2)) + 15, 80 + 15)
+        End If
 
         If Flag.InventoryOpen = 1 Then
             If CursorHoverPage = 1 And CursorHoverX = iii Then PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii), CameraPositionY + HotbarY - 16)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii), CameraPositionY + HotbarY), Texture.HudSprites, , (32, 32)-(63, 63)
@@ -1106,7 +1139,7 @@ Sub DisplayInventory (CreativePage As Integer)
                 Case 2
                     PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (Inventory(iiii + 1, iii, 1), Inventory(iiii + 1, iii, 2))-(Inventory(iiii + 1, iii, 1) + 15, Inventory(iiii + 1, iii, 2) + 15)
                     If Inventory(iiii + 1, iii, 10) > 1 Then
-                        PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
+                        PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (128 + (16 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (16 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
                     End If
             End Select
         Next
@@ -1133,7 +1166,10 @@ Sub DisplayCrafting
                 For iiii = 0 To Player.CraftingLevel - 1
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (0, 32)-(31, 63)
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (CraftingGrid(iiii, iii, 1), CraftingGrid(iiii, iii, 2))-(CraftingGrid(iiii, iii, 1) + 15, CraftingGrid(iiii, iii, 2) + 15)
-                    PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (128 + (8 * (CraftingGrid(iiii, iii, 10) - 2)), 80)-(128 + (8 * (CraftingGrid(iiii, iii, 10) - 2)) + 15, 80 + 15) '            (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
+
+                    If CraftingGrid(iiii, iii, 10) > 1 Then
+                        PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (128 + (16 * (CraftingGrid(iiii, iii, 10) - 2)), 80)-(128 + (16 * (CraftingGrid(iiii, iii, 10) - 2)) + 15, 80 + 15) '            (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
+                    End If
 
                     If CursorHoverPage = 3 And CursorHoverX = iii And CursorHoverY = iiii Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (32, 32)-(63, 63)
                     If CursorSelectedPage = 3 And CursorSelectedX = iii And CursorSelectedY = iiii And CursorMode = 1 Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
@@ -2640,6 +2676,10 @@ Sub Crafting
             Case "-1 -1 -1 |-1 19 -1 |-1 19 -1 |" 'Tool Handle
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(22, i)
 
+            Case "-1 48 -1 |48 22 48 |-1 48 -1 |" 'Iron Handle
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(54, i)
+
+
             Case "19 19 19 |19 -1 19 |19 19 19 |" 'Chest
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(6, i)
 
@@ -3132,6 +3172,13 @@ Sub DEV
                     Locate 28, 1: Input "Select Data Bit: ", databit
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "Select Data Value: ", TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, databit)
+
+                Case "itemdata", "id"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Select Data Bit: ", databit
+                    Locate 28, 1: Print "                   "
+                    Locate 28, 1: Input "Select Data Value: ", Inventory(0, CursorHoverX, databit)
+
 
 
                 Case "bgdraw"
@@ -4279,6 +4326,9 @@ Sub GenerateMap
             Select Case PerlinTile
                 Case Is < 0.35
                     GroundTile(ii, i) = 13
+                Case Is > 0.6
+                    GroundTile(ii, i) = 4
+                    WallTile(ii, i) = 19
             End Select
         Next
     Next
@@ -4287,7 +4337,7 @@ Sub GenerateMap
         For ii = 0 To 41
 
 
-            If GroundTile(ii, i) <> 13 Then
+            If GroundTile(ii, i) <> 13 And WallTile(ii, i) = 1 Then
 
                 'generate bushes
                 If Ceil(Rnd * 10) = 1 Then

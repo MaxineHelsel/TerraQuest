@@ -123,6 +123,7 @@ TileIndexData(7, 2) = 1 'blocks shadow
 TileIndexData(7, 3) = 0 'has interior shadow
 TileIndexData(7, 4) = 24 'resistance
 TileIndexData(7, 5) = 1 'is solid
+tileindexdata(7,14)=1
 
 
 TileName(8, 0) = "Wood Wall" 'Name of the tile
@@ -272,8 +273,8 @@ TileIndexData(17, 3) = 0 'has interior shadow
 TileIndexData(17, 4) = 5 'resistance
 TileIndexData(17, 5) = 0 'is solid
 
-TileName(18, 0) = "Stone Wall" 'Name of the tile
-TileName(18, 1) = "Placeholder" 'tooltip
+TileName(19, 0) = "Stone Wall" 'Name of the tile
+TileName(19, 1) = "Placeholder" 'tooltip
 TileIndex(19, 0) = 1 'layer definition
 TileIndex(19, 1) = 32 'x position on tilesheet
 TileIndex(19, 2) = 16 'y position on tilesheet
@@ -284,6 +285,8 @@ TileIndexData(19, 2) = 1 'blocks shadow
 TileIndexData(19, 3) = 0 'has interior shadow
 TileIndexData(19, 4) = 29 'resistance
 TileIndexData(19, 5) = 1 'is solid
+tileindexdata(19,14)=1 'requires pickaxe
+tileindexdata(19,15)=1 'has lootpool
 
 TileName(20, 0) = "Stone Path" 'Name of the tile
 TileName(20, 1) = "Placeholder" 'tooltip
@@ -297,6 +300,7 @@ TileIndexData(20, 2) = 0 'blocks shadow
 TileIndexData(20, 3) = 0 'has interior shadow
 TileIndexData(20, 4) = 10 'resistance
 TileIndexData(20, 5) = 0 'is solid
+tileindexdata(20,14)=1 'requires pickaxe
 
 TileName(21, 0) = "Farmland" 'Name of the tile
 TileName(21, 1) = "Placeholder" 'tooltip
@@ -324,9 +328,10 @@ TileIndexData(22, 0) = 1 'collision
 TileIndexData(22, 1) = 1 'casts shadow
 TileIndexData(22, 2) = 1 'blocks shadow
 TileIndexData(22, 3) = 0 'has interior shadow
-TileIndexData(22, 4) = 33 'resistance
+TileIndexData(22, 4) = 45 'resistance
 TileIndexData(22, 5) = 1 'is soli
 TileIndexData(22, 8) = 4
+tileindexdata(22,14)=1 'requires pickaxe
 
 TileName(23, 0) = "Wood Floor" 'Name of the tile
 TileName(23, 1) = "Placeholder" 'tooltip
