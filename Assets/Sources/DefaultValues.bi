@@ -2,13 +2,14 @@
 'Note: any changes made to this file, and any other source files require a recompile of the game before they are recognized
 
 'Default variables that are required to be set on initial load
-Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta Version 1.2 Edge Build 230508A
-Game.Version = "b1.2-230508A
+Game.Title = "TerraQuest (Networking Test)"
+Game.Buildinfo = "Beta Version 1.2 Edge Build 230512A
+Game.Version = "b1.2-230512A
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
 Game.FCV = 1
+Game.NetPort = 46290
 
 'Default settings values that are saved on first launch to settings.cdf, and on subsequent launches are loaded from that file
 Settings.FrameRate = 60

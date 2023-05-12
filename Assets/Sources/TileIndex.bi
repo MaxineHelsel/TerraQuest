@@ -123,6 +123,7 @@ TileIndexData(7, 2) = 1 'blocks shadow
 TileIndexData(7, 3) = 0 'has interior shadow
 TileIndexData(7, 4) = 24 'resistance
 TileIndexData(7, 5) = 1 'is solid
+TileIndexData(7, 14) = 1
 
 
 TileName(8, 0) = "Wood Wall" 'Name of the tile
@@ -272,8 +273,8 @@ TileIndexData(17, 3) = 0 'has interior shadow
 TileIndexData(17, 4) = 5 'resistance
 TileIndexData(17, 5) = 0 'is solid
 
-TileName(18, 0) = "Stone Wall" 'Name of the tile
-TileName(18, 1) = "Placeholder" 'tooltip
+TileName(19, 0) = "Stone Wall" 'Name of the tile
+TileName(19, 1) = "Placeholder" 'tooltip
 TileIndex(19, 0) = 1 'layer definition
 TileIndex(19, 1) = 32 'x position on tilesheet
 TileIndex(19, 2) = 16 'y position on tilesheet
@@ -282,8 +283,10 @@ TileIndexData(19, 0) = 1 'collision
 TileIndexData(19, 1) = 1 'casts shadow
 TileIndexData(19, 2) = 1 'blocks shadow
 TileIndexData(19, 3) = 0 'has interior shadow
-TileIndexData(19, 4) = 29 'resistance
+TileIndexData(19, 4) = 26 'resistance
 TileIndexData(19, 5) = 1 'is solid
+TileIndexData(19, 14) = 1 'requires pickaxe
+TileIndexData(19, 15) = 1 'has lootpool
 
 TileName(20, 0) = "Stone Path" 'Name of the tile
 TileName(20, 1) = "Placeholder" 'tooltip
@@ -297,6 +300,7 @@ TileIndexData(20, 2) = 0 'blocks shadow
 TileIndexData(20, 3) = 0 'has interior shadow
 TileIndexData(20, 4) = 10 'resistance
 TileIndexData(20, 5) = 0 'is solid
+TileIndexData(20, 14) = 1 'requires pickaxe
 
 TileName(21, 0) = "Farmland" 'Name of the tile
 TileName(21, 1) = "Placeholder" 'tooltip
@@ -314,7 +318,7 @@ TileIndexData(21, 5) = 1 'is solid
 TileIndexData(21, 9) = 0.08 'Friction
 TileIndexData(21, 10) = 0.72
 
-TileName(22, 0) = "Iron Crafting Station" 'Name of the tile
+TileName(22, 0) = "Advanced Crafting Station" 'Name of the tile
 TileName(22, 1) = "Placeholder" 'tooltip
 TileIndex(22, 0) = 1 'layer definition
 TileIndex(22, 1) = 176 'x position on tilesheet
@@ -324,9 +328,10 @@ TileIndexData(22, 0) = 1 'collision
 TileIndexData(22, 1) = 1 'casts shadow
 TileIndexData(22, 2) = 1 'blocks shadow
 TileIndexData(22, 3) = 0 'has interior shadow
-TileIndexData(22, 4) = 33 'resistance
+TileIndexData(22, 4) = 45 'resistance
 TileIndexData(22, 5) = 1 'is soli
 TileIndexData(22, 8) = 4
+TileIndexData(22, 14) = 1 'requires pickaxe
 
 TileName(23, 0) = "Wood Floor" 'Name of the tile
 TileName(23, 1) = "Placeholder" 'tooltip
@@ -342,3 +347,122 @@ TileIndexData(23, 4) = 19 'resistance
 TileIndexData(23, 5) = 1 'is solid
 TileIndexData(23, 9) = 0.25 'friction
 TileIndexData(23, 10) = 1
+
+'24 imbuement station
+TileName(24, 0) = "Imbuement Station" 'Name of the tile
+TileName(24, 1) = "Placeholder" 'tooltip
+TileIndex(24, 0) = 1 'layer definition
+TileIndex(24, 1) = 176 'x position on tilesheet
+TileIndex(24, 2) = 16 'y position on tilesheet
+TileIndex(24, 3) = 113 'itemid
+TileIndexData(24, 0) = 1 'collision
+TileIndexData(24, 1) = 1 'casts shadow
+TileIndexData(24, 2) = 1 'blocks shadow
+TileIndexData(24, 3) = 0 'has interior shadow
+TileIndexData(24, 4) = 45 'resistance
+TileIndexData(24, 5) = 1 'is soli
+TileIndexData(24, 8) = 6
+TileIndexData(24, 14) = 1 'requires pickaxe
+'info: crafting level 2,3,4,5 are reserved for standard tables up to aetherian workbench, level 6 is for imbuement, 7,8,9,10 are for furnaces
+
+
+'25 deep water
+TileName(25, 0) = "Deep Water" 'Name of the tile
+TileName(25, 1) = "Placeholder" 'tooltip
+TileIndex(25, 0) = 0 'layer definition
+TileIndex(25, 1) = 32 'x position on tilesheet
+TileIndex(25, 2) = 32 'y position on tilesheet
+TileIndex(25, 3) = -1 'itemid
+TileIndexData(25, 0) = 0 'collision
+TileIndexData(25, 1) = 0 'casts shadow
+TileIndexData(25, 2) = 0 'blocks shadow
+TileIndexData(25, 3) = 0 'has interior shadow
+TileIndexData(25, 4) = 1000 'resistance
+TileIndexData(25, 5) = 0 'is solid
+TileIndexData(25, 9) = 0.04 'friction
+TileIndexData(25, 10) = 0.4
+TileIndexData(25, 10) = 1
+
+
+'26 void
+
+'27 Sandstone
+TileName(28, 0) = "Sandstone Wall" 'Name of the tile
+TileName(28, 1) = "Placeholder" 'tooltip
+TileIndex(28, 0) = 1 'layer definition
+TileIndex(28, 1) = 0 'x position on tilesheet
+TileIndex(28, 2) = 32 'y position on tilesheet
+TileIndex(28, 3) = 28 'itemid
+TileIndexData(28, 0) = 1 'collision
+TileIndexData(28, 1) = 1 'casts shadow
+TileIndexData(28, 2) = 1 'blocks shadow
+TileIndexData(28, 3) = 0 'has interior shadow
+TileIndexData(28, 4) = 54 'resistance
+TileIndexData(28, 5) = 1 'is solid
+TileIndexData(28, 14) = 1 'requires pickaxe
+TileIndexData(28, 15) = 1 'has lootpool
+
+'28 Calcite
+TileName(28, 0) = "Calcite Wall" 'Name of the tile
+TileName(28, 1) = "Placeholder" 'tooltip
+TileIndex(28, 0) = 1 'layer definition
+TileIndex(28, 1) = 0 'x position on tilesheet
+TileIndex(28, 2) = 32 'y position on tilesheet
+TileIndex(28, 3) = 28 'itemid
+TileIndexData(28, 0) = 1 'collision
+TileIndexData(28, 1) = 1 'casts shadow
+TileIndexData(28, 2) = 1 'blocks shadow
+TileIndexData(28, 3) = 0 'has interior shadow
+TileIndexData(28, 4) = 45 'resistance
+TileIndexData(28, 5) = 1 'is solid
+TileIndexData(28, 14) = 1 'requires pickaxe
+TileIndexData(28, 15) = 1 'has lootpool
+
+'29 Sand
+TileName(29, 0) = "Sand" 'Name of the tile
+TileName(29, 1) = "Placeholder" 'tooltip
+TileIndex(29, 0) = 0 'layer definition
+TileIndex(29, 1) = 224 'x position on tilesheet
+TileIndex(29, 2) = 16 'y position on tilesheet
+TileIndex(29, 3) = 116 'itemid
+TileIndexData(29, 0) = 0 'collision
+TileIndexData(29, 1) = 0 'casts shadow
+TileIndexData(29, 2) = 0 'blocks shadow
+TileIndexData(29, 3) = 0 'has interior shadow
+TileIndexData(29, 4) = 19 'resistance
+TileIndexData(29, 5) = 0 'is solid
+TileIndexData(29, 9) = 0.3 'friction
+TileIndexData(29, 10) = 0.9
+tileindexdata(29,15)=1
+
+'30 Glass
+TileName(30, 0) = "Glass" 'Name of the tile
+TileName(30, 1) = "Placeholder" 'tooltip
+TileIndex(30, 0) = 1 'layer definition
+TileIndex(30, 1) = 16 'x position on tilesheet
+TileIndex(30, 2) = 32 'y position on tilesheet
+TileIndex(30, 3) = 116 'itemid
+TileIndexData(30, 0) = 1 'collision
+TileIndexData(30, 1) = 0 'casts shadow
+TileIndexData(30, 2) = 0 'blocks shadow
+TileIndexData(30, 3) = 0 'has interior shadow
+TileIndexData(30, 4) = 5 'resistance
+TileIndexData(30, 5) = 0 'is solid
+
+
+'31 asphault
+TileName(31, 0) = "Asphault" 'Name of the tile
+TileName(31, 1) = "Placeholder" 'tooltip
+TileIndex(31, 0) = 0 'layer definition
+TileIndex(31, 1) = 48 'x position on tilesheet
+TileIndex(31, 2) = 32 'y position on tilesheet
+TileIndex(31, 3) = 116 'itemid
+TileIndexData(31, 0) = 0 'collision
+TileIndexData(31, 1) = 0 'casts shadow
+TileIndexData(31, 2) = 0 'blocks shadow
+TileIndexData(31, 3) = 0 'has interior shadow
+TileIndexData(31, 4) = 33 'resistance
+TileIndexData(31, 5) = 0 'is solid
+TileIndexData(31, 9) = 0.35 'friction
+TileIndexData(31, 10) = 2.5
+

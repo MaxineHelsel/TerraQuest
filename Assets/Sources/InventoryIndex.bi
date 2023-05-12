@@ -1023,7 +1023,7 @@ ItemIndex(78, 9) = 78'Item ID
 
 '94-98 tungsten toolset
  
-ItemName(99, 0) = "Crafting Station"
+ItemName(99, 0) = "Advanced Crafting Station"
 ItemName(99, 1) = "Placeholder"
 ItemIndex(99, 0) = 0 'type
 ItemIndex(99, 1) = 96 'ssx
@@ -1045,3 +1045,149 @@ ItemIndex(100, 4) = 0 'layer
 ItemIndex(100, 7) = 1 'current stack
 ItemIndex(100, 8) = 100 'max stack
 ItemIndex(100, 9) = 100 'Item ID
+
+
+ItemName(101, 0) = "Zombie Flesh"
+ItemName(101, 1) = "Food Item"
+ItemIndex(101, 0) = 4 'item type (4 means consumable)
+ItemIndex(101, 1) = 96 'item texture x cord
+ItemIndex(101, 2) = 96 'item texture y cord
+ItemIndex(101, 3) = 0 'consumable type
+ItemIndex(101, 4) = 0 '
+ItemIndex(101, 5) = 0 '
+ItemIndex(101, 6) = 0 '
+ItemIndex(101, 7) = 1 'current stack
+ItemIndex(101, 8) = 100 'max stack
+ItemIndex(101, 9) = 101 'Item ID
+
+
+ItemName(102, 0) = "Duck Meat"
+ItemName(102, 1) = "Food Item"
+ItemIndex(102, 0) = 4 'item type (4 means consumable)
+ItemIndex(102, 1) = 80 'item texture x cord
+ItemIndex(102, 2) = 96 'item texture y cord
+ItemIndex(102, 3) = 0 'consumable type
+ItemIndex(102, 4) = 0 '
+ItemIndex(102, 5) = 0 '
+ItemIndex(102, 6) = 0 '
+ItemIndex(102, 7) = 1 'current stack
+ItemIndex(102, 8) = 100 'max stack
+ItemIndex(102, 9) = 102 'Item ID
+
+'Stone of Refraction (imbuement stone) 103
+ItemName(103, 0) = "Stone of Refraction 
+ItemName(103, 1) = "Crafting Material"
+ItemIndex(103, 0) = 3 'item type (1 means tool)
+ItemIndex(103, 1) = 96   'item texture x cord
+ItemIndex(103, 2) = 80 'item texture y cord
+ItemIndex(103, 3) = 0 ' 
+ItemIndex(103, 4) = 0 '
+ItemIndex(103, 5) = 0 '
+ItemIndex(103, 6) = 0 '
+ItemIndex(103, 7) = 1 'current stack
+ItemIndex(103, 8) = 100 'max stack
+ItemIndex(103, 9) = 103 'Item ID
+
+'Aetherian Energy Sphere 103
+ItemName(104, 0) = "Aetherian Energy Sphere 
+ItemName(104, 1) = "Crafting Material"
+ItemIndex(104, 0) = 3 'item type (1 means tool)
+ItemIndex(104, 1) = 112   'item texture x cord
+ItemIndex(104, 2) = 80 'item texture y cord
+ItemIndex(104, 3) = 0 ' 
+ItemIndex(104, 4) = 0 '
+ItemIndex(104, 5) = 0 '
+ItemIndex(104, 6) = 0 '
+ItemIndex(104, 7) = 1 'current stack
+ItemIndex(104, 8) = 100 'max stack
+ItemIndex(104, 9) = 104 'Item ID
+
+
+'105-112 gemstones
+ItemName(105, 0) = "Sapphire
+ItemName(105, 1) = "Crafting Material"
+ItemIndex(105, 0) = 3 'item type (1 means tool)
+ItemIndex(105, 1) = 144   'item texture x cord
+ItemIndex(105, 2) = 64 'item texture y cord
+ItemIndex(105, 3) = 0 ' 
+ItemIndex(105, 4) = 0 '
+ItemIndex(105, 5) = 0 '
+ItemIndex(105, 6) = 0 '
+ItemIndex(105, 7) = 1 'current stack
+ItemIndex(105, 8) = 100 'max stack
+ItemIndex(105, 9) = 105 'Item ID
+
+'113 imbuement station
+ItemName(113, 0) = "Imbuement Station
+ItemName(113, 1) = "Placeholder"
+ItemIndex(113, 0) = 0 'type
+ItemIndex(113, 1) = 128 'ssx
+ItemIndex(113, 2) = 64 'ssy
+ItemIndex(113, 3) = 24 'tileID
+ItemIndex(113, 4) = 1 'layer
+ItemIndex(113, 7) = 1 'current stack
+ItemIndex(113, 8) = 100 'max stack
+ItemIndex(113, 9) = 113 'Item ID
+
+
+'114 Sandstone
+ItemName(114, 0) = "Sandstone Wall
+ItemName(114, 1) = "Placeholder"
+ItemIndex(114, 0) = 0 'type
+ItemIndex(114, 1) = 144 'ssx
+ItemIndex(114, 2) = 96 'ssy
+ItemIndex(114, 3) = 27'tileID
+ItemIndex(114, 4) = 1 'layer
+ItemIndex(114, 7) = 1 'current stack
+ItemIndex(114, 8) = 100 'max stack
+ItemIndex(114, 9) = 114 'Item ID
+
+'115 calcite
+ItemName(115, 0) = "Calcite Wall
+ItemName(115, 1) = "Placeholder"
+ItemIndex(115, 0) = 0 'type
+ItemIndex(115, 1) = 160 'ssx
+ItemIndex(115, 2) = 96 'ssy
+ItemIndex(115, 3) = 28 'tileID
+ItemIndex(115, 4) = 1 'layer
+ItemIndex(115, 7) = 1 'current stack
+ItemIndex(115, 8) = 100 'max stack
+ItemIndex(115, 9) = 115 'Item ID
+
+'116 Sand
+ItemName(116, 0) = "Sand
+ItemName(116, 1) = "Placeholder"
+ItemIndex(116, 0) = 0 'type
+ItemIndex(116, 1) = 128 'ssx
+ItemIndex(116, 2) = 96 'ssy
+ItemIndex(116, 3) = 29 'tileID
+ItemIndex(116, 4) = 0 'layer
+ItemIndex(116, 7) = 1 'current stack
+ItemIndex(116, 8) = 100 'max stack
+ItemIndex(116, 9) = 116 'Item ID
+
+'117 glass
+ItemName(117, 0) = "Glass
+ItemName(117, 1) = "Placeholder"
+ItemIndex(117, 0) = 0 'type
+ItemIndex(117, 1) = 176 'ssx
+ItemIndex(117, 2) = 96 'ssy
+ItemIndex(117, 3) = 30 'tileID
+ItemIndex(117, 4) = 1 'layer
+ItemIndex(117, 7) = 1 'current stack
+ItemIndex(117, 8) = 100 'max stack
+ItemIndex(117, 9) = 117 'Item ID
+
+'118 Iron SCUBA Tool
+
+'119 asphault
+ItemName(119, 0) = "Asphault
+ItemName(119, 1) = "Placeholder"
+ItemIndex(119, 0) = 0 'type
+ItemIndex(119, 1) = 192 'ssx
+ItemIndex(119, 2) = 96 'ssy
+ItemIndex(119, 3) = 31 'tileID
+ItemIndex(119, 4) = 0 'layer
+ItemIndex(119, 7) = 1 'current stack
+ItemIndex(119, 8) = 100 'max stack
+ItemIndex(119, 9) = 119 'Item ID

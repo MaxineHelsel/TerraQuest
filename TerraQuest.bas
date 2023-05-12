@@ -65,18 +65,28 @@ CENTERPRINT "Temporary title screen"
 CENTERPRINT Game.Buildinfo
 Print
 Dim InputString As String
-Input "(L)oad world, (C)reate new world, (V)iew WIP Title Screen: ", InputString
-If LCase$(InputString) = "l" Then
-    Input "World name"; WorldName
-    LOADWORLD
-End If
-If LCase$(InputString) = "c" Then NewWorld
-For i = 0 To 31
-    For ii = 0 To 41
-        UpdateTile ii, i
-    Next
-Next
-If LCase$(InputString) = "v" Then TitleScreen
+Input "(L)oad world, (C)reate new world, (H)ost network game, (J)oin network game, (V)iew WIP Title Screen: ", InputString
+
+Select Case LCase$(InputString)
+    Case "l"
+        Input "World name"; WorldName
+        LOADWORLD
+
+    Case "c"
+        NewWorld
+        For i = 0 To 31
+            For ii = 0 To 41
+                UpdateTile ii, i
+            Next
+        Next
+
+    Case "h"
+    Case "j"
+    Case "v"
+        TitleScreen
+    Case Else
+        GoTo temptitle
+End Select
 
 SpreadLight (1)
 
@@ -144,6 +154,7 @@ Sub TileTickUpdates
 
 End Sub
 
+
 Sub UseItem (Slot)
     Static ConsumeCooldown
     Static WeaponCooldown
@@ -200,11 +211,16 @@ Sub UseItem (Slot)
                         If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
                         If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
                     End If
-                Case 1
+                Case 1, 2
+                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(0, Slot, 5) - 1 Then Exit Select
                     If WallTile(FacingX, FacingY) <> 1 Then
                         If TileData(FacingX, FacingY, 5) <= 0 Then
                             If GameMode <> 1 Then
-                                If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                                If TileIndexData(WallTile(FacingX, FacingY), 15) = 1 Then
+                                    If PickUpItem(LootTable(1, WallTile(FacingX, FacingY))) = 1 Then Exit Select
+                                Else
+                                    If PickUpItem(TileIndex(WallTile(FacingX, FacingY), 3)) = 1 Then Exit Select
+                                End If
                             End If
                             WallTile(FacingX, FacingY) = 1
                             TileData(FacingX, FacingY, 5) = 255
@@ -221,6 +237,7 @@ Sub UseItem (Slot)
                         If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
                         If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
                     End If
+
                 Case 3
                     If TileIndex(GroundTile(FacingX, FacingY), 4) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
@@ -555,6 +572,8 @@ Sub Entities (Command As Byte)
                     End Select
 
             End Select
+            'check if entity is inside of a tile, if so, then either retry or un summon
+
         Case 1 'Calculate Entity Shit (For all entities on current map
             For i = 1 To CurrentEntities
                 Select Case entity(i, 3) 'check ai type
@@ -731,17 +750,80 @@ Function SummonEntity (ID, Parameter)
     End Select
 End Function
 
+Function LootTable (tType As Byte, ID As Integer)
+    Static RandomCap
+    Select Case tType
+        Case 1 'tile drops
+            Select Case ID
+                Case 19
+                    LootTable = 29 'stone
+                    If Int(Rnd * 100) < 15 Then LootTable = 38 'tin
+                    If Int(Rnd * 100) < 8 Then LootTable = 39 'copper
+                Case 28
+                    LootTable = 29 'stone
+                    If Int(Rnd * 100) < 13 Then LootTable = 39 'iron
+                    If Int(Rnd * 100) < 6 Then LootTable = 40 'platinum
+                    If Int(Rnd * 1000) < 5 Then LootTable = 107 'diamond
+                    If Int(Rnd * 1000) < 5 Then LootTable = 108 'emeralf
+                    If Int(Rnd * 1000) < 5 Then LootTable = 104 'aetherian energy sphere
+
+                Case 29
+                    LootTable = 116
+                    If Int(Rnd * 1000) < 5 Then LootTable = 105 'ruby
+                    If Int(Rnd * 1000) < 5 Then LootTable = 106 'saphire
+                    If Int(Rnd * 1000) < 3 And CurrentDimension = 3 Then LootTable = 103
+
+
+            End Select
+        Case 2 'mob drops
+            Select Case ID
+                Case 1
+                    LootTable = 102
+                    RandomCap = 3
+                Case 2
+                    LootTable = 101
+                    RandomCap = 3
+
+                    If Flag.IsBloodmoon = 1 Then
+                        If Int(Rnd * 100) < 3 Then LootTable = 24: RandomCap = 1
+                    End If
+            End Select
+        Case 3 'random quanity
+            LootTable = Int(Rnd * RandomCap) + 1
+
+
+    End Select
+End Function
+
+Sub SetGroundItem (ItemID, Amount, X, Y)
+    If ItemID = 0 Then Exit Sub
+    Dim iii As Byte
+    WallTile(X, Y) = 11
+    NewContainer SavedMapX, SavedMapY, X, Y
+    OpenContainer SavedMapX, SavedMapY, X, Y
+
+    For iii = 0 To InvParameters
+        Container(0, 0, iii) = ItemIndex(ItemID, iii)
+
+    Next
+    Container(0, 0, 7) = Amount
+    CloseContainer SavedMapX, SavedMapY, X, Y
+
+
+End Sub
+
 Sub EntityDespawn (id)
     Dim i, ii
-
+    'make sure tile to be set on is air
+    SetGroundItem LootTable(2, id), LootTable(3, id), Int(entity(id, 4) / 16) + 1, Int(entity(id, 5) / 16) + 1
     For i = id To CurrentEntities
         For ii = 0 To EntityParameters
             entity(i, ii) = entity(i + 1, ii)
+
         Next
     Next
     CurrentEntities = CurrentEntities - 1
 End Sub
-
 
 Sub Respawn
     SAVEMAP
@@ -1070,7 +1152,10 @@ Sub DisplayHotbar
     For iii = 0 To 5
         PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii), CameraPositionY + HotbarY - 16)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii), CameraPositionY + HotbarY), Texture.HudSprites, , (0, 32)-(31, 63)
         PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (Inventory(0, iii, 1), Inventory(0, iii, 2))-(Inventory(0, iii, 1) + 15, Inventory(0, iii, 2) + 15)
-        PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (128 + (8 * (Inventory(0, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(0, iii, 10) - 2)) + 15, 80 + 15)
+
+        If Inventory(0, iii, 10) > 1 Then
+            PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii) + ItemSizeOffset, CameraPositionY + HotbarY - 16 + ItemSizeOffset)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii) - ItemSizeOffset, CameraPositionY + HotbarY - ItemSizeOffset), Texture.ItemSheet, , (128 + (16 * (Inventory(0, iii, 10) - 2)), 80)-(128 + (16 * (Inventory(0, iii, 10) - 2)) + 15, 80 + 15)
+        End If
 
         If Flag.InventoryOpen = 1 Then
             If CursorHoverPage = 1 And CursorHoverX = iii Then PutImage (CameraPositionX - HotbarX + (HotbarSpace * iii), CameraPositionY + HotbarY - 16)-(CameraPositionX - HotbarX + 16 + (HotbarSpace * iii), CameraPositionY + HotbarY), Texture.HudSprites, , (32, 32)-(63, 63)
@@ -1106,7 +1191,7 @@ Sub DisplayInventory (CreativePage As Integer)
                 Case 2
                     PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (Inventory(iiii + 1, iii, 1), Inventory(iiii + 1, iii, 2))-(Inventory(iiii + 1, iii, 1) + 15, Inventory(iiii + 1, iii, 2) + 15)
                     If Inventory(iiii + 1, iii, 10) > 1 Then
-                        PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
+                        PutImage (CameraPositionX - InventoryX + (InventorySpace * iii) + itemsizeoffset, (CameraPositionY + InventoryY - 16) - (16 * (iiii + 1) + InventoryOffset * iiii) + itemsizeoffset)-(CameraPositionX - InventoryX + 16 + (17 * iii) - itemsizeoffset, (CameraPositionY + InventoryY) - (16 * (iiii + 1) + InventoryOffset * iiii) - itemsizeoffset), Texture.ItemSheet, , (128 + (16 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (16 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
                     End If
             End Select
         Next
@@ -1133,7 +1218,10 @@ Sub DisplayCrafting
                 For iiii = 0 To Player.CraftingLevel - 1
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (0, 32)-(31, 63)
                     PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (CraftingGrid(iiii, iii, 1), CraftingGrid(iiii, iii, 2))-(CraftingGrid(iiii, iii, 1) + 15, CraftingGrid(iiii, iii, 2) + 15)
-                    PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (128 + (8 * (CraftingGrid(iiii, iii, 10) - 2)), 80)-(128 + (8 * (CraftingGrid(iiii, iii, 10) - 2)) + 15, 80 + 15) '            (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
+
+                    If CraftingGrid(iiii, iii, 10) > 1 Then
+                        PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii) + ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + ItemSizeOffset)-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16 - ItemSizeOffset, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16 - ItemSizeOffset), Texture.ItemSheet, , (128 + (16 * (CraftingGrid(iiii, iii, 10) - 2)), 80)-(128 + (16 * (CraftingGrid(iiii, iii, 10) - 2)) + 15, 80 + 15) '            (128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)), 80)-(128 + (8 * (Inventory(iiii + 1, iii, 10) - 2)) + 15, 80 + 15)
+                    End If
 
                     If CursorHoverPage = 3 And CursorHoverX = iii And CursorHoverY = iiii Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (32, 32)-(63, 63)
                     If CursorSelectedPage = 3 And CursorSelectedX = iii And CursorSelectedY = iiii And CursorMode = 1 Then PutImage (CameraPositionX + CraftingX - (CraftingSpace * iii), CameraPositionY + CraftingY - (CraftingSpace * iiii))-(CameraPositionX + CraftingX - (CraftingSpace * iii) + 16, CameraPositionY + CraftingY - (CraftingSpace * iiii) + 16), Texture.HudSprites, , (32 + 32, 32)-(63 + 32, 63)
@@ -2127,6 +2215,34 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 4
                     EffectIndex = 120 'framedelay
             End Select
+        Case "Consume Zombie Flesh"
+            Select Case Value
+                Case 0
+                    EffectIndex = 6 'effectid
+                Case 1
+                    EffectIndex = 242 'frameduration
+                Case 2
+                    EffectIndex = 242 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+                Case 4
+                    EffectIndex = 60 'framedelay
+            End Select
+        Case "Consume Duck Meat"
+            Select Case Value
+                Case 0
+                    EffectIndex = 7 'effectid
+                Case 1
+                    EffectIndex = 242 'frameduration
+                Case 2
+                    EffectIndex = 242 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+                Case 4
+                    EffectIndex = 120 'framedelay
+            End Select
+
+
 
         Case Else
             EffectIndex = 0
@@ -2640,12 +2756,42 @@ Sub Crafting
             Case "-1 -1 -1 |-1 19 -1 |-1 19 -1 |" 'Tool Handle
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(22, i)
 
+            Case "-1 48 -1 |48 22 48 |-1 48 -1 |" 'Iron Handle
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(54, i)
+
+
             Case "19 19 19 |19 -1 19 |19 19 19 |" 'Chest
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(6, i)
+        
 
             Case "-1 -1 -1 |-1 20 -1 |-1 -1 -1 |" 'Red Berries
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(23, i)
                 CraftingGrid(0, Player.CraftingLevel, 7) = 4
+                
+                
+                
+            Case "48 48 48 |48 103 48 |48 48 48 |" 'imbuement station
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(113, i)
+
+            Case "48 48 48 |48 104 48 |48 48 48 |" 'advanced crafting station
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(99, i)
+            Case "-1 -1 -1 -1 |-1 116 29 -1 |-1 29 116 -1 |-1 -1 -1 -1 |" 'asphault
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(119, i)
+
+                'temp ore refinement recipe till furnace
+            Case "-1 -1 -1 |-1 38 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(46, i)
+            Case "-1 -1 -1 |-1 39 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(47, i)
+            Case "-1 -1 -1 |-1 40 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(48, i)
+            Case "-1 -1 -1 |-1 41 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(49, i)
+            Case "-1 -1 -1 |-1 116 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(117, i)
+
+            Case "48 48 48 |48 117 48 |48 -1 48 |" 'iron scuba tool
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(118, i)
         End Select
     Next
 End Sub
@@ -2869,7 +3015,8 @@ Sub DEV
             ENDPRINT dummystring
             ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
         End If
-        Print
+        ENDPRINT "Terrain Generator Tile Height:" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / 100, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / 100, 0, WorldSeed))
+
         ENDPRINT "Flags:"
         If Flag.StillCam = 1 Then ENDPRINT "Still Camera Enabled"
         If Flag.FreeCam = 1 Then ENDPRINT "Free Camera Enabled"
@@ -2892,10 +3039,10 @@ Sub DEV
         If WorldReadOnly = 1 Then Print "(R/O)"
         If WorldReadOnly = 0 Then Print
         Print "World Seed:"; WorldSeed
-        Print "Map Seed:"; Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed))
         Print "Current Time:"; GameTime + (TimeMode * 43200)
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Current Entities: "; CurrentEntities
+
 
         ' Do While MouseInput
         ' Loop
@@ -3132,6 +3279,13 @@ Sub DEV
                     Locate 28, 1: Input "Select Data Bit: ", databit
                     Locate 28, 1: Print "                   "
                     Locate 28, 1: Input "Select Data Value: ", TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, databit)
+
+                Case "itemdata", "id"
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Select Data Bit: ", databit
+                    Locate 28, 1: Print "                   "
+                    Locate 28, 1: Input "Select Data Value: ", Inventory(0, CursorHoverX, databit)
+
 
 
                 Case "bgdraw"
@@ -4244,7 +4398,7 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
         SavedMapX = SavedMapX + 1
         GenerateMap
-    Loop Until GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) <> 13
+    Loop Until WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) = 1
 
     SpawnPointX = Player.x
     SpawnPointY = Player.y
@@ -4253,6 +4407,7 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
     Print "map generated, loading world"
     Delay 0.5
+    WorldSeed = 0
     LOADWORLD
 End Sub
 
@@ -4277,25 +4432,40 @@ Sub GenerateMap
             'generate terrain
             PerlinTile = Perlin((ii + (SavedMapX * 40)) / 100, (i + (SavedMapY * 30)) / 100, 0, WorldSeed)
             Select Case PerlinTile
+                Case Is < 0.235
+                    GroundTile(ii, i) = 25
                 Case Is < 0.35
                     GroundTile(ii, i) = 13
+                Case 0.35 To 0.4
+                    GroundTile(ii, i) = 29
+                Case Is > 0.7
+                    GroundTile(ii, i) = 4
+                    WallTile(ii, i) = 28
+
+                Case Is > 0.6
+                    GroundTile(ii, i) = 4
+                    WallTile(ii, i) = 19
             End Select
+
+            'generate structures
+
+
         Next
     Next
-    Randomize Using Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed)) 'TODO, include world layer in this too
+    ' Randomize Using Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed)) 'TODO, include world layer in this too
+    Randomize Using Perlin((SavedMapX * 40) / 100, (SavedMapY * 30) / 100, 0, WorldSeed)
     For i = 0 To 31
         For ii = 0 To 41
 
 
-            If GroundTile(ii, i) <> 13 Then
+            If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
 
-                'generate bushes
-                If Ceil(Rnd * 10) = 1 Then
+                If Ceil(Rnd * 10) = 5 Then
                     WallTile(ii, i) = 5
                 End If
 
                 'generate ground wood items
-                If Ceil(Rnd * 300) = 1 Then
+                If Ceil(Rnd * 150) = 50 Then
                     WallTile(ii, i) = 11
                     NewContainer SavedMapX, SavedMapY, ii, i
                     OpenContainer SavedMapX, SavedMapY, ii, i
@@ -4306,8 +4476,8 @@ Sub GenerateMap
                     CloseContainer SavedMapX, SavedMapY, ii, i
                 End If
 
-                'generate raw stone
-                If Ceil(Rnd * 450) = 1 Then
+                'generate ground Stone items
+                If Ceil(Rnd * 300) = 50 Then
                     WallTile(ii, i) = 11
                     NewContainer SavedMapX, SavedMapY, ii, i
                     OpenContainer SavedMapX, SavedMapY, ii, i
@@ -4320,14 +4490,16 @@ Sub GenerateMap
 
 
                 'generate berry bushes
-                If Ceil(Rnd * 250) = 1 Then
+                If Ceil(Rnd * 250) = 125 Then
                     WallTile(ii, i) = 12
                 End If
 
                 'generate carrots
-                If Ceil(Rnd * 600) = 1 Then
+                If Ceil(Rnd * 600) = 300 Then
                     WallTile(ii, i) = 17
                 End If
+
+
             End If
 
             'update set tiles
