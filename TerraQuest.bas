@@ -20,6 +20,10 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 'constants to make code more readable
+Dim Shared RandomTickRate As Integer
+
+RandomTickRate = 5
+
 Const EntityID = 0
 Const EntityHealth = 1
 Const EntitySpeedMod = 2
@@ -120,6 +124,7 @@ Do
     RenderEntities (1)
     Entities (0)
     Entities (1)
+    PrecipOverlay
     SetLighting
     INTER
     Hud2
@@ -129,6 +134,7 @@ Do
     ChangeMap 0, 0, 0
     DayLightCycle
     MinMemFix
+    RandomUpdates
     If Player.health <= 0 Then Respawn
 
     If WithinBounds = 1 Then
@@ -154,6 +160,54 @@ Sub TileTickUpdates
 
 End Sub
 
+Sub RandomUpdates
+    Static WeatherCountDown As Long
+    Print "WC"; WeatherCountDown
+
+    'weather
+    If WeatherCountDown < 0 Then
+        WeatherCountDown = Int(Rnd * 1000000)
+        PrecipitationLevel = Int(Rnd * 3)
+    Else
+        WeatherCountDown = WeatherCountDown - RandomTickRate
+    End If
+    'tile updates
+
+    'water spread
+
+End Sub
+
+Sub PrecipOverlay
+    Static AnimDelay As Byte
+    Static AnimFrame As Byte
+
+    AnimDelay = AnimDelay + 1
+    Select Case PrecipitationLevel
+        Case 0
+            AnimFrame = 0
+            AnimDelay = 0
+        Case 1
+            If AnimDelay > 13 Then AnimFrame = AnimFrame + 1: AnimDelay = 0
+        Case 2
+            If AnimDelay > 3 Then AnimFrame = AnimFrame + 1: AnimDelay = 0
+    End Select
+    If AnimFrame > 3 Then AnimFrame = 0: AnimDelay = 0
+    Dim i, ii As Byte
+    AnimDelay = AnimDelay + 1
+    If PrecipitationLevel > 0 Then
+        For i = 0 To 30
+            For ii = 0 To 40
+                If VisibleCheck(ii, i) = 1 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * AnimFrame), 0 + (16 * (PrecipitationLevel - 1)))-(15 + (16 * AnimFrame), 15 + (16 * (PrecipitationLevel - 1)))
+                End If
+            Next
+        Next
+    End If
+    Print AnimDelay
+    Print AnimFrame
+    Print PrecipitationLevel
+
+End Sub
 
 Sub UseItem (Slot)
     Static ConsumeCooldown
@@ -2762,14 +2816,14 @@ Sub Crafting
 
             Case "19 19 19 |19 -1 19 |19 19 19 |" 'Chest
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(6, i)
-        
+
 
             Case "-1 -1 -1 |-1 20 -1 |-1 -1 -1 |" 'Red Berries
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(23, i)
                 CraftingGrid(0, Player.CraftingLevel, 7) = 4
-                
-                
-                
+
+
+
             Case "48 48 48 |48 103 48 |48 48 48 |" 'imbuement station
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(113, i)
 
@@ -3022,7 +3076,7 @@ Sub DEV
         If Flag.FreeCam = 1 Then ENDPRINT "Free Camera Enabled"
         If Flag.FullCam = 1 Then ENDPRINT "Full Camera Enabled"
         If Flag.NoClip = 1 Then ENDPRINT "No Clip Enabled"
-        If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
+        If BGDraw = 1 Then ENDPRINT "Background Drawing Disabled"
         If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
         If Flag.CastShadows = 1 Then ENDPRINT "Shadows Disabled"
         If Flag.FrameRateLock = 1 Then ENDPRINT "Engine Tickrate Unlocked"
@@ -3186,6 +3240,10 @@ Sub DEV
                     Flag.IsBloodmoon = Flag.IsBloodmoon + 1
                     Swap Texture.Shadows, Texture.Shadows_Bloodmoon
                     If Flag.IsBloodmoon = 1 Then PlaySound Sounds.bloodmoon_spawn
+                Case "weather"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Precipitation Level: ", PrecipitationLevel
+
 
                 Case "stillcam", "sc"
                     Flag.StillCam = Flag.StillCam + 1
@@ -3289,7 +3347,7 @@ Sub DEV
 
 
                 Case "bgdraw"
-                    bgdraw = bgdraw + 1
+                    BGDraw = BGDraw + 1
                 Case "shadowcast", "sh"
                     Flag.CastShadows = Flag.CastShadows + 1
 
@@ -4271,7 +4329,7 @@ End Sub
 
 
 Sub SetBG
-    If bgdraw = 0 Then
+    If BGDraw = 0 Then
         Dim i As Integer
         Dim ii As Integer
         For i = 0 To 30
@@ -4327,6 +4385,7 @@ Sub SwitchRender (mode As Byte)
         FreeImage Texture.HudSprites
         FreeImage Texture.Shadows
         FreeImage Texture.Shadows_Bloodmoon
+        FreeImage Texture.Precipitation
 
     End If
 
@@ -4342,6 +4401,7 @@ Sub SwitchRender (mode As Byte)
     Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)
     Texture.Shadows = LoadImage(File.Shadows, mode + 32)
     Texture.Shadows_Bloodmoon = LoadImage(File.Shadows_Bloodmoon, mode + 32)
+    Texture.Precipitation = LoadImage(File.Precipitation, mode + 32)
 
     If Flag.IsBloodmoon = 1 Then Swap Texture.Shadows, Texture.Shadows_Bloodmoon
 

@@ -3,8 +3,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest (Networking Test)"
-Game.Buildinfo = "Beta Version 1.2 Edge Build 230512A
-Game.Version = "b1.2-230512A
+Game.Buildinfo = "Beta Version 1.2 Edge Build 230513A
+Game.Version = "b1.2-230513A
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -25,6 +25,7 @@ File.ItemSheet = "Assets/Sprites/Items/Items.png"
 File.HudSprites = "Assets/Sprites/Other/HUD.png"
 File.Shadows = "Assets/Sprites/Other/Shadows.png"
 File.Shadows_Bloodmoon = "Assets/Sprites/Other/Shadows-bloodmoon.png"
+File.Precipitation= "Assets/Sprites/Other/Precipitation.png"
 
 
 

@@ -86,7 +86,7 @@ Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
 dim shared Game.MapProtocol as integer
 dim shared Game.ManifestProtocol as integer
-dim shared Game.NetPort as         integer
+dim shared Game.NetPort as integer
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
@@ -121,7 +121,8 @@ dim shared Flag.InitialRender as byte
 dim shared Flag.ContainerOpen as byte
 dim shared Flag.FullRender as unsigned bit
 dim shared Flag.IsBloodmoon as unsigned bit
-Dim Shared bgdraw As Unsigned Bit
+dim shared    PrecipitationLevel as byte
+Dim Shared BGDraw As Unsigned Bit
 dim shared RenderMode as byte
 
 
@@ -159,6 +160,7 @@ Type File
     HudSprites As String
     Shadows As String
     Shadows_Bloodmoon as string
+    Precipitation as string
 End Type
 
 Type Texture
@@ -166,12 +168,12 @@ Type Texture
     PlayerSheet as long
     ZombieSheet as long
     DuckSheet as long
-
     TileSheet As Long
     ItemSheet as long
     HudSprites As Long
     Shadows As Long
     Shadows_Bloodmoon as long
+    Precipitation as long
 End Type
 
 Type Sounds
