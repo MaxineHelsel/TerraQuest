@@ -20,6 +20,14 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 'constants to make code more readable
+
+'things to throw into the include files that im too lazy to do right now
+Dim Shared Gen.HeightScale
+Dim Shared Gen.TempScale
+
+Gen.HeightScale = 100
+Gen.TempScale = 500
+
 Dim Shared RandomTickRate As Integer
 
 RandomTickRate = 5
@@ -162,7 +170,7 @@ End Sub
 
 Sub RandomUpdates
     Static WeatherCountDown As Long
-    Print "WC"; WeatherCountDown
+    Static TileCountDown As Long
 
     'weather
     If WeatherCountDown < 0 Then
@@ -172,6 +180,13 @@ Sub RandomUpdates
         WeatherCountDown = WeatherCountDown - RandomTickRate
     End If
     'tile updates
+    If TileCountDown < 0 Then
+
+    Else
+        TileCountDown = TileCountDown - RandomTickRate
+
+    End If
+
 
     'water spread
 
@@ -3069,7 +3084,7 @@ Sub DEV
             ENDPRINT dummystring
             ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
         End If
-        ENDPRINT "Terrain Generator Tile Height:" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / 100, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / 100, 0, WorldSeed))
+
 
         ENDPRINT "Flags:"
         If Flag.StillCam = 1 Then ENDPRINT "Still Camera Enabled"
@@ -3197,6 +3212,11 @@ Sub DEV
                 Print "Combat Tile Tracker"
                 Print "   (WIP)"
                 ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
+            Case "7"
+                Print "World Data Viewer"
+                Print "Height (Current Tile):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.HeightScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Temperature (Biome+SeasonOffset):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.TempScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.TempScale, 0, Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)))
+                Print "Virus Level: 0"
 
 
             Case Else
@@ -4471,6 +4491,7 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     LOADWORLD
 End Sub
 
+
 Sub GenerateMap
     Dim i, ii, iii
     Dim PerlinTile As Double
@@ -4490,7 +4511,7 @@ Sub GenerateMap
 
 
             'generate terrain
-            PerlinTile = Perlin((ii + (SavedMapX * 40)) / 100, (i + (SavedMapY * 30)) / 100, 0, WorldSeed)
+            PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed)
             Select Case PerlinTile
                 Case Is < 0.235
                     GroundTile(ii, i) = 25
@@ -4512,8 +4533,56 @@ Sub GenerateMap
 
         Next
     Next
-    ' Randomize Using Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed)) 'TODO, include world layer in this too
-    Randomize Using Perlin((SavedMapX * 40) / 100, (SavedMapY * 30) / 100, 0, WorldSeed)
+
+    'generate biomes
+    For i = 0 To 31
+        For ii = 0 To 41
+            PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.TempScale, (i + (SavedMapY * 30)) / Gen.TempScale, 0, Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed))
+            Select Case PerlinTile
+
+                Case Is < 0.25
+                    'permafrost (being in this biome will damage you
+                Case 0.25 To 0.35
+                    'snowy
+                    Select Case GroundTile(ii, i)
+                        Case 13
+                            GroundTile(ii, i) = 14
+                    End Select
+                Case 0.35 To 0.55
+                    'planes
+                Case 0.55 To 0.65
+                    'forrest
+                Case Is > 0.75
+                    'lava    (needless to say being here will damage you, but even on land
+                Case Is > 0.65
+                    'desert
+                    Select Case GroundTile(ii, i)
+                        Case Is <> 13
+                            GroundTile(ii, i) = 29
+                    End Select
+
+
+                    'Case Is < 0.235
+                    '     GroundTile(ii, i) = 25
+                    ' Case Is < 0.35
+                    '    GroundTile(ii, i) = 13
+                    ' Case 0.35 To 0.4
+                    '   GroundTile(ii, i) = 29
+                    ' Case Is > 0.7
+                    '  GroundTile(ii, i) = 4
+                    '  WallTile(ii, i) = 28
+
+                    ' Case Is > 0.6
+                    '  GroundTile(ii, i) = 4
+                    '  WallTile(ii, i) = 19
+            End Select
+
+        Next
+    Next
+
+    'set feature seed
+    Randomize Using Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
+    'generate features
     For i = 0 To 31
         For ii = 0 To 41
 
