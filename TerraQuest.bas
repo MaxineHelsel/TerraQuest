@@ -19,11 +19,26 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
+
+'parse command line arguments
+Select Case LCase$(Command$)
+    Case "server"
+        ServerInit
+        ServerLoop
+    Case "server-headless"
+        Print "Headless server mode is not supported yet, please use 'server' argument to start in server mode"
+        End
+    Case "software"
+        DefaultRenderMode = 0
+        Flag.RenderOverride = 1
+End Select
+
 'constants to make code more readable
 
 'things to throw into the include files that im too lazy to do right now
 Dim Shared Gen.HeightScale
 Dim Shared Gen.TempScale
+Dim Shared CurrentDay
 
 Gen.HeightScale = 100
 Gen.TempScale = 500
@@ -142,6 +157,7 @@ Do
     ChangeMap 0, 0, 0
     DayLightCycle
     MinMemFix
+    TileTickUpdates
     RandomUpdates
     If Player.health <= 0 Then Respawn
 
@@ -164,13 +180,40 @@ Loop
 
 Error 102
 
-Sub TileTickUpdates
+Sub ServerInit
+    INITIALIZE
+End Sub
 
+Sub ServerLoop
+
+End Sub
+
+Sub TileTickUpdates
+    Static WaterDelay
+    Dim i, ii
+    For i = 1 To 30
+        For ii = 1 To 40
+            Select Case GroundTile(ii, i)
+                Case 13
+                    If GroundTile(ii - 1, i) = 0 Then GroundTile(ii - 1, i) = 13: UpdateTile ii - 1, i
+                    If GroundTile(ii + 1, i) = 0 Then GroundTile(ii + 1, i) = 13: UpdateTile ii + 1, i
+                    If GroundTile(ii, i + 1) = 0 Then GroundTile(ii, i + 1) = 13: UpdateTile ii, i + 1
+                    If GroundTile(ii, i - 1) = 0 Then GroundTile(ii, i - 1) = 13: UpdateTile ii, i - 1
+            End Select
+            Select Case WallTile(ii, i)
+            End Select
+            Select Case CeilingTile(ii, i)
+            End Select
+        Next
+    Next
 End Sub
 
 Sub RandomUpdates
     Static WeatherCountDown As Long
     Static TileCountDown As Long
+    Static WaterSpreadCountDown As Long
+    Static LongTimeOut As Long
+    Dim Rx, Ry As Byte
 
     'weather
     If WeatherCountDown < 0 Then
@@ -180,21 +223,51 @@ Sub RandomUpdates
         WeatherCountDown = WeatherCountDown - RandomTickRate
     End If
     'tile updates
-    If TileCountDown < 0 Then
 
-    Else
-        TileCountDown = TileCountDown - RandomTickRate
+    Rx = Int(Rnd * 41)
+    Ry = Int(Rnd * 31)
+    Print Rx; Ry; GroundTile(Rx, Ry); WallTile(Rx, Ry)
 
+    If LongTimeOut < 0 Then
+        Select Case WallTile(Rx, Ry)
+            Case 32
+                WallTile(Rx, Ry) = 33
+            Case 33
+                WallTile(Rx, Ry) = 34
+            Case 34
+                WallTile(Rx, Ry) = 35
+        End Select
+        LongTimeOut = 500
     End If
 
-
-    'water spread
+    Select Case GroundTile(Rx, Ry)
+        Case 13
+            If LocalTemperature(Rx, Ry) < 0.35 Then GroundTile(Rx, Ry) = 14
+        Case 14
+            If LocalTemperature(Rx, Ry) > 0.35 Then GroundTile(Rx, Ry) = 13
+    End Select
+    LongTimeOut = LongTimeOut - RandomTickRate
+    TileCountDown = TileCountDown - RandomTickRate
+    UpdateTile Rx, Ry
 
 End Sub
+
+Function MapSeed
+    MapSeed = Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
+End Function
+
+Function BiomeTemperature (Tx, Ty)
+    BiomeTemperature = Perlin(Tx / Gen.TempScale, Ty / Gen.TempScale, 0, MapSeed)
+End Function
+
+Function LocalTemperature (Tx, Ty)
+    LocalTemperature =   biometemperature
+End Function
 
 Sub PrecipOverlay
     Static AnimDelay As Byte
     Static AnimFrame As Byte
+    Static PixelOffset As Byte
 
     AnimDelay = AnimDelay + 1
     Select Case PrecipitationLevel
@@ -229,7 +302,10 @@ Sub UseItem (Slot)
     Static WeaponCooldown
     Static ToolDelay
     Select Case Inventory(0, Slot, 0)
-        Case 0 'Block placing
+        Case 0, 5 'Block placing
+            If Inventory(0, Slot, 0) = 5 Then
+                If GroundTile(FacingX, FacingY) <> 21 Then Exit Sub
+            End If
             Select Case Inventory(0, Slot, 4)
                 Case 0
                     If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
@@ -363,6 +439,7 @@ Sub UseItem (Slot)
 
                 ConsumeCooldown = CurrentTick + 10
             End If
+
 
     End Select
 
@@ -2815,8 +2892,8 @@ Sub Crafting
             Case "49 49 -1 |-1 54 -1 |-1 54 -1 |" 'platinum hoe
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(78, i)
 
-
-
+            Case "-1 -1 -1 |19 19 19 |19 19 19 |" 'Wooden Floor
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(100, i)
 
             Case "29 29 29 |29 29 29 |29 29 29 |" 'cobblestone Wall
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(7, i)
@@ -2846,6 +2923,10 @@ Sub Crafting
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(99, i)
             Case "-1 -1 -1 -1 |-1 116 29 -1 |-1 29 116 -1 |-1 -1 -1 -1 |" 'asphault
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(119, i)
+
+            Case "-1 -1 -1 |-1 36 -1 |-1 -1 -1 |" 'eggplant seeds
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(37, i)
+                CraftingGrid(0, Player.CraftingLevel, 7) = 2
 
                 'temp ore refinement recipe till furnace
             Case "-1 -1 -1 |-1 38 -1 |-1 -1 -1 |"
@@ -3108,7 +3189,8 @@ Sub DEV
         If WorldReadOnly = 1 Then Print "(R/O)"
         If WorldReadOnly = 0 Then Print
         Print "World Seed:"; WorldSeed
-        Print "Current Time:"; GameTime + (TimeMode * 43200)
+        Print "Current Time:"; GameTime + (TimeMode * 43200);
+        Print "(Day:" + Str$(CurrentDay) + ")"
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Current Entities: "; CurrentEntities
 
@@ -3215,7 +3297,7 @@ Sub DEV
             Case "7"
                 Print "World Data Viewer"
                 Print "Height (Current Tile):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.HeightScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
-                Print "Temperature (Biome+SeasonOffset):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.TempScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.TempScale, 0, Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)))
+                Print "Temperature (Biome+SeasonOffset):"; localtemperature
                 Print "Virus Level: 0"
 
 
@@ -3263,6 +3345,13 @@ Sub DEV
                 Case "weather"
                     Locate 28, 1: Print "               "
                     Locate 28, 1: Input "Precipitation Level: ", PrecipitationLevel
+                Case "rts"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Random Tick Speed: ", RandomTickRate
+                Case "day"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Set Current Day: ", CurrentDay
+
 
 
                 Case "stillcam", "sc"
@@ -4068,7 +4157,7 @@ Sub DayLightCycle
             End If
         End If
     End If
-    If TimeMode > 1 Then TimeMode = 0
+    If TimeMode > 1 Then TimeMode = 0: CurrentDay = CurrentDay + 1
 
     Select Case TimeMode
         Case 0

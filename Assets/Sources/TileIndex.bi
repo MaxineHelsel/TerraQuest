@@ -43,7 +43,7 @@ TileIndexData(2, 2) = 0 'blocks shadow
 TileIndexData(2, 3) = 0 'has interior shadow
 TileIndexData(2, 4) = 5 'resistance
 TileIndexData(2, 5) = 1 'is solid
-TileIndexData(2, 9) = 0.25 'friction
+TileIndexData(2, 9) = 0.15 'friction
 TileIndexData(2, 10) = 1
 
 TileName(3, 0) = "Cut Grass" 'Name of the tile
@@ -59,7 +59,7 @@ TileIndexData(3, 2) = 0 'blocks shadow
 TileIndexData(3, 3) = 0 'has interior shadow
 TileIndexData(3, 4) = 5 'resistance
 TileIndexData(3, 5) = 1 'is solid
-TileIndexData(3, 9) = 0.25 'Friction
+TileIndexData(3, 9) = 0.15 'Friction
 TileIndexData(3, 10) = 1.2
 
 TileName(4, 0) = "Dirt" 'Name of the tile
@@ -75,7 +75,7 @@ TileIndexData(4, 2) = 0 'blocks shadow
 TileIndexData(4, 3) = 0 'has interior shadow
 TileIndexData(4, 4) = 4 'resistance
 TileIndexData(4, 5) = 1 'is solid
-TileIndexData(4, 9) = 0.2 'Friction
+TileIndexData(4, 9) = 0.15 'Friction
 TileIndexData(4, 10) = 0.8
 
 
@@ -381,7 +381,7 @@ TileIndexData(25, 4) = 1000 'resistance
 TileIndexData(25, 5) = 0 'is solid
 TileIndexData(25, 9) = 0.04 'friction
 TileIndexData(25, 10) = 0.4
-TileIndexData(25, 10) = 1
+TileIndexData(25, 11) = 1
 
 
 '26 void
@@ -431,7 +431,7 @@ TileIndexData(29, 2) = 0 'blocks shadow
 TileIndexData(29, 3) = 0 'has interior shadow
 TileIndexData(29, 4) = 19 'resistance
 TileIndexData(29, 5) = 0 'is solid
-TileIndexData(29, 9) = 0.3 'friction
+TileIndexData(29, 9) = 0.12 'friction
 TileIndexData(29, 10) = 0.9
 tileindexdata(29,15)=1
 
@@ -466,3 +466,158 @@ TileIndexData(31, 5) = 0 'is solid
 TileIndexData(31, 9) = 0.35 'friction
 TileIndexData(31, 10) = 2.5
 
+'32 eggplant lvl1
+TileName(32, 0) = "Eggplant" 'Name of the tile
+TileName(32, 1) = "Placeholder" 'tooltip
+TileIndex(32, 0) = 1 'layer definition
+TileIndex(32, 1) = 80 'x position on tilesheet
+TileIndex(32, 2) = 16 'y position on tilesheet
+TileIndex(32, 3) = 37 'itemid
+TileIndexData(32, 0) = 0 'collision
+TileIndexData(32, 1) = 0 'casts shadow
+TileIndexData(32, 2) = 0 'blocks shadow
+TileIndexData(32, 3) = 0 'has interior shadow
+TileIndexData(32, 4) = 10 'resistance
+TileIndexData(32, 5) = 0 'is solid
+TileIndexData(32, 9) = 0 'Friction
+
+'33 eggplant lvl1
+TileName(33, 0) = "Eggplant" 'Name of the tile
+TileName(33, 1) = "Placeholder" 'tooltip
+TileIndex(33, 0) = 1 'layer definition
+TileIndex(33, 1) = 96 'x position on tilesheet
+TileIndex(33, 2) = 16 'y position on tilesheet
+TileIndex(33, 3) = 37 'itemid
+TileIndexData(33, 0) = 0 'collision
+TileIndexData(33, 1) = 0 'casts shadow
+TileIndexData(33, 2) = 0 'blocks shadow
+TileIndexData(33, 3) = 0 'has interior shadow
+TileIndexData(33, 4) = 10 'resistance
+TileIndexData(33, 5) = 0 'is solid
+TileIndexData(33, 9) = 0 'Friction
+
+'32 eggplant lvl3
+TileName(34, 0) = "Eggplant" 'Name of the tile
+TileName(34, 1) = "Placeholder" 'tooltip
+TileIndex(34, 0) = 1 'layer definition
+TileIndex(34, 1) = 112 'x position on tilesheet
+TileIndex(34, 2) = 16 'y position on tilesheet
+TileIndex(34, 3) = 37 'itemid
+TileIndexData(34, 0) = 0 'collision
+TileIndexData(34, 1) = 0 'casts shadow
+TileIndexData(34, 2) = 0 'blocks shadow
+TileIndexData(34, 3) = 0 'has interior shadow
+TileIndexData(34, 4) = 10 'resistance
+TileIndexData(34, 5) = 0 'is solid
+TileIndexData(34, 9) = 0 'Friction
+
+'35 eggplant lvl4
+TileName(35, 0) = "Eggplant" 'Name of the tile
+TileName(35, 1) = "Placeholder" 'tooltip
+TileIndex(35, 0) = 1 'layer definition
+TileIndex(35, 1) = 128 'x position on tilesheet
+TileIndex(35, 2) = 16 'y position on tilesheet
+TileIndex(35, 3) = 36 'itemid
+TileIndexData(35, 0) = 0 'collision
+TileIndexData(35, 1) = 0 'casts shadow
+TileIndexData(35, 2) = 0 'blocks shadow
+TileIndexData(35, 3) = 0 'has interior shadow
+TileIndexData(35, 4) = 10 'resistance
+TileIndexData(35, 5) = 0 'is solid
+TileIndexData(35, 9) = 0 'Friction
+
+''36-41 aetherian wall 
+
+TileName(36, 0) = "Aetherian Wall" 'Name of the tile
+TileName(36, 1) = "Placeholder" 'tooltip
+TileIndex(36, 0) = 1 'layer definition
+TileIndex(36, 1) = 64 'x position on tilesheet
+TileIndex(36, 2) = 32 'y position on tilesheet
+TileIndex(36, 3) = -1 'itemid
+TileIndexData(36, 0) = 1 'collision
+TileIndexData(36, 1) = 1 'casts shadow
+TileIndexData(36, 2) = 1 'blocks shadow
+TileIndexData(36, 3) = 0 'has interior shadow
+TileIndexData(36, 4) = 59 'resistance
+TileIndexData(36, 5) = 1 'is solid
+
+TileName(37, 0) = "Aetherian Wall" 'Name of the tile
+TileName(37, 1) = "Placeholder" 'tooltip
+TileIndex(37, 0) = 1 'layer definition
+TileIndex(37, 1) = 80 'x position on tilesheet
+TileIndex(37, 2) = 32 'y position on tilesheet
+TileIndex(37, 3) = -1 'itemid
+TileIndexData(37, 0) = 1 'collision
+TileIndexData(37, 1) = 1 'casts shadow
+TileIndexData(37, 2) = 1 'blocks shadow
+TileIndexData(37, 3) = 0 'has interior shadow
+TileIndexData(37, 4) = 59 'resistance
+TileIndexData(37, 5) = 1 'is solid
+
+TileName(38, 0) = "Aetherian Wall" 'Name of the tile
+TileName(38, 1) = "Placeholder" 'tooltip
+TileIndex(38, 0) = 1 'layer definition
+TileIndex(38, 1) = 96 'x position on tilesheet
+TileIndex(38, 2) = 32 'y position on tilesheet
+TileIndex(38, 3) = -1 'itemid
+TileIndexData(38, 0) = 1 'collision
+TileIndexData(38, 1) = 1 'casts shadow
+TileIndexData(38, 2) = 1 'blocks shadow
+TileIndexData(38, 3) = 0 'has interior shadow
+TileIndexData(38, 4) = 59 'resistance
+TileIndexData(38, 5) = 1 'is solid
+
+TileName(39, 0) = "Aetherian Wall" 'Name of the tile
+TileName(39, 1) = "Placeholder" 'tooltip
+TileIndex(39, 0) = 1 'layer definition
+TileIndex(39, 1) = 112 'x position on tilesheet
+TileIndex(39, 2) = 32 'y position on tilesheet
+TileIndex(39, 3) = -1 'itemid
+TileIndexData(39, 0) = 1 'collision
+TileIndexData(39, 1) = 1 'casts shadow
+TileIndexData(39, 2) = 1 'blocks shadow
+TileIndexData(39, 3) = 0 'has interior shadow
+TileIndexData(39, 4) = 59 'resistance
+TileIndexData(39, 5) = 1 'is solid
+
+TileName(40, 0) = "Aetherian Wall" 'Name of the tile
+TileName(40, 1) = "Placeholder" 'tooltip
+TileIndex(40, 0) = 1 'layer definition
+TileIndex(40, 1) = 128 'x position on tilesheet
+TileIndex(40, 2) = 32 'y position on tilesheet
+TileIndex(40, 3) = -1 'itemid
+TileIndexData(40, 0) = 1 'collision
+TileIndexData(40, 1) = 1 'casts shadow
+TileIndexData(40, 2) = 1 'blocks shadow
+TileIndexData(40, 3) = 0 'has interior shadow
+TileIndexData(40, 4) = 59 'resistance
+TileIndexData(40, 5) = 1 'is solid
+
+TileName(41, 0) = "Aetherian Wall" 'Name of the tile
+TileName(41, 1) = "Placeholder" 'tooltip
+TileIndex(41, 0) = 1 'layer definition
+TileIndex(41, 1) = 144 'x position on tilesheet
+TileIndex(41, 2) = 32 'y position on tilesheet
+TileIndex(41, 3) = -1 'itemid
+TileIndexData(41, 0) = 1 'collision
+TileIndexData(41, 1) = 1 'casts shadow
+TileIndexData(41, 2) = 1 'blocks shadow
+TileIndexData(41, 3) = 0 'has interior shadow
+TileIndexData(41, 4) = 59 'resistance
+TileIndexData(41, 5) = 1 'is solid
+'42 aetherian carpet
+
+TileName(42, 0) = "Aetherian Carpet" 'Name of the tile
+TileName(42, 1) = "Placeholder" 'tooltip
+TileIndex(42, 0) = 0 'layer definition
+TileIndex(42, 1) = 160 'x position on tilesheet
+TileIndex(42, 2) = 32 'y position on tilesheet
+TileIndex(42, 3) = -1 'itemid
+TileIndexData(42, 0) = 0 'collision
+TileIndexData(42, 1) = 0 'casts shadow
+TileIndexData(42, 2) = 0 'blocks shadow
+TileIndexData(42, 3) = 0 'has interior shadow
+TileIndexData(42, 4) = 59 'resistance
+TileIndexData(42, 5) = 0 'is solid
+TileIndexData(42, 9) = 0.2 'friction
+TileIndexData(42, 10) = 1

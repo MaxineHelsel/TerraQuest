@@ -468,6 +468,17 @@ ItemIndex(36, 9) = 36 'Item ID
 
 '37 eggplant seeds
 
+ItemName(37, 0) = "Eggplant Seeds" 'Name of the tile
+ItemName(37, 1) = "Placeholder" 'tooltip
+ItemIndex(37, 0) = 5 'type
+ItemIndex(37, 1) = 96 'x position on tilesheet
+ItemIndex(37, 2) = 32 'y position on tilesheet
+ItemIndex(37, 3) = 32 'tile id
+ItemIndex(37, 4) = 1 'layer
+ItemIndex(37, 7) = 1 'current stack
+ItemIndex(37, 8) = 100 'max stack
+ItemIndex(37, 9) = 37 'Item ID
+
 '38-45 ores
 
 ItemName(38, 0) = "Tin Ore 

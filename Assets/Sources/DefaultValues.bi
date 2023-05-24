@@ -2,9 +2,9 @@
 'Note: any changes made to this file, and any other source files require a recompile of the game before they are recognized
 
 'Default variables that are required to be set on initial load
-Game.Title = "TerraQuest (Networking Test)"
-Game.Buildinfo = "Beta Version 1.2 Edge Build 230513A
-Game.Version = "b1.2-230513A
+Game.Title = "TerraQuest"
+Game.Buildinfo = "Beta Version 1.2 Edge Build 230523A
+Game.Version = "b1.2-230523A
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
