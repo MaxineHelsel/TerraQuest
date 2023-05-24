@@ -209,10 +209,14 @@ Sub TileTickUpdates
 End Sub
 
 Sub RandomUpdates
+    Randomize Timer
     Static WeatherCountDown As Long
     Static TileCountDown As Long
     Static WaterSpreadCountDown As Long
     Static LongTimeOut As Long
+    Static PriorCheck(40, 30)
+    Static TileTimeOut
+    Dim i, ii
     Dim Rx, Ry As Byte
 
     'weather
@@ -223,11 +227,24 @@ Sub RandomUpdates
         WeatherCountDown = WeatherCountDown - RandomTickRate
     End If
     'tile updates
+    Do
+        Rx = Int(Rnd * 41)
+        Ry = Int(Rnd * 31)
+        If TileTimeOut = 30 Then
+            For ii = 0 To 41
+                For i = 0 To 31
+                    PriorCheck(ii, i) = 0
+                    Exit Do
+                Next
+            Next
+        End If
+        TileTimeOut = TileTimeOut + 1
+    Loop Until PriorCheck(Rx, Ry) = 0
+    PriorCheck(Rx, Ry) = 1
+    TileTimeOut = 0
 
-    Rx = Int(Rnd * 41)
-    Ry = Int(Rnd * 31)
     Print Rx; Ry; GroundTile(Rx, Ry); WallTile(Rx, Ry)
-
+    Print TileTimeOut
     If LongTimeOut < 0 Then
         Select Case WallTile(Rx, Ry)
             Case 32
@@ -242,9 +259,9 @@ Sub RandomUpdates
 
     Select Case GroundTile(Rx, Ry)
         Case 13
-            If LocalTemperature(Rx, Ry) < 0.35 Then GroundTile(Rx, Ry) = 14
+            If LocalTemperature(Rx, Ry) < 0.30 Then GroundTile(Rx, Ry) = 14
         Case 14
-            If LocalTemperature(Rx, Ry) > 0.35 Then GroundTile(Rx, Ry) = 13
+            If LocalTemperature(Rx, Ry) > 0.30 Then GroundTile(Rx, Ry) = 13
     End Select
     LongTimeOut = LongTimeOut - RandomTickRate
     TileCountDown = TileCountDown - RandomTickRate
@@ -261,7 +278,16 @@ Function BiomeTemperature (Tx, Ty)
 End Function
 
 Function LocalTemperature (Tx, Ty)
-    LocalTemperature =   biometemperature
+    LocalTemperature = BiomeTemperature(Tx, Ty) + SeasonalOffset(Tx, Ty) + TODoffset(Tx, Ty)
+End Function
+
+Function TODoffset (Tx, Ty)
+    If TimeMode = 0 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400))
+    If TimeMode = 1 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400)) * -1
+End Function
+
+Function SeasonalOffset (Tx, Ty)
+    SeasonalOffset = 0.3 * Sin(2 * Pi * CurrentDay * (1 / 120)) - 0.3
 End Function
 
 Sub PrecipOverlay
@@ -3296,8 +3322,9 @@ Sub DEV
                 ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
             Case "7"
                 Print "World Data Viewer"
-                Print "Height (Current Tile):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.HeightScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
-                Print "Temperature (Biome+SeasonOffset):"; localtemperature
+                Print "Height Scale(Current Tile):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.HeightScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Biome Scale(Current Tile):"; BiomeTemperature((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)), (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)))
+                Print "Temperature (Biome+SeasonOffset+TOD):"; LocalTemperature((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)), (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)))
                 Print "Virus Level: 0"
 
 
