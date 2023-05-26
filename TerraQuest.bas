@@ -19,12 +19,24 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
+'ideas to add
+'3034997111
+'wires, and power
+'doors
+'switches
+'buttons
+'tile interaction with empty item slot
+ 'fix combat hitboxes to not be tile based
+
+
+
 
 'parse command line arguments
 Select Case LCase$(Command$)
     Case "server"
         ServerInit
         ServerLoop
+        End
     Case "server-headless"
         Print "Headless server mode is not supported yet, please use 'server' argument to start in server mode"
         End
@@ -121,6 +133,7 @@ GoTo game
 
 Error 102
 
+
 ERRORHANDLE:
 ErrorHandler
 Resume Next
@@ -147,7 +160,11 @@ Do
     RenderEntities (1)
     Entities (0)
     Entities (1)
-    PrecipOverlay
+    TileTickUpdates
+    RandomUpdates
+    DelayUpdates
+
+    Precip2
     SetLighting
     INTER
     Hud2
@@ -157,8 +174,6 @@ Do
     ChangeMap 0, 0, 0
     DayLightCycle
     MinMemFix
-    TileTickUpdates
-    RandomUpdates
     If Player.health <= 0 Then Respawn
 
     If WithinBounds = 1 Then
@@ -183,10 +198,11 @@ Error 102
 Sub ServerInit
     INITIALIZE
 End Sub
-
 Sub ServerLoop
-
 End Sub
+
+
+
 
 Sub TileTickUpdates
     Static WaterDelay
@@ -219,6 +235,7 @@ Sub RandomUpdates
     Dim i, ii
     Dim Rx, Ry As Byte
 
+    Const EggplantLTB = 0.35
     'weather
     If WeatherCountDown < 0 Then
         WeatherCountDown = Int(Rnd * 1000000)
@@ -243,16 +260,16 @@ Sub RandomUpdates
     PriorCheck(Rx, Ry) = 1
     TileTimeOut = 0
 
-    Print Rx; Ry; GroundTile(Rx, Ry); WallTile(Rx, Ry)
-    Print TileTimeOut
+
+
     If LongTimeOut < 0 Then
         Select Case WallTile(Rx, Ry)
             Case 32
-                WallTile(Rx, Ry) = 33
+                If LocalTemperature(Rx, Ry) > 0.35 And LocalTemperature(Rx, Ry) < 0.70 Then WallTile(Rx, Ry) = 33
             Case 33
-                WallTile(Rx, Ry) = 34
+                If LocalTemperature(Rx, Ry) > 0.35 And LocalTemperature(Rx, Ry) < 0.70 Then WallTile(Rx, Ry) = 34
             Case 34
-                WallTile(Rx, Ry) = 35
+                If LocalTemperature(Rx, Ry) > 0.35 And LocalTemperature(Rx, Ry) < 0.70 Then WallTile(Rx, Ry) = 35
         End Select
         LongTimeOut = 500
     End If
@@ -269,26 +286,89 @@ Sub RandomUpdates
 
 End Sub
 
+Sub DelayUpdates
+    Static DelayTimer
+    Select Case LocalTemperature(PlayerTileX, PlayerTileY)
+        Case Is < 0
+            Effects 1, "Temperature Freezing", 0
+        Case Is > 1
+            Effects 1, "Temperature Burning", 0
+    End Select
+End Sub
+
+Function PlayerTileX
+    PlayerTileX = (Int((Player.x + 8) / 16) + 1)
+End Function
+Function PlayerTileY
+    PlayerTileY = (Int((Player.y + 8) / 16) + 1)
+End Function
+
 Function MapSeed
     MapSeed = Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
 End Function
 
 Function BiomeTemperature (Tx, Ty)
-    BiomeTemperature = Perlin(Tx / Gen.TempScale, Ty / Gen.TempScale, 0, MapSeed)
+    BiomeTemperature = Perlin((Tx + SavedMapX * 40) / Gen.TempScale, (Ty + SavedMapY * 30) / Gen.TempScale, 0, MapSeed)
 End Function
 
 Function LocalTemperature (Tx, Ty)
-    LocalTemperature = BiomeTemperature(Tx, Ty) + SeasonalOffset(Tx, Ty) + TODoffset(Tx, Ty)
+    LocalTemperature = BiomeTemperature(Tx, Ty) + SeasonalOffset + TODoffset
 End Function
 
-Function TODoffset (Tx, Ty)
+Function TODoffset
     If TimeMode = 0 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400))
     If TimeMode = 1 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400)) * -1
 End Function
 
-Function SeasonalOffset (Tx, Ty)
-    SeasonalOffset = 0.3 * Sin(2 * Pi * CurrentDay * (1 / 120)) - 0.3
+Function SeasonalOffset
+    SeasonalOffset = 0.4 * Sin(2 * Pi * CurrentDay * (1 / 120)) - 0.1
 End Function
+
+Sub Precip2
+    Static SnowDelay As Byte
+    Static RainDelay As Byte
+    Static SnowFrame As Byte
+    Static RainFrame As Byte
+    Static LocalTempGrab(40, 30)
+    Static TempGrabDelay
+
+    Dim i, ii
+    SnowDelay = SnowDelay + 1
+    RainDelay = RainDelay + 1
+    TempGrabDelay = TempGrabDelay + 1
+    If TempGrabDelay > 20 Then TempGrabDelay = 0
+
+    Select Case PrecipitationLevel
+        Case 0
+            SnowDelay = 0
+            RainDelay = 0
+            SnowFrame = 0
+            RainFrame = 0
+        Case 1, 2
+            If SnowDelay > 13 Then SnowFrame = SnowFrame + 1: SnowDelay = 0
+            If RainDelay > 3 Then RainFrame = RainFrame + 1: RainDelay = 0
+    End Select
+    If RainFrame > 3 Then RainFrame = 0: RainDelay = 0
+    If SnowFrame > 3 Then SnowFrame = 0: SnowDelay = 0
+    If PrecipitationLevel > 0 Then
+        For i = 0 To 30
+            For ii = 0 To 40
+                If TempGrabDelay = 0 Then LocalTempGrab(ii, i) = LocalTemperature(ii, i)
+
+                If VisibleCheck(ii, i) = 1 Then
+                    If LocalTempGrab(ii, i) < 0.34 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * SnowFrame), 0)-(15 + (16 * SnowFrame), 15)
+                    End If
+                    If LocalTempGrab(ii, i) > 0.34 And LocalTempGrab(ii, i) < 0.90 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * RainFrame), 0 + 16)-(15 + (16 * RainFrame), 15 + 16)
+
+                    End If
+                End If
+            Next
+        Next
+    End If
+
+End Sub
 
 Sub PrecipOverlay
     Static AnimDelay As Byte
@@ -317,9 +397,6 @@ Sub PrecipOverlay
             Next
         Next
     End If
-    Print AnimDelay
-    Print AnimFrame
-    Print PrecipitationLevel
 
 End Sub
 
@@ -1094,7 +1171,7 @@ Sub DisplayLables
     HotbarTextX = 5
     HotbarTextY = ScreenRezY - 61
     HotbarTextSpace = 68
-
+    2
     HotbarTitlex = 6
     HotbarTitley = ScreenRezY - 85
 
@@ -1184,7 +1261,7 @@ Sub DisplayLables
     iiii = 0
     iii = Player.CraftingLevel
     If Flag.InventoryOpen = 1 And CraftingGrid(iiii, iii, 7) > 1 Then PrintString ((0 + CraftingTextX) - (HotbarTextSpace * iii), (CraftingTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset), Str$(CraftingGrid(iiii, iii, 7))
-End Sub
+End Sub '192,32   224,32
 
 Sub DisplayHealth
     Dim As Byte i, ii, iii
@@ -1194,12 +1271,16 @@ Sub DisplayHealth
     Dim As Byte BonusWheel
     Dim As Byte BigHealOffset
     Dim healthtextx, healthtexty
+    Dim ThermOffset
     Token = 1
     BigHealOffset = 0
     HealthX = (ScreenRezX / 4 / 2) + 8
     HealthY = (ScreenRezY / 4 / 2) - 11
 
     TMPHeal = Player.health
+
+    If Player.BodyTemp = 1 Then ThermOffset = 96
+    If Player.BodyTemp = 2 Then ThermOffset = 128
 
     If ImmunityFlash = 0 Then
         Select Case GameMode
@@ -1211,7 +1292,7 @@ Sub DisplayHealth
                     If Player.health > 8 Then BigHealOffset = 0
                     'draw full health wheel
                     For i = 0 To BigHealOffset
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
                         PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
                     Next
                     'print full wheel text "wheels (points)"
@@ -1242,7 +1323,7 @@ Sub DisplayHealth
                     If Player.health <= 8 Then Token = Token - 1
 
                     'draw current wheel     (honestly, idk how i managed to get this shit to work, but it does, DONT FUCKING TOUCH IT
-                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
                     TMPHeal = TMPHeal - 8 * Int(Player.health / 8)
                     If Player.health > (Player.MaxHealth + 1) * 8 Then TMPHeal = 8: BonusWheel = 1
                     If TMPHeal > 8 Then TMPHeal = 8
@@ -1253,7 +1334,7 @@ Sub DisplayHealth
                     'if empty wheel then
                     '   draw empty wheel
                     If Player.health - 1 < Player.MaxHealth * 8 Then
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
 
                         '   print empty wheel text
                         healthtextx = ScreenRezX - 35 - Len(Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")") * 4
@@ -1289,7 +1370,7 @@ Sub DisplayHealth
 
                 Else
                     For i = 0 To Player.MaxHealth
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
                         Token = Token + 1
                     Next
                     Token = 1
@@ -1576,9 +1657,9 @@ Sub ItemSwap
         Select Case CursorHoverPage
             Case 0
                 If GameMode = 1 Then
-                    SwapItem1(i) = CreativeInventory(CursorSelectedY, CursorSelectedX, i, CreativePage)
+                    SwapItem1(i) = CreativeInventory(CursorHoverY, CursorHoverX, i, CreativePage)
                 Else
-                    SwapItem1(i) = Inventory(CursorSelectedY + 1, CursorSelectedX, i)
+                    SwapItem1(i) = Inventory(CursorHoverY + 1, CursorHoverX, i)
                 End If
             Case 1
                 SwapItem1(i) = Inventory(0, CursorHoverX, i)
@@ -2258,6 +2339,22 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
                 entity(Entity, 1) = entity(Entity, 1) - Val1
             End If
             If ImmunityTimer = 0 Then PlaySound Sounds.damage_melee
+        Case 9
+            If Entity = 0 Then
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                Player.BodyTemp = 2
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+
+        Case 10
+            If Entity = 0 Then
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                Player.BodyTemp = 1
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+
 
 
 
@@ -2269,6 +2366,30 @@ End Sub
 
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
+        Case "Temperature Freezing"
+            Select Case Value
+                Case 0
+                    EffectIndex = 9 'effectid
+                Case 1
+                    EffectIndex = 2 'frame duration
+                Case 2
+                    EffectIndex = 120 'frame cooldown
+                Case 3
+                    EffectIndex = 1 'damage
+            End Select
+
+        Case "Temperature Burning"
+            Select Case Value
+                Case 0
+                    EffectIndex = 10 'effectid
+                Case 1
+                    EffectIndex = 2 'frame duration
+                Case 2
+                    EffectIndex = 120 'frame cooldown
+                Case 3
+                    EffectIndex = 1 'damage
+            End Select
+
         Case "Melee Damage"
             Select Case Value
                 Case 0
@@ -2434,6 +2555,8 @@ Sub EffectEnd (EffectID As Integer, EffectSlot As Integer, Entity As Single)
             ImmunityTimer = 0: ImmunityFlash = 0
         Case 6, 7
             HealthWheelOffset = 0
+        Case 9, 10
+            Player.BodyTemp = 0
     End Select
 
     For i = 0 To EffectParameters
@@ -3323,8 +3446,8 @@ Sub DEV
             Case "7"
                 Print "World Data Viewer"
                 Print "Height Scale(Current Tile):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.HeightScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
-                Print "Biome Scale(Current Tile):"; BiomeTemperature((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)), (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)))
-                Print "Temperature (Biome+SeasonOffset+TOD):"; LocalTemperature((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)), (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)))
+                Print "Biome Scale(Current Tile):"; BiomeTemperature((Int((Player.x + 8) / 16) + 1), (Int((Player.y + 8) / 16) + 1))
+                Print "Temperature (Biome+SeasonOffset+TOD):"; LocalTemperature((Int((Player.x + 8) / 16) + 1), (Int((Player.y + 8) / 16) + 1))
                 Print "Virus Level: 0"
 
 
@@ -3380,6 +3503,9 @@ Sub DEV
                     Locate 28, 1: Input "Set Current Day: ", CurrentDay
 
 
+                Case "bdtmp"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Set Body Temp mode: ", Player.BodyTemp
 
                 Case "stillcam", "sc"
                     Flag.StillCam = Flag.StillCam + 1
@@ -4663,14 +4789,15 @@ Sub GenerateMap
                     Select Case GroundTile(ii, i)
                         Case 13
                             GroundTile(ii, i) = 14
+
                     End Select
                 Case 0.35 To 0.55
                     'planes
                 Case 0.55 To 0.65
                     'forrest
-                Case Is > 0.75
+                    '   Case Is > 0.75
                     'lava    (needless to say being here will damage you, but even on land
-                Case Is > 0.65
+                Case Is > 0.75
                     'desert
                     Select Case GroundTile(ii, i)
                         Case Is <> 13
