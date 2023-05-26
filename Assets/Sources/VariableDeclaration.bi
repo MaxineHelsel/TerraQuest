@@ -206,6 +206,7 @@ Type Character
     CraftingLevel as byte
 
     MaxHealth as integer
+    BodyTemp as byte
 
     level As Byte
     health As integer
