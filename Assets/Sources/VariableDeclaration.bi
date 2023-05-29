@@ -8,7 +8,7 @@ Dim Shared Sounds As Sounds
 Dim Shared Debug As Debug
 
 'Constants
-const TileParameters=16
+const TileParameters=17
 const InvParameters=13
 const EffectParameters=4
 const MaxEffects=20

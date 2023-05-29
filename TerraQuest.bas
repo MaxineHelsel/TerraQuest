@@ -26,7 +26,7 @@ Title "TerraQuest"
 'switches
 'buttons
 'tile interaction with empty item slot
- 'fix combat hitboxes to not be tile based
+'fix combat hitboxes to not be tile based
 
 
 
@@ -58,6 +58,9 @@ Gen.TempScale = 500
 Dim Shared RandomTickRate As Integer
 
 RandomTickRate = 5
+
+
+Dim Shared TileThermalMap(41, 31)
 
 Const EntityID = 0
 Const EntityHealth = 1
@@ -203,7 +206,6 @@ End Sub
 
 
 
-
 Sub TileTickUpdates
     Static WaterDelay
     Dim i, ii
@@ -225,7 +227,6 @@ Sub TileTickUpdates
 End Sub
 
 Sub RandomUpdates
-    Randomize Timer
     Static WeatherCountDown As Long
     Static TileCountDown As Long
     Static WaterSpreadCountDown As Long
@@ -271,15 +272,16 @@ Sub RandomUpdates
             Case 34
                 If LocalTemperature(Rx, Ry) > 0.35 And LocalTemperature(Rx, Ry) < 0.70 Then WallTile(Rx, Ry) = 35
         End Select
+
+        Select Case GroundTile(Rx, Ry)
+            Case 13
+                If LocalTemperature(Rx, Ry) < 0.30 Then GroundTile(Rx, Ry) = 14
+            Case 14
+                If LocalTemperature(Rx, Ry) > 0.30 Then GroundTile(Rx, Ry) = 13
+        End Select
         LongTimeOut = 500
     End If
 
-    Select Case GroundTile(Rx, Ry)
-        Case 13
-            If LocalTemperature(Rx, Ry) < 0.30 Then GroundTile(Rx, Ry) = 14
-        Case 14
-            If LocalTemperature(Rx, Ry) > 0.30 Then GroundTile(Rx, Ry) = 13
-    End Select
     LongTimeOut = LongTimeOut - RandomTickRate
     TileCountDown = TileCountDown - RandomTickRate
     UpdateTile Rx, Ry
@@ -312,7 +314,8 @@ Function BiomeTemperature (Tx, Ty)
 End Function
 
 Function LocalTemperature (Tx, Ty)
-    LocalTemperature = BiomeTemperature(Tx, Ty) + SeasonalOffset + TODoffset
+
+    LocalTemperature = BiomeTemperature(Tx, Ty) + SeasonalOffset + TODoffset + TileThermalOffset(Tx, Ty)
 End Function
 
 Function TODoffset
@@ -323,6 +326,117 @@ End Function
 Function SeasonalOffset
     SeasonalOffset = 0.4 * Sin(2 * Pi * CurrentDay * (1 / 120)) - 0.1
 End Function
+
+Function TileThermalOffset (Tx, Ty)
+    TileThermalOffset = TileThermalMap(Tx, Ty)
+End Function
+
+
+
+Sub SpreadHeat
+    Dim As Byte i, ii
+    Static LagDelay
+
+    LagDelay = LagDelay + 1
+    If LagDelay > 30 Then LagDelay = 0
+    If LagDelay <> 15 Then Exit Sub
+
+    For i = 1 To 30
+        For ii = 1 To 40
+            TileThermalMap(ii, i) = 0
+            TileThermalMap(ii, i) = TileData(ii, i, 16)
+        Next
+    Next
+    SpreadHeat2 (1)
+End Sub
+Sub SpreadHeat2 (updates)
+    Dim As Byte i, ii, iii, iiii
+    Static UpdateLimit
+    If updates > 0 Then
+        updates = 0
+        For i = 1 To 30
+            For ii = 1 To 40
+                iiii = 1
+                iii = 0
+
+                For iii = 0 To 2
+
+                    If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i) Then TileThermalMap(ii, i) = TileThermalMap(ii + (iii - 1), i) - 0.01
+                    If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
+                Next
+
+                iiii = 0
+                iii = 1
+                For iiii = 0 To 2
+                    If TileThermalMap(ii, i) < TileThermalMap(ii, i + (iiii - 1)) Then TileThermalMap(ii, i) = TileThermalMap(ii, i + (iiii - 1)) - 0.01
+
+                    If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
+                Next
+                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
+            Next
+        Next
+        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
+        If UpdateLimit > 10 Then updates = 0
+        ' Print updates, UpdateLimit
+        ' Display
+        ' Sleep
+
+        SpreadHeat2 (updates)
+    Else
+        UpdateLimit = 0
+    End If
+End Sub
+
+
+
+Sub SpreadLight (updates)
+
+    Dim As Byte i, ii
+    For i = 1 To 30
+        For ii = 1 To 40
+            LocalLightLevel(ii, i) = TileData(ii, i, 8)
+        Next
+    Next
+    SpreadLight2 (updates)
+End Sub
+Sub SpreadLight2 (updates)
+    Dim As Byte i, ii, iii, iiii
+    Static UpdateLimit
+    If updates > 0 Then
+        updates = 0
+        For i = 1 To 30
+            For ii = 1 To 40
+                iiii = 1
+                iii = 0
+
+                For iii = 0 To 2
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+
+                iiii = 0
+                iii = 1
+                For iiii = 0 To 2
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
+            Next
+        Next
+        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
+        If UpdateLimit > 10 Then updates = 0
+        ' Print updates, UpdateLimit
+        ' Display
+        ' Sleep
+
+        SpreadLight2 (updates)
+    Else
+        UpdateLimit = 0
+    End If
+    SpreadHeat
+End Sub
 
 Sub Precip2
     Static SnowDelay As Byte
@@ -1010,8 +1124,8 @@ Function LootTable (tType As Byte, ID As Integer)
                     If Int(Rnd * 100) < 8 Then LootTable = 39 'copper
                 Case 28
                     LootTable = 29 'stone
-                    If Int(Rnd * 100) < 13 Then LootTable = 39 'iron
-                    If Int(Rnd * 100) < 6 Then LootTable = 40 'platinum
+                    If Int(Rnd * 100) < 15 Then LootTable = 40 'iron
+                    If Int(Rnd * 100) < 8 Then LootTable = 41 'platinum
                     If Int(Rnd * 1000) < 5 Then LootTable = 107 'diamond
                     If Int(Rnd * 1000) < 5 Then LootTable = 108 'emeralf
                     If Int(Rnd * 1000) < 5 Then LootTable = 104 'aetherian energy sphere
@@ -1034,7 +1148,7 @@ Function LootTable (tType As Byte, ID As Integer)
                     RandomCap = 3
 
                     If Flag.IsBloodmoon = 1 Then
-                        If Int(Rnd * 100) < 3 Then LootTable = 24: RandomCap = 1
+                        If Int(Rnd * 50) < 3 Then LootTable = 24: RandomCap = 1
                     End If
             End Select
         Case 3 'random quanity
@@ -1895,7 +2009,7 @@ End Sub
 
 Sub Hud2
     If Flag.HudDisplay = 0 Then
-        Dim As Byte i, ii, iii, iiii
+
 
         DisplayHealth
         DisplayHotbar
@@ -2255,16 +2369,16 @@ Sub ContactEffect (Direction As Byte, Entity As Single)
         Select Case Direction
             Case 1
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8) / 16) + 1, Int((PosY + 8 - 16) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(playertilex, Int((Player.y + 8 - 16) / 16) + 1), 0)
             Case 2
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8) / 16) + 1, Int((PosY + 8 + 16) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(playertilex, Int((Player.y + 8 + 16) / 16) + 1), 0)
             Case 3
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8 - 16) / 16) + 1, Int((PosY + 8) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, playertiley), 0)
             Case 4
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8 + 16) / 16) + 1, Int((PosY + 8) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, playertiley), 0)
         End Select
 
     End If
@@ -2622,48 +2736,48 @@ Sub Move
 
 
     If MoveUp Then
-        Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vy = Player.vy - TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 0
         Player.movingy = 1
     End If
     If MoveDown Then
-        Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vy = Player.vy + TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 1
         Player.movingy = 1
 
     End If
     If MoveLeft Then
-        Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vx = Player.vx - TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 2
         Player.movingx = 1
     End If
     If MoveRight Then
-        Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vx = Player.vx + TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 3
         Player.movingx = 1
     End If
 
-    If Player.vy > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
-    If Player.vy < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+    If Player.vy > TileData(PlayerTileX, PlayerTileY, 10) Then Player.vy = TileData(PlayerTileX, PlayerTileY, 10)
+    If Player.vy < TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2) Then Player.vy = TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2)
 
-    If Player.vx > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
-    If Player.vx < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+    If Player.vx > TileData(PlayerTileX, PlayerTileY, 10) Then Player.vx = TileData(PlayerTileX, PlayerTileY, 10)
+    If Player.vx < TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2) Then Player.vx = TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2)
 
     If Player.movingy = 0 Then
         If Player.vy > 0 Then
-            Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vy = Player.vy - TileData(PlayerTileX, PlayerTileY, 9)
         End If
         If Player.vy < 0 Then
-            Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vy = Player.vy + TileData(PlayerTileX, PlayerTileY, 9)
             If Player.vy > 0 Then Player.vy = 0
         End If
     End If
     If Player.movingx = 0 Then
         If Player.vx > 0 Then
-            Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vx = Player.vx - TileData(PlayerTileX, PlayerTileY, 9)
         End If
         If Player.vx < 0 Then
-            Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vx = Player.vx + TileData(PlayerTileX, PlayerTileY, 9)
             If Player.vx > 0 Then Player.vx = 0
         End If
     End If
@@ -2672,7 +2786,7 @@ Sub Move
 
     If SoundCooldown <= 0 Then
         If WithinBounds = 1 Then
-            If GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) = 13 Then
+            If GroundTile(PlayerTileX, PlayerTileY) = 13 Then
                 SoundCooldown = 60
                 PlaySound Sounds.walk_water
 
@@ -2770,10 +2884,10 @@ End Function
 Function FacingX
     Select Case Player.facing
         Case 0
-            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingX = PlayerTileX
 
         Case 1
-            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingX = PlayerTileX
 
         Case 2
             FacingX = Int((Player.x + 8 - 16) / 16) + 1
@@ -2795,10 +2909,10 @@ Function FacingY
             FacingY = Int((Player.y + 8 + 16) / 16) + 1
         Case 2
 
-            FacingY = Int((Player.y + 8) / 16) + 1
+            FacingY = PlayerTileY
         Case 3
 
-            FacingY = Int((Player.y + 8) / 16) + 1
+            FacingY = PlayerTileY
     End Select
 
 End Function
@@ -2889,6 +3003,7 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
     TileData(TileX, TileY, 9) = TileIndexData(GroundTile(TileX, TileY), 9)
     TileData(TileX, TileY, 10) = TileIndexData(GroundTile(TileX, TileY), 10)
+    TileData(TileX, TileY, 16) = TileIndexData(GroundTile(TileX, TileY), 16) + TileIndexData(WallTile(TileX, TileY), 16) + TileIndexData(CeilingTile(TileX, TileY), 16)
 
 End Sub
 'For i = TileData(TileX, TileY, 8) To 0 Step -1
@@ -3115,20 +3230,20 @@ Sub COLDET (entity)
 
     End If
 
-    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    Player.tile = GroundTile(PlayerTileX, PlayerTileY)
     Select Case Player.facing
         Case 0
             If Player.y - 8 <= 0 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
+            Player.tilefacing = GroundTile(PlayerTileX, Int((Player.y + 8 - 16) / 16) + 1)
         Case 1
             If Player.y + 8 + 16 >= 480 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
+            Player.tilefacing = GroundTile(PlayerTileX, Int((Player.y + 8 + 16) / 16) + 1)
         Case 2
             If Player.x - 8 <= 0 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, PlayerTileY)
         Case 3
             If Player.x + 8 + 16 >= 640 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, PlayerTileY)
     End Select
 
 
@@ -3372,8 +3487,8 @@ Sub DEV
                 Print "Start tracking an entity to view its data"
             Case "player", "1"
                 Print "Player"
-                Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
-                Print "GlobalPOS"; "("; Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40); ","; Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30); ")"
+                Print "POS:"; Player.x; ","; Player.y; "("; PlayerTileX; ","; PlayerTileY; ")"
+                Print "GlobalPOS"; "("; PlayerTileX + (SavedMapX * 40); ","; PlayerTileY + (SavedMapY * 30); ")"
                 Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.movingx; Player.movingy
@@ -3445,10 +3560,18 @@ Sub DEV
                 ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
             Case "7"
                 Print "World Data Viewer"
-                Print "Height Scale(Current Tile):" + Str$(Perlin((Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40)) / Gen.HeightScale, (Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
-                Print "Biome Scale(Current Tile):"; BiomeTemperature((Int((Player.x + 8) / 16) + 1), (Int((Player.y + 8) / 16) + 1))
-                Print "Temperature (Biome+SeasonOffset+TOD):"; LocalTemperature((Int((Player.x + 8) / 16) + 1), (Int((Player.y + 8) / 16) + 1))
-                Print "Virus Level: 0"
+                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * 40)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Biome Scale(Current Tile):"; BiomeTemperature((PlayerTileX), (PlayerTileY))
+                Print "Temperature (Biome+SeasonOffset+TOD+TTO):"; LocalTemperature((PlayerTileX), (PlayerTileY))
+                Print "Temperature Factors:"; BiomeTemperature(PlayerTileX, PlayerTileY); ","; SeasonalOffset; ","; TODoffset; ","; TileThermalOffset(PlayerTileX, PlayerTileY)
+            Case "7h"
+                Print "World Data Viewer (Human Readable"
+                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * 40)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Biome Scale(Current Tile):"; BiomeTemperature((PlayerTileX), (PlayerTileY))
+                Print "Temperature (Biome+SeasonOffset+TOD+TTO):"; Int(LocalTemperature((PlayerTileX), (PlayerTileY)) * 100)
+                Print "Temperature Factors:"; Int(BiomeTemperature(PlayerTileX, PlayerTileY) * 100); ","; Int(SeasonalOffset * 100); ","; Int(TODoffset * 100); ","; Int(TileThermalOffset(PlayerTileX, PlayerTileY) * 100)
+
+
 
 
             Case Else
@@ -3546,13 +3669,13 @@ Sub DEV
                     LOADWORLD
                 Case "groundtile", "gt"
                     Locate 28, 1: Print "                   "
-                    Locate 28, 1: Input "Set GroundTile ID: ", GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                    Locate 28, 1: Input "Set GroundTile ID: ", GroundTile(PlayerTileX, PlayerTileY)
                 Case "walltile", "wt"
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Set WallTile ID: ", WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                    Locate 28, 1: Input "Set WallTile ID: ", WallTile(PlayerTileX, PlayerTileY)
                 Case "ceilingtile", "ct"
                     Locate 28, 1: Print "                   "
-                    Locate 28, 1: Input "Set CeilingTile ID: ", CeilingTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                    Locate 28, 1: Input "Set CeilingTile ID: ", CeilingTile(PlayerTileX, PlayerTileY)
                 Case "fillwalltile", "fillwt", "fwt"
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "WallTile ID: ", fillid
@@ -3563,9 +3686,13 @@ Sub DEV
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
-                            WallTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                            WallTile(PlayerTileX + i, PlayerTileY + ii) = fillid
                         Next
                     Next
+                Case "spl"
+                    SpreadLight (1)
+                Case "sph"
+                    SpreadHeat
 
                 Case "fillgroundtile", "fillgt", "fgt"
                     Locate 28, 1: Print "                 "
@@ -3577,7 +3704,7 @@ Sub DEV
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
-                            GroundTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                            GroundTile(PlayerTileX + i, PlayerTileY + ii) = fillid
                         Next
                     Next
                 Case "fillceilingtile", "fillct", "fct"
@@ -3590,7 +3717,7 @@ Sub DEV
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
-                            CeilingTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                            CeilingTile(PlayerTileX + i, PlayerTileY + ii) = fillid
                         Next
                     Next
 
@@ -3598,7 +3725,7 @@ Sub DEV
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "Select Data Bit: ", databit
                     Locate 28, 1: Print "                   "
-                    Locate 28, 1: Input "Select Data Value: ", TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, databit)
+                    Locate 28, 1: Input "Select Data Value: ", TileData(PlayerTileX, PlayerTileY, databit)
 
                 Case "itemdata", "id"
                     Locate 28, 1: Print "                 "
@@ -3631,6 +3758,7 @@ Sub DEV
                             UpdateTile ii, i
                         Next
                     Next
+
                     SpreadLight (1)
                 Case "tickrate", "tk"
                     Locate 28, 1: Print "          "
@@ -3848,8 +3976,8 @@ End Sub
 
 Sub LOADMAP (file As String)
     Dim i, ii As Byte
-    Dim iii As Integer
-    Dim iiii As Byte
+    Dim iii As Single
+    Dim iiii As Single
     Dim MapProtocol As Integer
 
     iii = 1
@@ -3895,17 +4023,23 @@ Sub LOADMAP (file As String)
 
         Print "60%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
+        Print "61%"
         For i = 1 To 30
             For ii = 1 To 40
                 For iiii = 0 To TileParameters
+              '      Print "61." + Trim$(Str$(iii))
                     Get #1, iii, TileData(ii, i, iiii)
+               '     Print "62." + Trim$(Str$(iii))
                     iii = iii + 1
                 Next
 
             Next
         Next
+        Print "70%"
         Get #1, iii, map.name
+        Print "71%"
         Close #1
+        Print "72%"
         iii = 1
         Print "80%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-E.cdf" As #1
@@ -4226,52 +4360,6 @@ Sub CastShadow
 End Sub
 
 
-Sub SpreadLight (updates)
-    Dim As Byte i, ii
-    For i = 1 To 30
-        For ii = 1 To 40
-            LocalLightLevel(ii, i) = TileData(ii, i, 8)
-        Next
-    Next
-    SpreadLight2 (updates)
-End Sub
-Sub SpreadLight2 (updates)
-    Dim As Byte i, ii, iii, iiii
-    Static UpdateLimit
-    If updates > 0 Then
-        updates = 0
-        For i = 1 To 30
-            For ii = 1 To 40
-                iiii = 1
-                iii = 0
-
-                For iii = 0 To 2
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-
-                iiii = 0
-                iii = 1
-                For iiii = 0 To 2
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
-            Next
-        Next
-        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
-        If UpdateLimit > 10 Then updates = 0
-        ' Print updates, UpdateLimit
-        ' Display
-        ' Sleep
-
-        SpreadLight2 (updates)
-    Else
-        UpdateLimit = 0
-    End If
-End Sub
 
 
 Sub SetLighting
@@ -4720,7 +4808,7 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
         SavedMapX = SavedMapX + 1
         GenerateMap
-    Loop Until WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) = 1
+    Loop Until WallTile(PlayerTileX, PlayerTileY) = 1
 
     SpawnPointX = Player.x
     SpawnPointY = Player.y

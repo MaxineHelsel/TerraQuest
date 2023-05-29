@@ -1128,6 +1128,32 @@ ItemIndex(105, 7) = 1 'current stack
 ItemIndex(105, 8) = 100 'max stack
 ItemIndex(105, 9) = 105 'Item ID
 
+ItemName(106, 0) = "Ruby
+ItemName(106, 1) = "Crafting Material"
+ItemIndex(106, 0) = 3 'item type (1 means tool)
+ItemIndex(106, 1) = 160   'item texture x cord
+ItemIndex(106, 2) = 64 'item texture y cord
+ItemIndex(106, 3) = 0 ' 
+ItemIndex(106, 4) = 0 '
+ItemIndex(106, 5) = 0 '
+ItemIndex(106, 6) = 0 '
+ItemIndex(106, 7) = 1 'current stack
+ItemIndex(106, 8) = 100 'max stack
+ItemIndex(106, 9) = 106 'Item ID
+
+ItemName(105, 0) = "Diamond
+ItemName(105, 1) = "Crafting Material"
+ItemIndex(105, 0) = 3 'item type (1 means tool)
+ItemIndex(105, 1) = 144   'item texture x cord
+ItemIndex(105, 2) = 64 'item texture y cord
+ItemIndex(105, 3) = 0 ' 
+ItemIndex(105, 4) = 0 '
+ItemIndex(105, 5) = 0 '
+ItemIndex(105, 6) = 0 '
+ItemIndex(105, 7) = 1 'current stack
+ItemIndex(105, 8) = 100 'max stack
+ItemIndex(105, 9) = 105 'Item ID
+
 '113 imbuement station
 ItemName(113, 0) = "Imbuement Station
 ItemName(113, 1) = "Placeholder"
@@ -1202,3 +1228,15 @@ ItemIndex(119, 4) = 0 'layer
 ItemIndex(119, 7) = 1 'current stack
 ItemIndex(119, 8) = 100 'max stack
 ItemIndex(119, 9) = 119 'Item ID
+
+'120 torch
+ItemName(120, 0) = "Torch
+ItemName(120, 1) = "Placeholder"
+ItemIndex(120, 0) = 0 'type
+ItemIndex(120, 1) = 208 'ssx
+ItemIndex(120, 2) = 96 'ssy
+ItemIndex(120, 3) = 43 'tileID
+ItemIndex(120, 4) = 1 'layer
+ItemIndex(120, 7) = 1 'current stack
+ItemIndex(120, 8) = 100 'max stack
+ItemIndex(120, 9) = 120 'Item ID
