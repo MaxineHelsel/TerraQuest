@@ -45,12 +45,18 @@ Select Case LCase$(Command$)
         Flag.RenderOverride = 1
 End Select
 
+Type Virus
+    Status As Byte
+End Type
+Dim Shared Virus As Virus
+
 'constants to make code more readable
 
 'things to throw into the include files that im too lazy to do right now
 Dim Shared Gen.HeightScale
 Dim Shared Gen.TempScale
 Dim Shared CurrentDay
+
 
 Gen.HeightScale = 100
 Gen.TempScale = 500
@@ -166,7 +172,7 @@ Do
     TileTickUpdates
     RandomUpdates
     DelayUpdates
-
+    SpreadHeat
     Precip2
     SetLighting
     INTER
@@ -359,19 +365,37 @@ Sub SpreadHeat2 (updates)
                 iiii = 1
                 iii = 0
 
-                For iii = 0 To 2
+                If TileThermalMap(ii, i) < 0 Then
+                    For iii = 0 To 2
 
-                    If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i) Then TileThermalMap(ii, i) = TileThermalMap(ii + (iii - 1), i) - 0.01
-                    If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
-                Next
+                        If TileThermalMap(ii, i) > TileThermalMap(ii + (iii - 1), i) Then TileThermalMap(ii, i) = TileThermalMap(ii + (iii - 1), i) + 0.01
+                        If TileThermalMap(ii, i) > TileThermalMap(ii + (iii - 1), i + (iiii - 1)) + 0.02 Then updates = updates + 1
+                    Next
 
-                iiii = 0
-                iii = 1
-                For iiii = 0 To 2
-                    If TileThermalMap(ii, i) < TileThermalMap(ii, i + (iiii - 1)) Then TileThermalMap(ii, i) = TileThermalMap(ii, i + (iiii - 1)) - 0.01
+                    iiii = 0
+                    iii = 1
+                    For iiii = 0 To 2
+                        If TileThermalMap(ii, i) > TileThermalMap(ii, i + (iiii - 1)) Then TileThermalMap(ii, i) = TileThermalMap(ii, i + (iiii - 1)) + 0.01
 
-                    If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
-                Next
+                        If TileThermalMap(ii, i) > TileThermalMap(ii + (iii - 1), i + (iiii - 1)) + 0.02 Then updates = updates + 1
+                    Next
+
+                End If
+                If TileThermalMap(ii, i) >= 0 Then
+                    For iii = 0 To 2
+
+                        If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i) Then TileThermalMap(ii, i) = TileThermalMap(ii + (iii - 1), i) - 0.01
+                        If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
+                    Next
+
+                    iiii = 0
+                    iii = 1
+                    For iiii = 0 To 2
+                        If TileThermalMap(ii, i) < TileThermalMap(ii, i + (iiii - 1)) Then TileThermalMap(ii, i) = TileThermalMap(ii, i + (iiii - 1)) - 0.01
+
+                        If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
+                    Next
+                End If
                 'LocalLightLevel(ii, i) = TileData(ii, i, 8)
             Next
         Next
@@ -435,7 +459,7 @@ Sub SpreadLight2 (updates)
     Else
         UpdateLimit = 0
     End If
-    SpreadHeat
+
 End Sub
 
 Sub Precip2
@@ -627,13 +651,13 @@ Sub UseItem (Slot)
                 For i = 1 To CurrentEntities
                     Select Case Player.facing
                         Case 0, 1 'up down
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 Then DamageEntity (i)
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 Then DamageEntity (i): Exit Select
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 - 1 Then DamageEntity (i): Exit Select
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 + 1 Then DamageEntity (i): Exit Select
                         Case 2, 3 'left right
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 Then DamageEntity (i)
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 Then DamageEntity (i): Exit Select
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 - 1 Then DamageEntity (i): Exit Select
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 + 1 Then DamageEntity (i): Exit Select
                     End Select
                 Next
                 'apply weapon cooldown
@@ -877,8 +901,22 @@ Sub TitleScreen
     Loop
 End Sub
 
+Sub SpawnEntity (EntityID)
+    Dim i
+    If CurrentEntities < EntityNatSpawnLim * (Flag.IsBloodmoon + 1) Then
+        CurrentEntities = CurrentEntities + 1
+        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
+        For i = 0 To EntityParameters
+            entity(CurrentEntities, i) = SummonEntity(EntityID, i)
+        Next
+    End If
+
+End Sub
+
 Sub Entities (Command As Byte)
+    Randomize Timer
     Dim i, ii
+    Static EntityDespawnOffset
     Select Case Command
         Case 0 'attempt to summon
 
@@ -898,37 +936,19 @@ Sub Entities (Command As Byte)
                 Case 0 'day time
                     Select Case Ceil(Rnd * 100000)
                         Case 0 To 250 'pig
-                            If CurrentEntities < EntityNatSpawnLim Then
-                                CurrentEntities = CurrentEntities + 1
-                                ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                                For i = 0 To EntityParameters
-                                    entity(CurrentEntities, i) = SummonEntity(1, i)
-                                Next
-                            End If
+                            SpawnEntity (1)
                     End Select
                 Case 1 'night time
                     Select Case Flag.IsBloodmoon
                         Case 0
                             Select Case Ceil(Rnd * 100000)
                                 Case 0 To 120 'zombie
-                                    If CurrentEntities < EntityNatSpawnLim Then
-                                        CurrentEntities = CurrentEntities + 1
-                                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                                        For i = 0 To EntityParameters
-                                            entity(CurrentEntities, i) = SummonEntity(2, i)
-                                        Next
-                                    End If
+                                    SpawnEntity (2)
                             End Select
                         Case 1
                             Select Case Ceil(Rnd * 50000)
                                 Case 0 To 120 'zombie
-                                    If CurrentEntities < EntityNatSpawnLim * 2 Then
-                                        CurrentEntities = CurrentEntities + 1
-                                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                                        For i = 0 To EntityParameters
-                                            entity(CurrentEntities, i) = SummonEntity(2, i)
-                                        Next
-                                    End If
+                                    SpawnEntity (2)
                             End Select
 
 
@@ -1027,14 +1047,16 @@ Sub Entities (Command As Byte)
                 entity(i, 14) = entity(i, 5)
                 COLDET i
 
-                If entity(i, 1) <= 0 Or entity(i, 15) <= 0 Then EntityDespawn i
+                If entity(i, 1) <= 0 Or entity(i, 15) <= 0 Then EntityDespawn i: Exit Sub
                 '
 
                 'count down decision timer
                 entity(i, 7) = entity(i, 7) - Settings.TickRate
                 entity(i, 15) = entity(i, 15) - Settings.TickRate
             Next
+            EntityDespawnOffset = 0
     End Select
+
 End Sub
 
 Sub TargetPlayer (i)
@@ -1049,6 +1071,7 @@ Sub TargetPlayer (i)
 End Sub
 
 Function SummonEntity (ID, Parameter)
+    Randomize Timer
     Select Case ID
         Case 1 'Pig
 
@@ -1178,14 +1201,19 @@ End Sub
 Sub EntityDespawn (id)
     Dim i, ii
     'make sure tile to be set on is air
-    SetGroundItem LootTable(2, id), LootTable(3, id), Int(entity(id, 4) / 16) + 1, Int(entity(id, 5) / 16) + 1
+
+    'set ground item
+    SetGroundItem LootTable(2, entity(id, 0)), LootTable(3, entity(id, 0)), Int(entity(id, 4) / 16) + 1, Int(entity(id, 5) / 16) + 1
+
+    'shift all entity data down 1 slot over the dead entiyt data
     For i = id To CurrentEntities
         For ii = 0 To EntityParameters
             entity(i, ii) = entity(i + 1, ii)
-
         Next
     Next
+
     CurrentEntities = CurrentEntities - 1
+
 End Sub
 
 Sub Respawn
@@ -3555,8 +3583,17 @@ Sub DEV
                 If MouseWheel = -1 Then Print "Scroll Down"
                 If MouseWheel = 1 Then Print "Scroll Up"
             Case "6"
-                Print "Combat Tile Tracker"
-                Print "   (WIP)"
+                Print "Novaflux Virus Status:"
+                Select Case Virus.Status
+                    Case 0
+                        Print "Dormant Novaflux Present"
+                    Case 1
+                        Print "Novaflux-X1 Present"
+                    Case 2
+                        Print "Novaflux-X2 Present"
+                    Case 3
+                        Print "Novaflux Virus Cured and Eradicated"
+                End Select
                 ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
             Case "7"
                 Print "World Data Viewer"
@@ -3608,6 +3645,9 @@ Sub DEV
                     Locate 28, 1: Print "               "
                     Locate 28, 1: Input "Resolution Y: ", ScreenRezY
                     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
+                Case "viruslevel", "vl"
+                    Locate 28, 1: Print "                     "
+                    Locate 28, 1: Input "Virus Status Level: ", Virus.Status
 
                 Case "cv01"
                     Error 104
@@ -3680,9 +3720,9 @@ Sub DEV
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "WallTile ID: ", fillid
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "X Ã± from pos: ", fillx
+                    Locate 28, 1: Input "X Tile from pos: ", fillx
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Y Ã± from pos: ", filly
+                    Locate 28, 1: Input "Y Tile from pos: ", filly
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
@@ -3698,9 +3738,9 @@ Sub DEV
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "GroundTile ID: ", fillid
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "X Ã± from pos: ", fillx
+                    Locate 28, 1: Input "X Tile from pos: ", fillx
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Y Ã± from pos: ", filly
+                    Locate 28, 1: Input "Y Tile from pos: ", filly
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
@@ -3711,9 +3751,9 @@ Sub DEV
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "WallTile ID: ", fillid
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "X Ã± from pos: ", fillx
+                    Locate 28, 1: Input "X Tile from pos: ", fillx
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Y Ã± from pos: ", filly
+                    Locate 28, 1: Input "Y Tile from pos: ", filly
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
@@ -3794,7 +3834,7 @@ Sub DEV
                     Locate 28, 1: Print "                                            "
                     Locate 28, 1: Input "Number of this entity to spawn ", temp
                     Locate 28, 1: Print "                                            "
-                    Locate 28, 1: Input "Set(0) or Rand(1) Cords ", cord
+                    Locate 28, 1: Input "Rand(0) or Set(1) Cords ", cord
                     If cord = 1 Then
                         Dim entx, enty
                         Locate 28, 1: Print "                              "
@@ -4027,9 +4067,9 @@ Sub LOADMAP (file As String)
         For i = 1 To 30
             For ii = 1 To 40
                 For iiii = 0 To TileParameters
-              '      Print "61." + Trim$(Str$(iii))
+                    '      Print "61." + Trim$(Str$(iii))
                     Get #1, iii, TileData(ii, i, iiii)
-               '     Print "62." + Trim$(Str$(iii))
+                    '     Print "62." + Trim$(Str$(iii))
                     iii = iii + 1
                 Next
 
