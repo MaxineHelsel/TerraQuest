@@ -278,7 +278,7 @@ Sub Textbox (Diag, Opt)
             End If
 
             PutImage (CameraPositionX - BoxW * 8, CameraPositionY - BoxH * 8), Texture.HudSprites, , (128 + (BoxW * 8), 0 + (BoxH * 8))-(8 + 128 + (BoxW * 8), 8 + 0 + (BoxH * 8))
-            Display
+
         Next
     Next
     Locate (ScreenRezY / 8 / 2) - (BoxH / 2) - 5, 1
@@ -289,10 +289,7 @@ Sub Textbox (Diag, Opt)
             CENTERPRINT DiagSel(2, Opt) + "Multi Player"
             Print
             CENTERPRINT DiagSel(3, Opt) + "Settings"
-            Display
     End Select
-
-
 End Sub
 Function DiagSel$ (Cur, Hil)
     If Cur = Hil Then DiagSel = "" Else DiagSel = " "
