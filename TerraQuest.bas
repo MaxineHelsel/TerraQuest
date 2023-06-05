@@ -68,6 +68,7 @@ RandomTickRate = 5
 
 Dim Shared TileThermalMap(41, 31)
 
+
 Const EntityID = 0
 Const EntityHealth = 1
 Const EntitySpeedMod = 2
@@ -107,6 +108,36 @@ Const TileDataMaxSpeed = 10
 
 temptitle:
 INITIALIZE
+Do
+    Dim Selected
+    Cls
+    Selected = Menu(0)
+    Display
+    Select Case Selected
+        Case 0
+        Case 1
+            GoTo oldtitle
+        Case 3
+            GoTo Settings
+    End Select
+Loop
+Error 102
+Settings:
+Do
+    Cls
+    Selected = Menu(1)
+    Display
+    Select Case Selected
+        Case 0
+        Case 1
+            GoTo oldtitle
+        Case 2
+
+    End Select
+Loop
+
+oldtitle:
+While InKey$ <> "": Wend
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
 CENTERPRINT "Temporary title screen"
@@ -155,7 +186,7 @@ If DefaultRenderMode = 2 Then
     SwitchRender 0 'these 2 statements are important to prevent a dumb bug
     SwitchRender 1
 End If
-
+Flag.FadeIn = 1
 Do
     For i = 0 To CurrentEntities
         OnTopEffect i
@@ -183,8 +214,9 @@ Do
     ChangeMap 0, 0, 0
     DayLightCycle
     MinMemFix
-    If Player.health <= 0 Then Respawn
 
+    If Player.health <= 0 Then Respawn
+    If Flag.FadeIn = 1 Then FadeIn
     If WithinBounds = 1 Then
         If TileIndexData(WallTile(FacingX, FacingY), 8) > 0 Then Player.CraftingLevel = TileIndexData(WallTile(FacingX, FacingY), 8) Else Player.CraftingLevel = 2
     End If
@@ -208,6 +240,122 @@ Sub ServerInit
     INITIALIZE
 End Sub
 Sub ServerLoop
+End Sub
+
+
+Sub Textbox (Diag, Opt)
+    Dim BoxW
+    Dim BoxH
+
+    Dim BoxOffW
+    Dim BoxOffH
+
+    Dim W
+    Dim H
+    Select Case Diag
+        Case 0
+            BoxH = 3
+            BoxW = 10
+
+
+
+    End Select
+    For W = 0 To BoxW
+        If W = 0 Then
+            BoxOffW = 0
+        ElseIf W = BoxW Then
+            BoxOffW = 2
+        Else
+            BoxOffW = 1
+        End If
+        For H = 0 To BoxH
+            If H = 0 Then
+                BoxOffH = 0
+            ElseIf H = BoxH Then
+                BoxOffH = 2
+            Else
+                BoxOffH = 1
+            End If
+
+            PutImage (CameraPositionX - BoxW * 8, CameraPositionY - BoxH * 8), Texture.HudSprites, , (128 + (BoxW * 8), 0 + (BoxH * 8))-(8 + 128 + (BoxW * 8), 8 + 0 + (BoxH * 8))
+            Display
+        Next
+    Next
+    Locate (ScreenRezY / 8 / 2) - (BoxH / 2) - 5, 1
+    Select Case Diag
+        Case 0
+            CENTERPRINT DiagSel(1, Opt) + "Single Player"
+            Print
+            CENTERPRINT DiagSel(2, Opt) + "Multi Player"
+            Print
+            CENTERPRINT DiagSel(3, Opt) + "Settings"
+            Display
+    End Select
+
+
+End Sub
+Function DiagSel$ (Cur, Hil)
+    If Cur = Hil Then DiagSel = "" Else DiagSel = " "
+End Function
+
+Function Menu (MenuNum)
+    Static HighlightedOption
+    Dim i
+    Menu = 0
+    Static SplashText, fh
+    If fh = 0 Then
+        SplashText = Int(Rnd * SplashCount)
+        fh = 1
+    End If
+
+    Select Case MenuNum
+        Case 0 ' Title Screen
+            'put title screen icon
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT "Terraquest " + Game.Buildinfo
+            'put splash text
+            'Draw Options buttons
+
+            Textbox 0, HighlightedOption
+
+            If HighlightedOption < 1 Then HighlightedOption = 3
+            If HighlightedOption > 3 Then HighlightedOption = 1
+        Case 1
+
+
+    End Select
+    'check for key input if options is more than 1
+    If InventorySelect Then Menu = HighlightedOption
+    If InventoryUp Then HighlightedOption = HighlightedOption - 1
+    If InventoryDown Then HighlightedOption = HighlightedOption + 1
+    If InventoryLeft Then HighlightedOption = HighlightedOption - 1
+    If InventoryRight Then HighlightedOption = HighlightedOption + 1
+
+
+
+
+    'if enter is pressed, then return option number, starting at 1, otherwise return 0
+End Function
+
+Sub CENTERPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As _Byte
+    For i = 0 To Int((ScreenRezX / 8 / 2) - (Len(nam$) / 2) - 1)
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
+End Sub
+
+Sub ENDPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As Integer
+    For i = 0 To Int((ScreenRezX / 8) - (Len(nam$))) - 1
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
 End Sub
 
 
@@ -242,11 +390,19 @@ Sub RandomUpdates
     Dim i, ii
     Dim Rx, Ry As Byte
 
-    Const EggplantLTB = 0.35
+    ' Const EggplantLTB = 0.35
     'weather
     If WeatherCountDown < 0 Then
         WeatherCountDown = Int(Rnd * 1000000)
-        PrecipitationLevel = Int(Rnd * 3)
+        Select Case Int(Rnd * 100)
+            Case Is > 50
+                PrecipitationLevel = 0
+            Case Is < 25
+                PrecipitationLevel = 1
+            Case Else
+                PrecipitationLevel = 2
+        End Select
+
     Else
         WeatherCountDown = WeatherCountDown - RandomTickRate
     End If
@@ -254,7 +410,7 @@ Sub RandomUpdates
     Do
         Rx = Int(Rnd * 41)
         Ry = Int(Rnd * 31)
-        If TileTimeOut = 30 Then
+        If TileTimeOut = 15 Then
             For ii = 0 To 41
                 For i = 0 To 31
                     PriorCheck(ii, i) = 0
@@ -320,10 +476,12 @@ Function BiomeTemperature (Tx, Ty)
 End Function
 
 Function LocalTemperature (Tx, Ty)
-
     LocalTemperature = BiomeTemperature(Tx, Ty) + SeasonalOffset + TODoffset + TileThermalOffset(Tx, Ty)
 End Function
 
+Function NaturalTemperature (tx, ty)
+    NaturalTemperature = BiomeTemperature(tx, ty) + SeasonalOffset + TODoffset
+End Function
 Function TODoffset
     If TimeMode = 0 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400))
     If TimeMode = 1 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400)) * -1
@@ -491,7 +649,7 @@ Sub Precip2
     If PrecipitationLevel > 0 Then
         For i = 0 To 30
             For ii = 0 To 40
-                If TempGrabDelay = 0 Then LocalTempGrab(ii, i) = LocalTemperature(ii, i)
+                If TempGrabDelay = 0 Then LocalTempGrab(ii, i) = NaturalTemperature(ii, i)
 
                 If VisibleCheck(ii, i) = 1 Then
                     If LocalTempGrab(ii, i) < 0.34 Then
@@ -785,37 +943,6 @@ Sub ContainerUpdate
     End If
 End Sub
 
-Function Dialog (Template, DialogString As String, Options)
-    Static HighlightedOption
-    Dim i
-
-    Select Case Template
-        Case 0 ' Title Screen
-            'put title screen icon
-            CENTERPRINT DialogString + " " + Game.Buildinfo
-            'put splash text
-            'Draw Options buttons
-
-            Print "Load World";
-            If HighlightedOption = 1 Then Print "*" Else Print
-            Print "Create World";
-            If HighlightedOption = 2 Then Print "*" Else Print
-            Print "Settings";
-            If HighlightedOption = 3 Then Print "*" Else Print
-
-
-        Case 1
-
-
-    End Select
-    'check for key input if options is more than 1
-    If InventoryUp Then HighlightedOption = HighlightedOption - 1
-    If InventoryDown Then HighlightedOption = HighlightedOption + 1
-    If InventoryLeft Then HighlightedOption = HighlightedOption - 1
-    If InventoryRight Then HighlightedOption = HighlightedOption + 1
-    If InventorySelect Then Dialog = HighlightedOption
-    'if enter is pressed, then return option number, starting at 1, otherwise return 0
-End Function
 
 Sub TitleScreen
     Dim i, ii
@@ -873,7 +1000,7 @@ Sub TitleScreen
             Next
 
         End If
-        Select Case Dialog(0, Game.Title, 2)
+        Select Case 4
             Case 1
                 Settings.TickRate = 1
                 AutoDisplay
@@ -1141,23 +1268,24 @@ Function LootTable (tType As Byte, ID As Integer)
     Select Case tType
         Case 1 'tile drops
             Select Case ID
-                Case 19
+                Case 19 '                low tier stone
                     LootTable = 29 'stone
+                    If Int(Rnd * 50) < 5 Then LootTable = 122 'coal
                     If Int(Rnd * 100) < 15 Then LootTable = 38 'tin
                     If Int(Rnd * 100) < 8 Then LootTable = 39 'copper
-                Case 28
+                Case 28 'calcite
                     LootTable = 29 'stone
                     If Int(Rnd * 100) < 15 Then LootTable = 40 'iron
                     If Int(Rnd * 100) < 8 Then LootTable = 41 'platinum
-                    If Int(Rnd * 1000) < 5 Then LootTable = 107 'diamond
-                    If Int(Rnd * 1000) < 5 Then LootTable = 108 'emeralf
+                    If Int(Rnd * 600) < 5 Then LootTable = 107 'diamond
+                    If Int(Rnd * 600) < 5 Then LootTable = 108 'emerald
                     If Int(Rnd * 1000) < 5 Then LootTable = 104 'aetherian energy sphere
 
-                Case 29
-                    LootTable = 116
-                    If Int(Rnd * 1000) < 5 Then LootTable = 105 'ruby
-                    If Int(Rnd * 1000) < 5 Then LootTable = 106 'saphire
-                    If Int(Rnd * 1000) < 3 And CurrentDimension = 3 Then LootTable = 103
+                Case 29 'sand
+                    LootTable = 116 'sand
+                    If Int(Rnd * 400) < 5 Then LootTable = 105 'ruby
+                    If Int(Rnd * 400) < 5 Then LootTable = 106 'saphire
+                    If Int(Rnd * 1000) < 3 And CurrentDimension = 3 Then LootTable = 103 'Imbuement Refraction Core
 
 
             End Select
@@ -2945,12 +3073,32 @@ Function FacingY
 
 End Function
 
+Sub FadeIn
+    Static FadeStep
+    Static StepDelay
+
+    'incriment per frame
+    StepDelay = StepDelay + 1
+
+    'repeat basically what the fade out is doing, but fade in
+    If StepDelay > 5 Then
+        StepDelay = 0
+        FadeStep = FadeStep + 2
+    End If
+    'set light level
+    OverlayLightLevel = 12 - FadeStep
+
+    'see if fully faded in
+    If FadeStep >= 12 Then Flag.FadeIn = 0: FadeStep = 0: StepDelay = 0
+
+End Sub
+
 Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TickDelay
     Static TotalDelay
     Static LightStep
     Dim i, ii
-    If LightStep < 12 Then
+    If LightStep <= 12 Then
         Select Case Player.facing
             Case 0
                 If Player.y <= 0 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
@@ -3000,7 +3148,7 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
             Next
         Next
         SpreadLight (1)
-
+        Flag.FadeIn = 1
         LightStep = 0
     End If
 
@@ -3186,6 +3334,7 @@ Sub Crafting
 
             Case "-1 -1 -1 |19 19 19 |19 19 19 |" 'Wooden Floor
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(100, i)
+                CraftingGrid(0, Player.CraftingLevel, 7) = 6
 
             Case "29 29 29 |29 29 29 |29 29 29 |" 'cobblestone Wall
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(7, i)
@@ -3219,6 +3368,12 @@ Sub Crafting
             Case "-1 -1 -1 |-1 36 -1 |-1 -1 -1 |" 'eggplant seeds
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(37, i)
                 CraftingGrid(0, Player.CraftingLevel, 7) = 2
+
+            Case "-1 -1 -1 |-1 122 -1 |-1 22 -1 |" 'torch
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(120, i)
+                CraftingGrid(0, Player.CraftingLevel, 7) = 2
+
+
 
                 'temp ore refinement recipe till furnace
             Case "-1 -1 -1 |-1 38 -1 |-1 -1 -1 |"
@@ -4408,10 +4563,21 @@ Sub SetLighting
     Dim TotalLightLevel
     For i = 0 To 31
         For ii = 0 To 41
-            If GlobalLightLevel < LocalLightLevel(ii, i) Then TotalLightLevel = LocalLightLevel(ii, i) Else TotalLightLevel = GlobalLightLevel
+
+            If GlobalLightLevel < LocalLightLevel(ii, i) Then
+                TotalLightLevel = LocalLightLevel(ii, i)
+            Else
+                TotalLightLevel = GlobalLightLevel
+            End If
+            'If PrecipitationLevel = 2 Then TotalLightLevel = TotalLightLevel - 2
+
+
+            'map change overlay mainly
             TotalLightLevel = TotalLightLevel - OverlayLightLevel
+
+
             If TotalLightLevel > 12 Then TotalLightLevel = 12
-            If TotalLightLevel < 0 Then TotalLightLevel = 0
+            If TotalLightLevel < 1 Then TotalLightLevel = 1
 
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
         Next
@@ -4452,6 +4618,7 @@ Sub DayLightCycle
                 GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
             End If
     End Select
+    GlobalLightLevel = GlobalLightLevel - (Int(PrecipitationLevel / 2) * 2)
 End Sub
 
 
@@ -4501,25 +4668,6 @@ Sub INITIALIZE
 
 End Sub
 
-Sub CENTERPRINT (nam$)
-    _PrintMode _KeepBackground
-    Dim i As _Byte
-    For i = 0 To Int((ScreenRezX / 8 / 2) - (Len(nam$) / 2) - 1)
-        Print " ";
-    Next
-    _PrintMode _FillBackground
-    Print nam$
-End Sub
-
-Sub ENDPRINT (nam$)
-    _PrintMode _KeepBackground
-    Dim i As Integer
-    For i = 0 To Int((ScreenRezX / 8) - (Len(nam$))) - 1
-        Print " ";
-    Next
-    _PrintMode _FillBackground
-    Print nam$
-End Sub
 
 
 

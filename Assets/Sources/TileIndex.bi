@@ -166,7 +166,7 @@ TileIndexData(10, 3) = 0 'has interior shadow
 TileIndexData(10, 4) = 15 'resistance
 TileIndexData(10, 5) = 0 'is solid
 TileIndexData(10, 6) = 14 'light casts
-tileindexdata(10,16)=0.15 'thermal output
+tileindexdata(10,16)=0.13 'thermal output
 
 TileName(11, 0) = "Ground Item" 'Name of the tile
 TileName(11, 1) = "Placeholder" 'tooltip
@@ -631,14 +631,14 @@ TileIndex(43, 0) = 1 'layer definition
 TileIndex(43, 1) = 176 'x position on tilesheet
 TileIndex(43, 2) = 32 'y position on tilesheet
 TileIndex(43, 3) = 120 'itemid
-TileIndexData(43, 0) = 1 'collision
+TileIndexData(43, 0) = 0 'collision
 TileIndexData(43, 1) = 0 'casts shadow
 TileIndexData(43, 2) = 1 'blocks shadow
 TileIndexData(43, 3) = 0 'has interior shadow
 TileIndexData(43, 4) = 5 'resistance
 TileIndexData(43, 5) = 0 'is solid
-TileIndexData(43, 6) = 10 'light casts
-tileindexdata(43,16)=0.4
+TileIndexData(43, 6) = 9 'light casts
+tileindexdata(43,16) = 0
 
 '44 Ice Campfire
 TileName(44, 0) = "Ice Campfire" 'Name of the tile
@@ -654,4 +654,4 @@ TileIndexData(44, 3) = 0 'has interior shadow
 TileIndexData(44, 4) = 15 'resistance
 TileIndexData(44, 5) = 0 'is solid
 TileIndexData(44, 6) = 8 'light casts
-tileindexdata(44,16)=-0.15
+tileindexdata(44,16) = -0.08  

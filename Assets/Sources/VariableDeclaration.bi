@@ -121,6 +121,9 @@ dim shared Flag.InitialRender as byte
 dim shared Flag.ContainerOpen as byte
 dim shared Flag.FullRender as unsigned bit
 dim shared Flag.IsBloodmoon as unsigned bit
+dim shared Flag.FadeIn as unsigned bit
+
+
 dim shared    PrecipitationLevel as byte
 Dim Shared BGDraw As Unsigned Bit
 dim shared RenderMode as byte
