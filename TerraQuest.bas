@@ -130,9 +130,10 @@ Do
     Select Case Selected
         Case 0
         Case 1
-            GoTo oldtitle
-        Case 2
 
+        Case 2
+        Case 6
+            GoTo oldtitle
     End Select
 Loop
 
@@ -252,14 +253,19 @@ Sub Textbox (Diag, Opt)
 
     Dim W
     Dim H
+
+    'set center dialog box size
     Select Case Diag
         Case 0
-            BoxH = 3
-            BoxW = 10
-
-
+            BoxH = 7
+            BoxW = 16
+        Case 1
+            BoxH = 7
+            BoxW = 16
 
     End Select
+
+    'draw box outline
     For W = 0 To BoxW
         If W = 0 Then
             BoxOffW = 0
@@ -281,7 +287,9 @@ Sub Textbox (Diag, Opt)
 
         Next
     Next
-    Locate (ScreenRezY / 8 / 2) - (BoxH / 2) - 5, 1
+
+
+    Locate (ScreenRezY / 8 / 4) - (BoxH / 2), 1
     Select Case Diag
         Case 0
             CENTERPRINT DiagSel(1, Opt) + "Single Player"
@@ -289,8 +297,59 @@ Sub Textbox (Diag, Opt)
             CENTERPRINT DiagSel(2, Opt) + "Multi Player"
             Print
             CENTERPRINT DiagSel(3, Opt) + "Settings"
+
+
+        Case 1
+            CENTERPRINT DiagSel(1, Opt) + "Resolution: (" + LTrim$(Str$(ScreenRezX)) + "x" + LTrim$(Str$(ScreenRezY)) + ")"
+            Print
+            Select Case RenderMode
+                Case 0
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Disabled"
+                Case 1
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Mixed"
+                Case 2
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Enabled"
+            End Select
+            Print
+            CENTERPRINT DiagSel(3, Opt) + "Fullscreen: Enabled"
+            Print
+            CENTERPRINT DiagSel(4, Opt) + "Game Tick Rates: TTS:1 RTS:5 "
+            Print
+            CENTERPRINT DiagSel(5, Opt) + "Sprite Packs"
+            Print
+            Print
+            Print
+            CENTERPRINT DiagSel(6, Opt) + "Main Menu"
+
+
+
     End Select
+    Display
 End Sub
+
+Sub PauseMenu
+    Dim Selected
+    While InKey$ <> "": Wend
+    '    If Flag.RenderOverride = 0 Then SwitchRender (0)
+    Do
+
+
+        '      Selected = Menu(2)
+        Select Case Selected
+            Case 0
+            Case 1
+
+            Case 3
+
+        End Select
+
+
+        If KeyHit = 27 Then Exit Do
+    Loop
+    '   SwitchRender (RenderMode)
+End Sub
+
+
 Function DiagSel$ (Cur, Hil)
     If Cur = Hil Then DiagSel = "" Else DiagSel = " "
 End Function
@@ -298,6 +357,7 @@ End Function
 Function Menu (MenuNum)
     Static HighlightedOption
     Dim i
+    Dim OptCount
     Menu = 0
     Static SplashText, fh
     If fh = 0 Then
@@ -315,11 +375,19 @@ Function Menu (MenuNum)
             'Draw Options buttons
 
             Textbox 0, HighlightedOption
-
-            If HighlightedOption < 1 Then HighlightedOption = 3
-            If HighlightedOption > 3 Then HighlightedOption = 1
+            OptCount = 3
         Case 1
+            'put title screen icon
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT "Terraquest " + Game.Buildinfo
+            Print
+            CENTERPRINT "Settings"
+            'put splash text
+            'Draw Options buttons
 
+            Textbox 1, HighlightedOption
+            OptCount = 5
 
     End Select
     'check for key input if options is more than 1
@@ -328,6 +396,8 @@ Function Menu (MenuNum)
     If InventoryDown Then HighlightedOption = HighlightedOption + 1
     If InventoryLeft Then HighlightedOption = HighlightedOption - 1
     If InventoryRight Then HighlightedOption = HighlightedOption + 1
+    If HighlightedOption < 1 Then HighlightedOption = OptCount
+    If HighlightedOption > OptCount Then HighlightedOption = 1
 
 
 
@@ -421,7 +491,7 @@ Sub RandomUpdates
     TileTimeOut = 0
 
 
-
+    'delayed tile updates
     If LongTimeOut < 0 Then
         Select Case WallTile(Rx, Ry)
             Case 32
@@ -433,13 +503,26 @@ Sub RandomUpdates
         End Select
 
         Select Case GroundTile(Rx, Ry)
-            Case 13
-                If LocalTemperature(Rx, Ry) < 0.30 Then GroundTile(Rx, Ry) = 14
-            Case 14
-                If LocalTemperature(Rx, Ry) > 0.30 Then GroundTile(Rx, Ry) = 13
+            Case 4
+                If LocalTemperature(Rx, Ry) > 0.3 Then
+                    If GroundTile(Rx - 1, Ry) = 2 Or GroundTile(Rx + 1, Ry) = 2 Or GroundTile(Rx, Ry - 1) = 2 Or GroundTile(Rx, Ry + 1) = 2 Then GroundTile(Rx, Ry) = 2
+                End If
+            Case 3
+                If LocalTemperature(Rx, Ry) > 0.3 Then GroundTile(Rx, Ry) = 2
         End Select
         LongTimeOut = 500
     End If
+
+
+    'quick tile updates
+
+    Select Case GroundTile(Rx, Ry)
+        Case 13
+            If LocalTemperature(Rx, Ry) < 0.30 Then GroundTile(Rx, Ry) = 14
+        Case 14
+            If LocalTemperature(Rx, Ry) > 0.30 Then GroundTile(Rx, Ry) = 13
+    End Select
+
 
     LongTimeOut = LongTimeOut - RandomTickRate
     TileCountDown = TileCountDown - RandomTickRate
@@ -731,7 +814,7 @@ Sub UseItem (Slot)
             End Select
         Case 1 'Tools
             Select Case Inventory(0, Slot, 5)
-                Case 0
+                Case 0 'shovel
                     If GroundTile(FacingX, FacingY) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
                             If GameMode <> 1 Then
@@ -745,15 +828,17 @@ Sub UseItem (Slot)
                         End If
                         ToolDelay = ToolDelay + 1
                         If ToolDelay > 10 Then
-                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
-                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            If TileIndexData(GroundTile(FacingX, FacingY), 4) - Inventory(0, Slot, 6) < 0 Then
+                                TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                                TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            End If
                             ToolDelay = 0
                         End If
                         If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
                         If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
                     End If
-                Case 1, 2
-                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(0, Slot, 5) - 1 Then Exit Select
+                Case 1, 2 'axe, pickaxe
+                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(0, Slot, 5) - 1 Then Exit Select 'to make sure if tile is stone or metal that you are using a pickaxe
                     If WallTile(FacingX, FacingY) <> 1 Then
                         If TileData(FacingX, FacingY, 5) <= 0 Then
                             If GameMode <> 1 Then
@@ -771,15 +856,17 @@ Sub UseItem (Slot)
                         End If
                         ToolDelay = ToolDelay + 1
                         If ToolDelay > 10 Then
-                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
-                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                            If TileIndexData(WallTile(FacingX, FacingY), 4) - Inventory(0, Slot, 6) < 0 Then
+                                TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
+                                TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                            End If
                             ToolDelay = 0
                         End If
                         If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
                         If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
                     End If
 
-                Case 3
+                Case 3 'hoe
                     If TileIndex(GroundTile(FacingX, FacingY), 4) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
                             GroundTile(FacingX, FacingY) = TileIndex(GroundTile(FacingX, FacingY), 4)
@@ -2775,7 +2862,7 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 4
                     EffectIndex = 120 'framedelay
             End Select
-        Case "Consume Zombie Flesh"
+        Case "Consume Decayed Flesh"
             Select Case Value
                 Case 0
                     EffectIndex = 6 'effectid
@@ -2786,7 +2873,7 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 3
                     EffectIndex = 1 'value
                 Case 4
-                    EffectIndex = 60 'framedelay
+                    EffectIndex = 120 'framedelay
             End Select
         Case "Consume Duck Meat"
             Select Case Value
@@ -3199,10 +3286,12 @@ Sub INTER
             Flag.HudDisplay = Flag.HudDisplay + 1
         Case 101
             Flag.InventoryOpen = Flag.InventoryOpen + 1
-
+        Case 27
+            PauseMenu
 
     End Select
 End Sub
+
 
 Sub Crafting
     Dim recipe As String
@@ -3244,7 +3333,7 @@ Sub Crafting
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
 
             Case "19 19 19 |-1 22 -1 |-1 22 -1 |" 'wooden pickaxe
-                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(17, i)
 
             Case "19 19 -1 |-1 22 -1 |-1 22 -1 |" 'wooden hoe
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(30, i)
