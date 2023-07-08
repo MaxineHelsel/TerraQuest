@@ -2,9 +2,9 @@
 'Note: any changes made to this file, and any other source files require a recompile of the game before they are recognized
 
 'Default variables that are required to be set on initial load
-Game.Title = "TerraQuest (Networking Test)"
-Game.Buildinfo = "Beta Version 1.2 Edge Build 230509A
-Game.Version = "b1.2-230509A
+Game.Title = "TerraQuest"
+Game.Buildinfo = "Beta 1.2 Edge Build 230708RC1
+Game.Version = "B1.2-230708RC1
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -25,6 +25,7 @@ File.ItemSheet = "Assets/Sprites/Items/Items.png"
 File.HudSprites = "Assets/Sprites/Other/HUD.png"
 File.Shadows = "Assets/Sprites/Other/Shadows.png"
 File.Shadows_Bloodmoon = "Assets/Sprites/Other/Shadows-bloodmoon.png"
+File.Precipitation= "Assets/Sprites/Other/Precipitation.png"
 
 
 
@@ -36,6 +37,7 @@ Sounds.walk_water = "Assets/Sounds/walk_water.mp3"
 Sounds.bloodmoon_spawn = "Assets/Sounds/bloodmoon_spawn.mp3
 
 'Debug values that are only set here for testing purposes
+player.name = "Player"
 Player.health = 8
 Player.MaxHealth = 0
 GameMode = 2
@@ -46,6 +48,11 @@ Flag.RenderOverride = 0
 DefaultRenderMode = 2
 bloodmoonspawnrate= 5
 entitynatspawnlim=15
+RandomTickRate = 5
+Gen.HeightScale = 100
+Gen.TempScale = 500
+
+
 Dim ii, iii, iiii
 For ii = 0 To 3
     For iii = 0 To 5

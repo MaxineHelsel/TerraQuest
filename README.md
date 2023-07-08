@@ -1,3 +1,4 @@
+﻿
 # TerraQuest
 
 ### WARNING This is the edge branch, meaning this version could be incomplete, unstable, untested, broken, etc. If you are looking for the latest released version, switch to stable.
@@ -18,9 +19,15 @@
 
 - Arrow Keys: Navigate Inventory
 
-- 1-6 (While in inventory) Swap selected item with hotbar
+- Tab: Switch Inventory Panels
 
-- 1-6 (out of inventory) use item in hotbar
+- Backslash: Split Stack
+
+- Q: Drop Item
+
+- Space Bar (in hotbar): use item 
+
+- 1-6 (out of inventory): use item in hotbar
 
 
 # Update Information
@@ -39,6 +46,141 @@ Windows comes second, because it does not require me to switch systems, as i can
 macOS comes last, because i have to switch to a different system and pull the already pushed version, compile for mac os, test, then re push.
 
 # ChangeLog
+
+## Beta 1.2
+
+### New Items
+(* denotes only obtainable in creative)
+
+- Eggplant Seed*
+- Tin ore
+- Copper Ore
+- Iron Ore
+- Platinum Ore
+- Titanium Ore*
+- Cobalt Ore*
+- Chromium Ore*
+- Tungsten Ore*
+- Tin Bar
+- Copper Bar
+- Iron Bar
+- Platinum Bar
+- Titanium Bar*
+- Cobalt Bar*
+- Chromium Bar*
+- Tungsten Bar*
+- Iron Tool Handle
+- Platinum Tool Handle*
+- Titanium Tool Handle*
+- Cobalt Tool Handle*
+- Chromium Tool Handle*
+- Tin Shovel
+- Tin Axe
+- Tin Pickaxe
+- Tin Sword
+- Tin Hoe
+- Copper Shovel
+- Copper Axe
+- Copper Pickaxe
+- Copper Sword
+- Copper Hoe
+- Iron Shovel
+- Iron Axe
+- Iron Pickaxe
+- Iron Sword
+- Iron Hoe
+- Platinum Shovel
+- Platinum Axe
+- Platinum Pickaxe
+- Platinum Sword
+- Platinum Hoe
+- Titanium Shovel*
+- Titanium Axe*
+- Titanium Pickaxe*
+- Titanium Sword*
+- Titanium Hoe*
+- Cobalt Shovel*
+- Cobalt Axe*
+- Cobalt Pickaxe*
+- Cobalt Sword*
+- Cobalt Hoe*
+- Chromium Shovel*
+- Chromium Axe*
+- Chromium Pickaxe*
+- Chromium Sword*
+- Chromium Hoe*
+- Tungsten Shovel*
+- Tungsten Axe*
+- Tungsten Pickaxe*
+- Tungsten Sword*
+- Tungsten Hoe*
+- Advanced Crafting Station
+- Wooden Floor
+- Decayed Flesh
+- Duck Meat
+- Stone of Refraction*
+- Aetherian Energy Sphere
+- Sapphire
+- Ruby
+- Diamond
+- Emerald
+- Imbuement Station*
+- Sandstone*
+- Calcite
+- Sand
+- Glass
+- Asphalt
+- Torch
+
+### New Tiles
+
+- Advanced crafting station
+- Wood floor
+- Imbuement station
+- Deep water
+- Sandstone
+- Calcite
+- Sand 
+- Glass
+- Asphalt
+- Planted Eggplant
+- Torch
+- A few hidden tiles for experimenting with generated structures
+
+### New Mechanics
+
+- Upon death entities will drop items on ground
+- Water now spreads
+- At the end of twilight there is a chance for a blood moon to spawn, resulting In more difficult enemies and more spawning
+- During blood moons, zombies will have a chance to drop health wheels, allowing you to increase your max health permanently
+- Weather
+- Temperature
+- Seasons
+- When it gets too cold; snow will fall instead of rain, water will freeze to ice, eventually the player will take damage in too cold
+- When it gets too hot; Rain will no longer fall, eventually the player will take damage in too hot
+- naturally hot areas will generate deserts
+- naturally cold areas will generate ice and snow
+- You can now use swords to combat entities
+- pickaxes are now required to mine rock or metal tiles
+- you can now farm plants, though only eggplants are farmable at the moment, and the seeds only obtainable in creative
+- Command line arguments are now accepted, the only one that does anything currently is ``software`` which will force the game to start with software rendering, in case hardware rendering is causing issues
+
+
+### Major Bugs Fixed
+
+- Inventory Duplication via swaping with empty slot fixed
+- Generated Features (ground items, carrots, bushes) now generate properly
+
+
+### Other Notable Changes
+
+- Map seed is now generated with perlin
+
+
+
+## Legacy Change Log
+
+
 
 ## Alpha Version 21
 

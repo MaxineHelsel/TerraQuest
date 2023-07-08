@@ -19,46 +19,60 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
-'constants to make code more readable
-Const EntityID = 0
-Const EntityHealth = 1
-Const EntitySpeedMod = 2
-Const EntityAI = 3
-Const EntityX = 4
-Const EntityY = 5
-Const EntityAction = 6
-Const EntityTimerAct = 7
-Const EntityVX = 8
-Const EntityVY = 9
-Const EntityMX = 10 'These 2 values are redundant, could just be calculated if vx and vy != 0
-Const EntityMY = 11
-Const EntityMaxHealth = 12
-Const EntityLX = 13
-Const EntityLY = 14
-Const EntityTimerDespawn = 15
-Const EntityFacing = 16
-Const EntitySpOffY = 17
 
-Const TileLayer = 0
-Const TileSX = 1
-Const TileSY = 2
-Const TileItemID = 3
 
-Const TileDataCollision = 0
-Const TileDataCastShadow = 1
-Const TileDataBlockShadow = 2
-Const TileDataIntShadow = 3
-Const TileDataResistance = 4
-Const TileDataSolid = 5
-Const TileDataLightCast = 6
-Const TileDataContainer = 7
-Const TileDataCraftingLevel = 8
-Const TileDataFriction = 9
-Const TileDataMaxSpeed = 10
+'parse command line arguments
+Select Case LCase$(Command$)
+    Case "server"
+        ServerInit
+        ServerLoop
+        End
+    Case "server-headless"
+        Print "Headless server mode is not supported yet, please use 'server' argument to start in server mode"
+        End
+    Case "software"
+        DefaultRenderMode = 0
+        Flag.RenderOverride = 1
+    Case "experimental"
+        Flag.ExperimentalFeature = 1
+End Select
 
+Flag.ExperimentalFeature = 0
 
 temptitle:
 INITIALIZE
+If Flag.ExperimentalFeature = 0 Then GoTo oldtitle
+Do
+    Dim Selected
+    Cls
+    Selected = Menu(0)
+    Display
+    Select Case Selected
+        Case 0
+        Case 1
+            GoTo oldtitle
+        Case 3
+            GoTo Settings
+    End Select
+Loop
+Error 102
+Settings:
+Do
+    Cls
+    Selected = Menu(1)
+    Display
+    Select Case Selected
+        Case 0
+        Case 1
+
+        Case 2
+        Case 6
+            GoTo oldtitle
+    End Select
+Loop
+
+oldtitle:
+While InKey$ <> "": Wend
 'TitleScreen
 'TEMPORARY, MAKE A MENU SUBROUTINE OR SOMETHING
 CENTERPRINT "Temporary title screen"
@@ -94,6 +108,7 @@ GoTo game
 
 Error 102
 
+
 ERRORHANDLE:
 ErrorHandler
 Resume Next
@@ -106,7 +121,7 @@ If DefaultRenderMode = 2 Then
     SwitchRender 0 'these 2 statements are important to prevent a dumb bug
     SwitchRender 1
 End If
-
+Flag.FadeIn = 1
 Do
     For i = 0 To CurrentEntities
         OnTopEffect i
@@ -120,6 +135,11 @@ Do
     RenderEntities (1)
     Entities (0)
     Entities (1)
+    TileTickUpdates
+    RandomUpdates
+    DelayUpdates
+    SpreadHeat
+    Precip2
     SetLighting
     INTER
     Hud2
@@ -129,8 +149,10 @@ Do
     ChangeMap 0, 0, 0
     DayLightCycle
     MinMemFix
-    If Player.health <= 0 Then Respawn
+    GameChat
 
+    If Player.health <= 0 Then Respawn
+    If Flag.FadeIn = 1 Then FadeIn
     If WithinBounds = 1 Then
         If TileIndexData(WallTile(FacingX, FacingY), 8) > 0 Then Player.CraftingLevel = TileIndexData(WallTile(FacingX, FacingY), 8) Else Player.CraftingLevel = 2
     End If
@@ -150,28 +172,557 @@ Loop
 
 Error 102
 
+Sub ServerInit
+    INITIALIZE
+End Sub
+Sub ServerLoop
+End Sub
+
+
+Sub Textbox (Diag, Opt)
+    Dim BoxW
+    Dim BoxH
+
+    Dim BoxOffW
+    Dim BoxOffH
+
+    Dim W
+    Dim H
+
+    'set center dialog box size
+    Select Case Diag
+        Case 0
+            BoxH = 7
+            BoxW = 16
+        Case 1
+            BoxH = 7
+            BoxW = 16
+
+    End Select
+
+    'draw box outline
+    For W = 0 To BoxW
+        If W = 0 Then
+            BoxOffW = 0
+        ElseIf W = BoxW Then
+            BoxOffW = 2
+        Else
+            BoxOffW = 1
+        End If
+        For H = 0 To BoxH
+            If H = 0 Then
+                BoxOffH = 0
+            ElseIf H = BoxH Then
+                BoxOffH = 2
+            Else
+                BoxOffH = 1
+            End If
+
+            PutImage (CameraPositionX - BoxW * 8, CameraPositionY - BoxH * 8), Texture.HudSprites, , (128 + (BoxW * 8), 0 + (BoxH * 8))-(8 + 128 + (BoxW * 8), 8 + 0 + (BoxH * 8))
+
+        Next
+    Next
+
+
+    Locate (ScreenRezY / 8 / 4) - (BoxH / 2), 1
+    Select Case Diag
+        Case 0
+            CENTERPRINT DiagSel(1, Opt) + "Single Player"
+            Print
+            CENTERPRINT DiagSel(2, Opt) + "Multi Player"
+            Print
+            CENTERPRINT DiagSel(3, Opt) + "Settings"
+
+
+        Case 1
+            CENTERPRINT DiagSel(1, Opt) + "Resolution: (" + LTrim$(Str$(ScreenRezX)) + "x" + LTrim$(Str$(ScreenRezY)) + ")"
+            Print
+            Select Case RenderMode
+                Case 0
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Disabled"
+                Case 1
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Mixed"
+                Case 2
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Enabled"
+            End Select
+            Print
+            CENTERPRINT DiagSel(3, Opt) + "Fullscreen: Enabled"
+            Print
+            CENTERPRINT DiagSel(4, Opt) + "Game Tick Rates: TTS:1 RTS:5 "
+            Print
+            CENTERPRINT DiagSel(5, Opt) + "Sprite Packs"
+            Print
+            Print
+            Print
+            CENTERPRINT DiagSel(6, Opt) + "Main Menu"
+
+
+
+    End Select
+    Display
+End Sub
+
+Sub PauseMenu
+    Dim Selected
+    While InKey$ <> "": Wend
+    '    If Flag.RenderOverride = 0 Then SwitchRender (0)
+    Do
+
+
+        '      Selected = Menu(2)
+        Select Case Selected
+            Case 0
+            Case 1
+
+            Case 3
+
+        End Select
+
+
+        If KeyHit = 27 Then Exit Do
+    Loop
+    '   SwitchRender (RenderMode)
+End Sub
+
+
+Function DiagSel$ (Cur, Hil)
+    If Cur = Hil Then DiagSel = "" Else DiagSel = " "
+End Function
+
+Function Menu (MenuNum)
+    Static HighlightedOption
+    Dim i
+    Dim OptCount
+    Menu = 0
+    Static SplashText, fh
+    If fh = 0 Then
+        SplashText = Int(Rnd * SplashCount)
+        fh = 1
+    End If
+
+    Select Case MenuNum
+        Case 0 ' Title Screen
+            'put title screen icon
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT "Terraquest " + Game.Buildinfo
+            'put splash text
+            'Draw Options buttons
+
+            Textbox 0, HighlightedOption
+            OptCount = 3
+        Case 1
+            'put title screen icon
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT "Terraquest " + Game.Buildinfo
+            Print
+            CENTERPRINT "Settings"
+            'put splash text
+            'Draw Options buttons
+
+            Textbox 1, HighlightedOption
+            OptCount = 5
+
+    End Select
+    'check for key input if options is more than 1
+    If InventorySelect Then Menu = HighlightedOption
+    If InventoryUp Then HighlightedOption = HighlightedOption - 1
+    If InventoryDown Then HighlightedOption = HighlightedOption + 1
+    If InventoryLeft Then HighlightedOption = HighlightedOption - 1
+    If InventoryRight Then HighlightedOption = HighlightedOption + 1
+    If HighlightedOption < 1 Then HighlightedOption = OptCount
+    If HighlightedOption > OptCount Then HighlightedOption = 1
+
+
+
+
+    'if enter is pressed, then return option number, starting at 1, otherwise return 0
+End Function
+
+Sub CENTERPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As _Byte
+    For i = 0 To Int((ScreenRezX / 8 / 2) - (Len(nam$) / 2) - 1)
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
+End Sub
+
+Sub ENDPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As Integer
+    For i = 0 To Int((ScreenRezX / 8) - (Len(nam$))) - 1
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
+End Sub
+
+
+
 Sub TileTickUpdates
+    Static WaterDelay
+    Dim i, ii
+    For i = 1 To 30
+        For ii = 1 To 40
+            Select Case GroundTile(ii, i)
+                Case 13
+                    If GroundTile(ii - 1, i) = 0 Then GroundTile(ii - 1, i) = 13: UpdateTile ii - 1, i
+                    If GroundTile(ii + 1, i) = 0 Then GroundTile(ii + 1, i) = 13: UpdateTile ii + 1, i
+                    If GroundTile(ii, i + 1) = 0 Then GroundTile(ii, i + 1) = 13: UpdateTile ii, i + 1
+                    If GroundTile(ii, i - 1) = 0 Then GroundTile(ii, i - 1) = 13: UpdateTile ii, i - 1
+            End Select
+            Select Case WallTile(ii, i)
+            End Select
+            Select Case CeilingTile(ii, i)
+            End Select
+        Next
+    Next
+End Sub
+
+Sub RandomUpdates
+
+    Static TileCountDown As Long
+    Static WaterSpreadCountDown As Long
+    Static LongTimeOut As Long
+    Static PriorCheck(40, 30)
+    Static TileTimeOut
+    Dim i, ii
+    Dim Rx, Ry As Byte
+
+    ' Const EggplantLTB = 0.35
+    'weather
+    If WeatherCountDown < 0 Then
+        WeatherCountDown = Int(Rnd * 1000000)
+        Select Case Int(Rnd * 100)
+            Case Is > 50
+                PrecipitationLevel = 0
+            Case Is < 25
+                PrecipitationLevel = 1
+            Case Else
+                PrecipitationLevel = 2
+        End Select
+
+    Else
+        WeatherCountDown = WeatherCountDown - RandomTickRate
+    End If
+    'tile updates
+    Do
+        Rx = Int(Rnd * 41)
+        Ry = Int(Rnd * 31)
+        If TileTimeOut = 15 Then
+            For ii = 0 To 41
+                For i = 0 To 31
+                    PriorCheck(ii, i) = 0
+                    Exit Do
+                Next
+            Next
+        End If
+        TileTimeOut = TileTimeOut + 1
+    Loop Until PriorCheck(Rx, Ry) = 0
+    PriorCheck(Rx, Ry) = 1
+    TileTimeOut = 0
+
+
+    'delayed tile updates
+    If LongTimeOut < 0 Then
+        Select Case WallTile(Rx, Ry)
+            Case 32
+                If LocalTemperature(Rx, Ry) > 0.35 And LocalTemperature(Rx, Ry) < 0.70 Then WallTile(Rx, Ry) = 33
+            Case 33
+                If LocalTemperature(Rx, Ry) > 0.35 And LocalTemperature(Rx, Ry) < 0.70 Then WallTile(Rx, Ry) = 34
+            Case 34
+                If LocalTemperature(Rx, Ry) > 0.35 And LocalTemperature(Rx, Ry) < 0.70 Then WallTile(Rx, Ry) = 35
+        End Select
+
+        Select Case GroundTile(Rx, Ry)
+            Case 4
+                If LocalTemperature(Rx, Ry) > 0.3 Then
+                    'make only target within bounds
+                    If GroundTile(Rx - 1, Ry) = 2 Or GroundTile(Rx + 1, Ry) = 2 Or GroundTile(Rx, Ry - 1) = 2 Or GroundTile(Rx, Ry + 1) = 2 Then GroundTile(Rx, Ry) = 2
+                End If
+            Case 3
+                If LocalTemperature(Rx, Ry) > 0.3 Then GroundTile(Rx, Ry) = 2
+        End Select
+        LongTimeOut = 500
+    End If
+
+
+    'quick tile updates
+
+    Select Case GroundTile(Rx, Ry)
+        Case 13
+            If LocalTemperature(Rx, Ry) < 0.30 Then GroundTile(Rx, Ry) = 14
+        Case 14
+            If LocalTemperature(Rx, Ry) > 0.30 Then GroundTile(Rx, Ry) = 13
+    End Select
+
+
+    LongTimeOut = LongTimeOut - RandomTickRate
+    TileCountDown = TileCountDown - RandomTickRate
+    UpdateTile Rx, Ry
 
 End Sub
 
-Function LootTable (tType As Byte, ID As Integer)
-    Select Case tType
-        Case 1 'tile drops
-            Select Case ID
-                Case 19
-                    LootTable = 29
-                    If Int(Rnd * 100) < 5 Then LootTable = 38
-                    If Int(Rnd * 100) < 2.5 Then LootTable = 39
-            End Select
+Sub DelayUpdates
+    Static DelayTimer
+    Select Case LocalTemperature(PlayerTileX, PlayerTileY)
+        Case Is < 0
+            Effects 1, "Temperature Freezing", 0
+        Case Is > 1
+            Effects 1, "Temperature Burning", 0
     End Select
+End Sub
+
+Function PlayerTileX
+    PlayerTileX = (Int((Player.x + 8) / 16) + 1)
 End Function
+Function PlayerTileY
+    PlayerTileY = (Int((Player.y + 8) / 16) + 1)
+End Function
+
+Function MapSeed
+    MapSeed = Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
+End Function
+
+Function BiomeTemperature (Tx, Ty)
+    BiomeTemperature = Perlin((Tx + SavedMapX * 40) / Gen.TempScale, (Ty + SavedMapY * 30) / Gen.TempScale, 0, MapSeed)
+End Function
+
+Function LocalTemperature (Tx, Ty)
+    LocalTemperature = BiomeTemperature(Tx, Ty) + SeasonalOffset + TODoffset + TileThermalOffset(Tx, Ty)
+End Function
+
+Function NaturalTemperature (tx, ty)
+    NaturalTemperature = BiomeTemperature(tx, ty) + SeasonalOffset + TODoffset
+End Function
+Function TODoffset
+    If TimeMode = 0 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400))
+    If TimeMode = 1 Then TODoffset = 0.05 * Sin(2 * Pi * (GameTime + 5000) * (1 / 86400)) * -1
+End Function
+
+Function SeasonalOffset
+    SeasonalOffset = 0.4 * Sin(2 * Pi * CurrentDay * (1 / 120)) - 0.1
+End Function
+
+Function TileThermalOffset (Tx, Ty)
+    TileThermalOffset = TileThermalMap(Tx, Ty)
+End Function
+
+
+
+Sub SpreadHeat
+    Dim As Byte i, ii
+    Static LagDelay
+
+    LagDelay = LagDelay + 1
+    If LagDelay > 30 Then LagDelay = 0
+    If LagDelay <> 15 Then Exit Sub
+
+    For i = 1 To 30
+        For ii = 1 To 40
+            TileThermalMap(ii, i) = 0
+            TileThermalMap(ii, i) = TileData(ii, i, 16)
+        Next
+    Next
+    SpreadHeat2 (1)
+End Sub
+Sub SpreadHeat2 (updates)
+    Dim As Byte i, ii, iii, iiii
+    Static UpdateLimit
+    If updates > 0 Then
+        updates = 0
+        For i = 1 To 30
+            For ii = 1 To 40
+                iiii = 1
+                iii = 0
+
+                If TileThermalMap(ii, i) < 0 Then
+                    For iii = 0 To 2
+
+                        If TileThermalMap(ii, i) > TileThermalMap(ii + (iii - 1), i) Then TileThermalMap(ii, i) = TileThermalMap(ii + (iii - 1), i) + 0.01
+                        If TileThermalMap(ii, i) > TileThermalMap(ii + (iii - 1), i + (iiii - 1)) + 0.02 Then updates = updates + 1
+                    Next
+
+                    iiii = 0
+                    iii = 1
+                    For iiii = 0 To 2
+                        If TileThermalMap(ii, i) > TileThermalMap(ii, i + (iiii - 1)) Then TileThermalMap(ii, i) = TileThermalMap(ii, i + (iiii - 1)) + 0.01
+
+                        If TileThermalMap(ii, i) > TileThermalMap(ii + (iii - 1), i + (iiii - 1)) + 0.02 Then updates = updates + 1
+                    Next
+
+                End If
+                If TileThermalMap(ii, i) >= 0 Then
+                    For iii = 0 To 2
+
+                        If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i) Then TileThermalMap(ii, i) = TileThermalMap(ii + (iii - 1), i) - 0.01
+                        If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
+                    Next
+
+                    iiii = 0
+                    iii = 1
+                    For iiii = 0 To 2
+                        If TileThermalMap(ii, i) < TileThermalMap(ii, i + (iiii - 1)) Then TileThermalMap(ii, i) = TileThermalMap(ii, i + (iiii - 1)) - 0.01
+
+                        If TileThermalMap(ii, i) < TileThermalMap(ii + (iii - 1), i + (iiii - 1)) - 0.02 Then updates = updates + 1
+                    Next
+                End If
+                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
+            Next
+        Next
+        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
+        If UpdateLimit > 10 Then updates = 0
+        ' Print updates, UpdateLimit
+        ' Display
+        ' Sleep
+
+        SpreadHeat2 (updates)
+    Else
+        UpdateLimit = 0
+    End If
+End Sub
+
+Sub spreadlightd (fuck)
+
+End Sub
+
+Sub SpreadLight (updates)
+
+    Dim As Byte i, ii
+    For i = 1 To 30
+        For ii = 1 To 40
+            LocalLightLevel(ii, i) = TileData(ii, i, 8)
+        Next
+    Next
+    SpreadLight2 (updates)
+End Sub
+Sub SpreadLight2 (updates)
+    Dim As Byte i, ii, iii, iiii
+    Static UpdateLimit
+    If updates > 0 Then
+        updates = 0
+        For i = 1 To 30
+            For ii = 1 To 40
+                iiii = 1
+                iii = 0
+
+                For iii = 0 To 2
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+
+                iiii = 0
+                iii = 1
+                For iiii = 0 To 2
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
+
+                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
+                Next
+                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
+            Next
+        Next
+        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
+        If UpdateLimit > 10 Then updates = 0
+        ' Print updates, UpdateLimit
+        ' Display
+        ' Sleep
+
+        SpreadLight2 (updates)
+    Else
+        UpdateLimit = 0
+    End If
+
+End Sub
+
+Sub Precip2
+    Static SnowDelay As Byte
+    Static RainDelay As Byte
+    Static SnowFrame As Byte
+    Static RainFrame As Byte
+    Static LocalTempGrab(40, 30)
+    Static TempGrabDelay
+
+    Dim i, ii
+    SnowDelay = SnowDelay + 1
+    RainDelay = RainDelay + 1
+    TempGrabDelay = TempGrabDelay + 1
+    If TempGrabDelay > 20 Then TempGrabDelay = 0
+
+    Select Case PrecipitationLevel
+        Case 0
+            SnowDelay = 0
+            RainDelay = 0
+            SnowFrame = 0
+            RainFrame = 0
+        Case 1, 2
+            If SnowDelay > 13 Then SnowFrame = SnowFrame + 1: SnowDelay = 0
+            If RainDelay > 3 Then RainFrame = RainFrame + 1: RainDelay = 0
+    End Select
+    If RainFrame > 3 Then RainFrame = 0: RainDelay = 0
+    If SnowFrame > 3 Then SnowFrame = 0: SnowDelay = 0
+    If PrecipitationLevel > 0 Then
+        For i = 0 To 30
+            For ii = 0 To 40
+                If TempGrabDelay = 0 Then LocalTempGrab(ii, i) = NaturalTemperature(ii, i)
+
+                If VisibleCheck(ii, i) = 1 Then
+                    If LocalTempGrab(ii, i) < 0.34 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * SnowFrame), 0)-(15 + (16 * SnowFrame), 15)
+                    End If
+                    If LocalTempGrab(ii, i) > 0.34 And LocalTempGrab(ii, i) < 0.90 Then
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * RainFrame), 0 + 16)-(15 + (16 * RainFrame), 15 + 16)
+
+                    End If
+                End If
+            Next
+        Next
+    End If
+
+End Sub
+
+Sub PrecipOverlay
+    Static AnimDelay As Byte
+    Static AnimFrame As Byte
+    Static PixelOffset As Byte
+
+    AnimDelay = AnimDelay + 1
+    Select Case PrecipitationLevel
+        Case 0
+            AnimFrame = 0
+            AnimDelay = 0
+        Case 1
+            If AnimDelay > 13 Then AnimFrame = AnimFrame + 1: AnimDelay = 0
+        Case 2
+            If AnimDelay > 3 Then AnimFrame = AnimFrame + 1: AnimDelay = 0
+    End Select
+    If AnimFrame > 3 Then AnimFrame = 0: AnimDelay = 0
+    Dim i, ii As Byte
+    AnimDelay = AnimDelay + 1
+    If PrecipitationLevel > 0 Then
+        For i = 0 To 30
+            For ii = 0 To 40
+                If VisibleCheck(ii, i) = 1 Then
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * AnimFrame), 0 + (16 * (PrecipitationLevel - 1)))-(15 + (16 * AnimFrame), 15 + (16 * (PrecipitationLevel - 1)))
+                End If
+            Next
+        Next
+    End If
+
+End Sub
 
 Sub UseItem (Slot)
     Static ConsumeCooldown
     Static WeaponCooldown
     Static ToolDelay
     Select Case Inventory(0, Slot, 0)
-        Case 0 'Block placing
+        Case 0, 5 'Block placing
+            If Inventory(0, Slot, 0) = 5 Then
+                If GroundTile(FacingX, FacingY) <> 21 Then Exit Sub
+            End If
             Select Case Inventory(0, Slot, 4)
                 Case 0
                     If GroundTile(FacingX, FacingY) = 0 Or GroundTile(FacingX, FacingY) = 13 Then
@@ -201,7 +752,7 @@ Sub UseItem (Slot)
             End Select
         Case 1 'Tools
             Select Case Inventory(0, Slot, 5)
-                Case 0
+                Case 0 'shovel
                     If GroundTile(FacingX, FacingY) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
                             If GameMode <> 1 Then
@@ -215,15 +766,17 @@ Sub UseItem (Slot)
                         End If
                         ToolDelay = ToolDelay + 1
                         If ToolDelay > 10 Then
-                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
-                            TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            If TileIndexData(GroundTile(FacingX, FacingY), 4) - Inventory(0, Slot, 6) < 0 Then
+                                TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) - Inventory(0, Slot, 6)
+                                TileData(FacingX, FacingY, 4) = TileData(FacingX, FacingY, 4) + TileIndexData(GroundTile(FacingX, FacingY), 4)
+                            End If
                             ToolDelay = 0
                         End If
                         If TileData(FacingX, FacingY, 4) < 0 Then TileData(FacingX, FacingY, 4) = 0
                         If TileData(FacingX, FacingY, 4) > 255 Then TileData(FacingX, FacingY, 4) = 255
                     End If
-                Case 1, 2
-                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(0, Slot, 5) - 1 Then Exit Select
+                Case 1, 2 'axe, pickaxe
+                    If TileIndexData(WallTile(FacingX, FacingY), 14) <> Inventory(0, Slot, 5) - 1 Then Exit Select 'to make sure if tile is stone or metal that you are using a pickaxe
                     If WallTile(FacingX, FacingY) <> 1 Then
                         If TileData(FacingX, FacingY, 5) <= 0 Then
                             If GameMode <> 1 Then
@@ -241,15 +794,17 @@ Sub UseItem (Slot)
                         End If
                         ToolDelay = ToolDelay + 1
                         If ToolDelay > 10 Then
-                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
-                            TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                            If TileIndexData(WallTile(FacingX, FacingY), 4) - Inventory(0, Slot, 6) < 0 Then
+                                TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) - Inventory(0, Slot, 6)
+                                TileData(FacingX, FacingY, 5) = TileData(FacingX, FacingY, 5) + TileIndexData(WallTile(FacingX, FacingY), 4)
+                            End If
                             ToolDelay = 0
                         End If
                         If TileData(FacingX, FacingY, 5) < 0 Then TileData(FacingX, FacingY, 5) = 0
                         If TileData(FacingX, FacingY, 5) > 255 Then TileData(FacingX, FacingY, 5) = 255
                     End If
 
-                Case 3
+                Case 3 'hoe
                     If TileIndex(GroundTile(FacingX, FacingY), 4) <> 0 Then
                         If TileData(FacingX, FacingY, 4) <= 0 Then
                             GroundTile(FacingX, FacingY) = TileIndex(GroundTile(FacingX, FacingY), 4)
@@ -276,13 +831,13 @@ Sub UseItem (Slot)
                 For i = 1 To CurrentEntities
                     Select Case Player.facing
                         Case 0, 1 'up down
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 Then DamageEntity (i)
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 Then DamageEntity (i): Exit Select
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 - 1 Then DamageEntity (i): Exit Select
+                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 + 1 Then DamageEntity (i): Exit Select
                         Case 2, 3 'left right
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 Then DamageEntity (i)
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 - 1 Then DamageEntity (i)
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 + 1 Then DamageEntity (i)
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 Then DamageEntity (i): Exit Select
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 - 1 Then DamageEntity (i): Exit Select
+                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 + 1 Then DamageEntity (i): Exit Select
                     End Select
                 Next
                 'apply weapon cooldown
@@ -305,6 +860,7 @@ Sub UseItem (Slot)
 
                 ConsumeCooldown = CurrentTick + 10
             End If
+
 
     End Select
 
@@ -409,37 +965,6 @@ Sub ContainerUpdate
     End If
 End Sub
 
-Function Dialog (Template, DialogString As String, Options)
-    Static HighlightedOption
-    Dim i
-
-    Select Case Template
-        Case 0 ' Title Screen
-            'put title screen icon
-            CENTERPRINT DialogString + " " + Game.Buildinfo
-            'put splash text
-            'Draw Options buttons
-
-            Print "Load World";
-            If HighlightedOption = 1 Then Print "*" Else Print
-            Print "Create World";
-            If HighlightedOption = 2 Then Print "*" Else Print
-            Print "Settings";
-            If HighlightedOption = 3 Then Print "*" Else Print
-
-
-        Case 1
-
-
-    End Select
-    'check for key input if options is more than 1
-    If InventoryUp Then HighlightedOption = HighlightedOption - 1
-    If InventoryDown Then HighlightedOption = HighlightedOption + 1
-    If InventoryLeft Then HighlightedOption = HighlightedOption - 1
-    If InventoryRight Then HighlightedOption = HighlightedOption + 1
-    If InventorySelect Then Dialog = HighlightedOption
-    'if enter is pressed, then return option number, starting at 1, otherwise return 0
-End Function
 
 Sub TitleScreen
     Dim i, ii
@@ -497,7 +1022,7 @@ Sub TitleScreen
             Next
 
         End If
-        Select Case Dialog(0, Game.Title, 2)
+        Select Case 4
             Case 1
                 Settings.TickRate = 1
                 AutoDisplay
@@ -525,8 +1050,22 @@ Sub TitleScreen
     Loop
 End Sub
 
+Sub SpawnEntity (EntityID)
+    Dim i
+    If CurrentEntities < EntityNatSpawnLim * (Flag.IsBloodmoon + 1) Then
+        CurrentEntities = CurrentEntities + 1
+        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
+        For i = 0 To EntityParameters
+            entity(CurrentEntities, i) = SummonEntity(EntityID, i)
+        Next
+    End If
+
+End Sub
+
 Sub Entities (Command As Byte)
+    Randomize Timer
     Dim i, ii
+    Static EntityDespawnOffset
     Select Case Command
         Case 0 'attempt to summon
 
@@ -546,37 +1085,19 @@ Sub Entities (Command As Byte)
                 Case 0 'day time
                     Select Case Ceil(Rnd * 100000)
                         Case 0 To 250 'pig
-                            If CurrentEntities < EntityNatSpawnLim Then
-                                CurrentEntities = CurrentEntities + 1
-                                ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                                For i = 0 To EntityParameters
-                                    entity(CurrentEntities, i) = SummonEntity(1, i)
-                                Next
-                            End If
+                            SpawnEntity (1)
                     End Select
                 Case 1 'night time
                     Select Case Flag.IsBloodmoon
                         Case 0
                             Select Case Ceil(Rnd * 100000)
                                 Case 0 To 120 'zombie
-                                    If CurrentEntities < EntityNatSpawnLim Then
-                                        CurrentEntities = CurrentEntities + 1
-                                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                                        For i = 0 To EntityParameters
-                                            entity(CurrentEntities, i) = SummonEntity(2, i)
-                                        Next
-                                    End If
+                                    SpawnEntity (2)
                             End Select
                         Case 1
                             Select Case Ceil(Rnd * 50000)
                                 Case 0 To 120 'zombie
-                                    If CurrentEntities < EntityNatSpawnLim * 2 Then
-                                        CurrentEntities = CurrentEntities + 1
-                                        ' ReDim Preserve Entity(CurrentEntities, EntityParameters)
-                                        For i = 0 To EntityParameters
-                                            entity(CurrentEntities, i) = SummonEntity(2, i)
-                                        Next
-                                    End If
+                                    SpawnEntity (2)
                             End Select
 
 
@@ -675,14 +1196,16 @@ Sub Entities (Command As Byte)
                 entity(i, 14) = entity(i, 5)
                 COLDET i
 
-                If entity(i, 1) <= 0 Or entity(i, 15) <= 0 Then EntityDespawn i
+                If entity(i, 1) <= 0 Or entity(i, 15) <= 0 Then EntityDespawn i: Exit Sub
                 '
 
                 'count down decision timer
                 entity(i, 7) = entity(i, 7) - Settings.TickRate
                 entity(i, 15) = entity(i, 15) - Settings.TickRate
             Next
+            EntityDespawnOffset = 0
     End Select
+
 End Sub
 
 Sub TargetPlayer (i)
@@ -697,6 +1220,7 @@ Sub TargetPlayer (i)
 End Sub
 
 Function SummonEntity (ID, Parameter)
+    Randomize Timer
     Select Case ID
         Case 1 'Pig
 
@@ -761,17 +1285,86 @@ Function SummonEntity (ID, Parameter)
     End Select
 End Function
 
+Function LootTable (tType As Byte, ID As Integer)
+    Static RandomCap
+    Select Case tType
+        Case 1 'tile drops
+            Select Case ID
+                Case 19 '                low tier stone
+                    LootTable = 29 'stone
+                    If Int(Rnd * 50) < 5 Then LootTable = 122 'coal
+                    If Int(Rnd * 100) < 15 Then LootTable = 38 'tin
+                    If Int(Rnd * 100) < 8 Then LootTable = 39 'copper
+                Case 28 'calcite
+                    LootTable = 29 'stone
+                    If Int(Rnd * 100) < 15 Then LootTable = 40 'iron
+                    If Int(Rnd * 100) < 8 Then LootTable = 41 'platinum
+                    If Int(Rnd * 600) < 5 Then LootTable = 107 'diamond
+                    If Int(Rnd * 600) < 5 Then LootTable = 108 'emerald
+                    If Int(Rnd * 1000) < 5 Then LootTable = 104 'aetherian energy sphere
+
+                Case 29 'sand
+                    LootTable = 116 'sand
+                    If Int(Rnd * 400) < 5 Then LootTable = 105 'ruby
+                    If Int(Rnd * 400) < 5 Then LootTable = 106 'saphire
+                    If Int(Rnd * 1000) < 3 And CurrentDimension = 3 Then LootTable = 103 'Imbuement Refraction Core
+
+
+            End Select
+        Case 2 'mob drops
+            Select Case ID
+                Case 1
+                    LootTable = 102
+                    RandomCap = 3
+                Case 2
+                    LootTable = 101
+                    RandomCap = 3
+
+                    If Flag.IsBloodmoon = 1 Then
+                        If Int(Rnd * 50) < 3 Then LootTable = 24: RandomCap = 1
+                    End If
+            End Select
+        Case 3 'random quanity
+            LootTable = Int(Rnd * RandomCap) + 1
+
+
+    End Select
+End Function
+
+Sub SetGroundItem (ItemID, Amount, X, Y)
+    If ItemID = 0 Then Exit Sub
+    Dim iii As Byte
+    WallTile(X, Y) = 11
+    NewContainer SavedMapX, SavedMapY, X, Y
+    OpenContainer SavedMapX, SavedMapY, X, Y
+
+    For iii = 0 To InvParameters
+        Container(0, 0, iii) = ItemIndex(ItemID, iii)
+
+    Next
+    Container(0, 0, 7) = Amount
+    CloseContainer SavedMapX, SavedMapY, X, Y
+
+
+End Sub
+
 Sub EntityDespawn (id)
     Dim i, ii
+    'make sure tile to be set on is air
 
+    'set ground item
+    SetGroundItem LootTable(2, entity(id, 0)), LootTable(3, entity(id, 0)), Int(entity(id, 4) / 16) + 1, Int(entity(id, 5) / 16) + 1
+
+    'shift all entity data down 1 slot over the dead entiyt data
     For i = id To CurrentEntities
         For ii = 0 To EntityParameters
             entity(i, ii) = entity(i + 1, ii)
         Next
     Next
-    CurrentEntities = CurrentEntities - 1
-End Sub
 
+    CurrentEntities = CurrentEntities - 1
+
+End Sub
 
 Sub Respawn
     SAVEMAP
@@ -870,7 +1463,7 @@ Sub DisplayLables
     HotbarTextX = 5
     HotbarTextY = ScreenRezY - 61
     HotbarTextSpace = 68
-
+    2
     HotbarTitlex = 6
     HotbarTitley = ScreenRezY - 85
 
@@ -960,7 +1553,7 @@ Sub DisplayLables
     iiii = 0
     iii = Player.CraftingLevel
     If Flag.InventoryOpen = 1 And CraftingGrid(iiii, iii, 7) > 1 Then PrintString ((0 + CraftingTextX) - (HotbarTextSpace * iii), (CraftingTextY) - (HotbarTextSpace * iiii + 1) - InventoryTextOffset), Str$(CraftingGrid(iiii, iii, 7))
-End Sub
+End Sub '192,32   224,32
 
 Sub DisplayHealth
     Dim As Byte i, ii, iii
@@ -970,12 +1563,16 @@ Sub DisplayHealth
     Dim As Byte BonusWheel
     Dim As Byte BigHealOffset
     Dim healthtextx, healthtexty
+    Dim ThermOffset
     Token = 1
     BigHealOffset = 0
     HealthX = (ScreenRezX / 4 / 2) + 8
     HealthY = (ScreenRezY / 4 / 2) - 11
 
     TMPHeal = Player.health
+
+    If Player.BodyTemp = 1 Then ThermOffset = 96
+    If Player.BodyTemp = 2 Then ThermOffset = 128
 
     If ImmunityFlash = 0 Then
         Select Case GameMode
@@ -987,7 +1584,7 @@ Sub DisplayHealth
                     If Player.health > 8 Then BigHealOffset = 0
                     'draw full health wheel
                     For i = 0 To BigHealOffset
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
                         PutImage (CameraPositionX + HealthX - 16, CameraPositionY + i - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + i - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (7 * 32, 0 + HealthWheelOffset)-(7 * 32 + 31, 31 + HealthWheelOffset)
                     Next
                     'print full wheel text "wheels (points)"
@@ -1018,7 +1615,7 @@ Sub DisplayHealth
                     If Player.health <= 8 Then Token = Token - 1
 
                     'draw current wheel     (honestly, idk how i managed to get this shit to work, but it does, DONT FUCKING TOUCH IT
-                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                    PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
                     TMPHeal = TMPHeal - 8 * Int(Player.health / 8)
                     If Player.health > (Player.MaxHealth + 1) * 8 Then TMPHeal = 8: BonusWheel = 1
                     If TMPHeal > 8 Then TMPHeal = 8
@@ -1029,7 +1626,7 @@ Sub DisplayHealth
                     'if empty wheel then
                     '   draw empty wheel
                     If Player.health - 1 < Player.MaxHealth * 8 Then
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY + BigHealOffset - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY + BigHealOffset - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
 
                         '   print empty wheel text
                         healthtextx = ScreenRezX - 35 - Len(Str$(Player.MaxHealth - Ceil(Player.health / 8) + 1) + " (" + Trim$(Str$((Player.MaxHealth - Ceil(Player.health / 8) + 1) * 8)) + ")") * 4
@@ -1065,7 +1662,7 @@ Sub DisplayHealth
 
                 Else
                     For i = 0 To Player.MaxHealth
-                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32, 32)-(3 * 32 + 31, 63)
+                        PutImage (CameraPositionX + HealthX - 16, CameraPositionY - HealthY + (Token - 1) * 16)-(CameraPositionX + HealthX, CameraPositionY - HealthY + 16 + (Token - 1) * 16), Texture.HudSprites, , (3 * 32 + ThermOffset, 32)-(3 * 32 + 31 + ThermOffset, 63)
                         Token = Token + 1
                     Next
                     Token = 1
@@ -1352,9 +1949,9 @@ Sub ItemSwap
         Select Case CursorHoverPage
             Case 0
                 If GameMode = 1 Then
-                    SwapItem1(i) = CreativeInventory(CursorSelectedY, CursorSelectedX, i, CreativePage)
+                    SwapItem1(i) = CreativeInventory(CursorHoverY, CursorHoverX, i, CreativePage)
                 Else
-                    SwapItem1(i) = Inventory(CursorSelectedY + 1, CursorSelectedX, i)
+                    SwapItem1(i) = Inventory(CursorHoverY + 1, CursorHoverX, i)
                 End If
             Case 1
                 SwapItem1(i) = Inventory(0, CursorHoverX, i)
@@ -1590,7 +2187,7 @@ End Sub
 
 Sub Hud2
     If Flag.HudDisplay = 0 Then
-        Dim As Byte i, ii, iii, iiii
+
 
         DisplayHealth
         DisplayHotbar
@@ -1950,16 +2547,16 @@ Sub ContactEffect (Direction As Byte, Entity As Single)
         Select Case Direction
             Case 1
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8) / 16) + 1, Int((PosY + 8 - 16) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(playertilex, Int((Player.y + 8 - 16) / 16) + 1), 0)
             Case 2
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8) / 16) + 1, Int((PosY + 8 + 16) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(playertilex, Int((Player.y + 8 + 16) / 16) + 1), 0)
             Case 3
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8 - 16) / 16) + 1, Int((PosY + 8) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 - 16) / 16) + 1, playertiley), 0)
             Case 4
                 Effects 1, "Contact " + TileName(WallTile(Int((PosX + 8 + 16) / 16) + 1, Int((PosY + 8) / 16) + 1), 0), Entity
-                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1), 0)
+                'Print "Contact " + TileName(WallTile(Int((Player.x + 8 + 16) / 16) + 1, playertiley), 0)
         End Select
 
     End If
@@ -2034,6 +2631,22 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
                 entity(Entity, 1) = entity(Entity, 1) - Val1
             End If
             If ImmunityTimer = 0 Then PlaySound Sounds.damage_melee
+        Case 9
+            If Entity = 0 Then
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                Player.BodyTemp = 2
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+
+        Case 10
+            If Entity = 0 Then
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                Player.BodyTemp = 1
+            Else
+                entity(Entity, 1) = entity(Entity, 1) - Val1
+            End If
+
 
 
 
@@ -2045,6 +2658,30 @@ End Sub
 
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
+        Case "Temperature Freezing"
+            Select Case Value
+                Case 0
+                    EffectIndex = 9 'effectid
+                Case 1
+                    EffectIndex = 2 'frame duration
+                Case 2
+                    EffectIndex = 120 'frame cooldown
+                Case 3
+                    EffectIndex = 1 'damage
+            End Select
+
+        Case "Temperature Burning"
+            Select Case Value
+                Case 0
+                    EffectIndex = 10 'effectid
+                Case 1
+                    EffectIndex = 2 'frame duration
+                Case 2
+                    EffectIndex = 120 'frame cooldown
+                Case 3
+                    EffectIndex = 1 'damage
+            End Select
+
         Case "Melee Damage"
             Select Case Value
                 Case 0
@@ -2163,6 +2800,34 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 4
                     EffectIndex = 120 'framedelay
             End Select
+        Case "Consume Decayed Flesh"
+            Select Case Value
+                Case 0
+                    EffectIndex = 6 'effectid
+                Case 1
+                    EffectIndex = 242 'frameduration
+                Case 2
+                    EffectIndex = 242 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+                Case 4
+                    EffectIndex = 120 'framedelay
+            End Select
+        Case "Consume Duck Meat"
+            Select Case Value
+                Case 0
+                    EffectIndex = 7 'effectid
+                Case 1
+                    EffectIndex = 242 'frameduration
+                Case 2
+                    EffectIndex = 242 'framecooldown
+                Case 3
+                    EffectIndex = 1 'value
+                Case 4
+                    EffectIndex = 120 'framedelay
+            End Select
+
+
 
         Case Else
             EffectIndex = 0
@@ -2182,6 +2847,8 @@ Sub EffectEnd (EffectID As Integer, EffectSlot As Integer, Entity As Single)
             ImmunityTimer = 0: ImmunityFlash = 0
         Case 6, 7
             HealthWheelOffset = 0
+        Case 9, 10
+            Player.BodyTemp = 0
     End Select
 
     For i = 0 To EffectParameters
@@ -2247,48 +2914,48 @@ Sub Move
 
 
     If MoveUp Then
-        Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vy = Player.vy - TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 0
         Player.movingy = 1
     End If
     If MoveDown Then
-        Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vy = Player.vy + TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 1
         Player.movingy = 1
 
     End If
     If MoveLeft Then
-        Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vx = Player.vx - TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 2
         Player.movingx = 1
     End If
     If MoveRight Then
-        Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+        Player.vx = Player.vx + TileData(PlayerTileX, PlayerTileY, 9)
         Player.facing = 3
         Player.movingx = 1
     End If
 
-    If Player.vy > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
-    If Player.vy < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vy = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+    If Player.vy > TileData(PlayerTileX, PlayerTileY, 10) Then Player.vy = TileData(PlayerTileX, PlayerTileY, 10)
+    If Player.vy < TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2) Then Player.vy = TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2)
 
-    If Player.vx > TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10)
-    If Player.vx < TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2) Then Player.vx = TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) - (TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 10) * 2)
+    If Player.vx > TileData(PlayerTileX, PlayerTileY, 10) Then Player.vx = TileData(PlayerTileX, PlayerTileY, 10)
+    If Player.vx < TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2) Then Player.vx = TileData(PlayerTileX, PlayerTileY, 10) - (TileData(PlayerTileX, PlayerTileY, 10) * 2)
 
     If Player.movingy = 0 Then
         If Player.vy > 0 Then
-            Player.vy = Player.vy - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vy = Player.vy - TileData(PlayerTileX, PlayerTileY, 9)
         End If
         If Player.vy < 0 Then
-            Player.vy = Player.vy + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vy = Player.vy + TileData(PlayerTileX, PlayerTileY, 9)
             If Player.vy > 0 Then Player.vy = 0
         End If
     End If
     If Player.movingx = 0 Then
         If Player.vx > 0 Then
-            Player.vx = Player.vx - TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vx = Player.vx - TileData(PlayerTileX, PlayerTileY, 9)
         End If
         If Player.vx < 0 Then
-            Player.vx = Player.vx + TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, 9)
+            Player.vx = Player.vx + TileData(PlayerTileX, PlayerTileY, 9)
             If Player.vx > 0 Then Player.vx = 0
         End If
     End If
@@ -2297,7 +2964,7 @@ Sub Move
 
     If SoundCooldown <= 0 Then
         If WithinBounds = 1 Then
-            If GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) = 13 Then
+            If GroundTile(PlayerTileX, PlayerTileY) = 13 Then
                 SoundCooldown = 60
                 PlaySound Sounds.walk_water
 
@@ -2395,10 +3062,10 @@ End Function
 Function FacingX
     Select Case Player.facing
         Case 0
-            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingX = PlayerTileX
 
         Case 1
-            FacingX = Int((Player.x + 8) / 16) + 1
+            FacingX = PlayerTileX
 
         Case 2
             FacingX = Int((Player.x + 8 - 16) / 16) + 1
@@ -2420,20 +3087,40 @@ Function FacingY
             FacingY = Int((Player.y + 8 + 16) / 16) + 1
         Case 2
 
-            FacingY = Int((Player.y + 8) / 16) + 1
+            FacingY = PlayerTileY
         Case 3
 
-            FacingY = Int((Player.y + 8) / 16) + 1
+            FacingY = PlayerTileY
     End Select
 
 End Function
+
+Sub FadeIn
+    Static FadeStep
+    Static StepDelay
+
+    'incriment per frame
+    StepDelay = StepDelay + 1
+
+    'repeat basically what the fade out is doing, but fade in
+    If StepDelay > 5 Then
+        StepDelay = 0
+        FadeStep = FadeStep + 2
+    End If
+    'set light level
+    OverlayLightLevel = 12 - FadeStep
+
+    'see if fully faded in
+    If FadeStep >= 12 Then Flag.FadeIn = 0: FadeStep = 0: StepDelay = 0
+
+End Sub
 
 Sub ChangeMap (Command, CommandMapX, CommandMapY)
     Static TickDelay
     Static TotalDelay
     Static LightStep
     Dim i, ii
-    If LightStep < 12 Then
+    If LightStep <= 12 Then
         Select Case Player.facing
             Case 0
                 If Player.y <= 0 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
@@ -2483,7 +3170,7 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
             Next
         Next
         SpreadLight (1)
-
+        Flag.FadeIn = 1
         LightStep = 0
     End If
 
@@ -2514,6 +3201,7 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
     TileData(TileX, TileY, 9) = TileIndexData(GroundTile(TileX, TileY), 9)
     TileData(TileX, TileY, 10) = TileIndexData(GroundTile(TileX, TileY), 10)
+    TileData(TileX, TileY, 16) = TileIndexData(GroundTile(TileX, TileY), 16) + TileIndexData(WallTile(TileX, TileY), 16) + TileIndexData(CeilingTile(TileX, TileY), 16)
 
 End Sub
 'For i = TileData(TileX, TileY, 8) To 0 Step -1
@@ -2536,10 +3224,12 @@ Sub INTER
             Flag.HudDisplay = Flag.HudDisplay + 1
         Case 101
             Flag.InventoryOpen = Flag.InventoryOpen + 1
-
+        Case 27
+            PauseMenu
 
     End Select
 End Sub
+
 
 Sub Crafting
     Dim recipe As String
@@ -2551,7 +3241,6 @@ Sub Crafting
         Next
         recipe = recipe + "|"
     Next
-    Print recipe
     For i = 0 To InvParameters
         CraftingGrid(0, Player.CraftingLevel, i) = -1
     Next
@@ -2581,7 +3270,7 @@ Sub Crafting
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
 
             Case "19 19 19 |-1 22 -1 |-1 22 -1 |" 'wooden pickaxe
-                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(18, i)
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(17, i)
 
             Case "19 19 -1 |-1 22 -1 |-1 22 -1 |" 'wooden hoe
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(30, i)
@@ -2666,8 +3355,9 @@ Sub Crafting
             Case "49 49 -1 |-1 54 -1 |-1 54 -1 |" 'platinum hoe
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(78, i)
 
-
-
+            Case "-1 -1 -1 |19 19 19 |19 19 19 |" 'Wooden Floor
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(100, i)
+                CraftingGrid(0, Player.CraftingLevel, 7) = 6
 
             Case "29 29 29 |29 29 29 |29 29 29 |" 'cobblestone Wall
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(7, i)
@@ -2683,9 +3373,45 @@ Sub Crafting
             Case "19 19 19 |19 -1 19 |19 19 19 |" 'Chest
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(6, i)
 
+
             Case "-1 -1 -1 |-1 20 -1 |-1 -1 -1 |" 'Red Berries
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(23, i)
                 CraftingGrid(0, Player.CraftingLevel, 7) = 4
+
+
+
+            Case "48 48 48 |48 103 48 |48 48 48 |" 'imbuement station
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(113, i)
+
+            Case "48 48 48 |48 104 48 |48 48 48 |" 'advanced crafting station
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(99, i)
+            Case "-1 -1 -1 -1 |-1 116 29 -1 |-1 29 116 -1 |-1 -1 -1 -1 |" 'asphault
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(119, i)
+
+            Case "-1 -1 -1 |-1 36 -1 |-1 -1 -1 |" 'eggplant seeds
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(37, i)
+                CraftingGrid(0, Player.CraftingLevel, 7) = 2
+
+            Case "-1 -1 -1 |-1 122 -1 |-1 22 -1 |" 'torch
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(120, i)
+                CraftingGrid(0, Player.CraftingLevel, 7) = 2
+
+
+
+                'temp ore refinement recipe till furnace
+            Case "-1 -1 -1 |-1 38 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(46, i)
+            Case "-1 -1 -1 |-1 39 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(47, i)
+            Case "-1 -1 -1 |-1 40 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(48, i)
+            Case "-1 -1 -1 |-1 41 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(49, i)
+            Case "-1 -1 -1 |-1 116 -1 |-1 -1 -1 |"
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(117, i)
+
+            Case "48 48 48 |48 117 48 |48 -1 48 |" 'iron scuba tool
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(118, i)
         End Select
     Next
 End Sub
@@ -2710,20 +3436,20 @@ Sub COLDET (entity)
 
     End If
 
-    Player.tile = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+    Player.tile = GroundTile(PlayerTileX, PlayerTileY)
     Select Case Player.facing
         Case 0
             If Player.y - 8 <= 0 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 - 16) / 16) + 1)
+            Player.tilefacing = GroundTile(PlayerTileX, Int((Player.y + 8 - 16) / 16) + 1)
         Case 1
             If Player.y + 8 + 16 >= 480 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8 + 16) / 16) + 1)
+            Player.tilefacing = GroundTile(PlayerTileX, Int((Player.y + 8 + 16) / 16) + 1)
         Case 2
             If Player.x - 8 <= 0 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+            Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, PlayerTileY)
         Case 3
             If Player.x + 8 + 16 >= 640 Then Exit Select
-            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+            Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, PlayerTileY)
     End Select
 
 
@@ -2909,13 +3635,14 @@ Sub DEV
             ENDPRINT dummystring
             ENDPRINT Str$(GroundTile(FacingX, FacingY)) + Str$(WallTile(FacingX, FacingY)) + Str$(CeilingTile(FacingX, FacingY))
         End If
-        Print
+
+
         ENDPRINT "Flags:"
         If Flag.StillCam = 1 Then ENDPRINT "Still Camera Enabled"
         If Flag.FreeCam = 1 Then ENDPRINT "Free Camera Enabled"
         If Flag.FullCam = 1 Then ENDPRINT "Full Camera Enabled"
         If Flag.NoClip = 1 Then ENDPRINT "No Clip Enabled"
-        If bgdraw = 1 Then ENDPRINT "Background Drawing Disabled"
+        If BGDraw = 1 Then ENDPRINT "Background Drawing Disabled"
         If Flag.InventoryOpen = 1 Then ENDPRINT "Inventory Open"
         If Flag.CastShadows = 1 Then ENDPRINT "Shadows Disabled"
         If Flag.FrameRateLock = 1 Then ENDPRINT "Engine Tickrate Unlocked"
@@ -2932,10 +3659,11 @@ Sub DEV
         If WorldReadOnly = 1 Then Print "(R/O)"
         If WorldReadOnly = 0 Then Print
         Print "World Seed:"; WorldSeed
-        Print "Map Seed:"; Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed))
-        Print "Current Time:"; GameTime + (TimeMode * 43200)
+        Print "Current Time:"; GameTime + (TimeMode * 43200);
+        Print "(Day:" + Str$(CurrentDay) + ")"
         Print "Light Level: (G:"; GlobalLightLevel; ", L:"; LocalLightLevel((Player.x + 8) / 16, (Player.y + 8) / 16); ", O:"; OverlayLightLevel; ")"
         Print "Current Entities: "; CurrentEntities
+
 
         ' Do While MouseInput
         ' Loop
@@ -2965,8 +3693,8 @@ Sub DEV
                 Print "Start tracking an entity to view its data"
             Case "player", "1"
                 Print "Player"
-                Print "POS:"; Player.x; ","; Player.y; "("; Int((Player.x + 8) / 16) + 1; ","; Int((Player.y + 8) / 16) + 1; ")"
-                Print "GlobalPOS"; "("; Int((Player.x + 8) / 16) + 1 + (SavedMapX * 40); ","; Int((Player.y + 8) / 16) + 1 + (SavedMapY * 30); ")"
+                Print "POS:"; Player.x; ","; Player.y; "("; PlayerTileX; ","; PlayerTileY; ")"
+                Print "GlobalPOS"; "("; PlayerTileX + (SavedMapX * 40); ","; PlayerTileY + (SavedMapY * 30); ")"
                 Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.movingx; Player.movingy
@@ -3033,9 +3761,32 @@ Sub DEV
                 If MouseWheel = -1 Then Print "Scroll Down"
                 If MouseWheel = 1 Then Print "Scroll Up"
             Case "6"
-                Print "Combat Tile Tracker"
-                Print "   (WIP)"
+                Print "Novaflux Virus Status:"
+                Select Case Virus.Status
+                    Case 0
+                        Print "Dormant Novaflux Present"
+                    Case 1
+                        Print "Novaflux-X1 Present"
+                    Case 2
+                        Print "Novaflux-X2 Present"
+                    Case 3
+                        Print "Novaflux Virus Cured and Eradicated"
+                End Select
                 ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
+            Case "7"
+                Print "World Data Viewer"
+                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * 40)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Biome Scale(Current Tile):"; BiomeTemperature((PlayerTileX), (PlayerTileY))
+                Print "Temperature (Biome+SeasonOffset+TOD+TTO):"; LocalTemperature((PlayerTileX), (PlayerTileY))
+                Print "Temperature Factors:"; BiomeTemperature(PlayerTileX, PlayerTileY); ","; SeasonalOffset; ","; TODoffset; ","; TileThermalOffset(PlayerTileX, PlayerTileY)
+            Case "7h"
+                Print "World Data Viewer (Human Readable)"
+                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * 40)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Biome Scale(Current Tile):"; BiomeTemperature((PlayerTileX), (PlayerTileY))
+                Print "Temperature (Biome+SeasonOffset+TOD+TTO):"; Int(LocalTemperature((PlayerTileX), (PlayerTileY)) * 100)
+                Print "Temperature Factors:"; Int(BiomeTemperature(PlayerTileX, PlayerTileY) * 100); ","; Int(SeasonalOffset * 100); ","; Int(TODoffset * 100); ","; Int(TileThermalOffset(PlayerTileX, PlayerTileY) * 100)
+
+
 
 
             Case Else
@@ -3050,7 +3801,7 @@ Sub DEV
         End If
         If Flag.OpenCommand = 2 Then
             KeyClear
-            Locate 28, 1: Input "/", comin
+            Locate 28, 1: Input "Command:", comin
             Select Case comin
                 Case "teleport", "tp"
                     Locate 28, 1: Print "               "
@@ -3072,6 +3823,9 @@ Sub DEV
                     Locate 28, 1: Print "               "
                     Locate 28, 1: Input "Resolution Y: ", ScreenRezY
                     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
+                Case "viruslevel", "vl"
+                    Locate 28, 1: Print "                     "
+                    Locate 28, 1: Input "Virus Status Level: ", Virus.Status
 
                 Case "cv01"
                     Error 104
@@ -3079,6 +3833,20 @@ Sub DEV
                     Flag.IsBloodmoon = Flag.IsBloodmoon + 1
                     Swap Texture.Shadows, Texture.Shadows_Bloodmoon
                     If Flag.IsBloodmoon = 1 Then PlaySound Sounds.bloodmoon_spawn
+                Case "weather"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Precipitation Level: ", PrecipitationLevel
+                Case "rts"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Random Tick Speed: ", RandomTickRate
+                Case "day"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Set Current Day: ", CurrentDay
+
+
+                Case "bdtmp"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Set Body Temp mode: ", Player.BodyTemp
 
                 Case "stillcam", "sc"
                     Flag.StillCam = Flag.StillCam + 1
@@ -3119,51 +3887,55 @@ Sub DEV
                     LOADWORLD
                 Case "groundtile", "gt"
                     Locate 28, 1: Print "                   "
-                    Locate 28, 1: Input "Set GroundTile ID: ", GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                    Locate 28, 1: Input "Set GroundTile ID: ", GroundTile(PlayerTileX, PlayerTileY)
                 Case "walltile", "wt"
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Set WallTile ID: ", WallTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                    Locate 28, 1: Input "Set WallTile ID: ", WallTile(PlayerTileX, PlayerTileY)
                 Case "ceilingtile", "ct"
                     Locate 28, 1: Print "                   "
-                    Locate 28, 1: Input "Set CeilingTile ID: ", CeilingTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1)
+                    Locate 28, 1: Input "Set CeilingTile ID: ", CeilingTile(PlayerTileX, PlayerTileY)
                 Case "fillwalltile", "fillwt", "fwt"
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "WallTile ID: ", fillid
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "X Ã± from pos: ", fillx
+                    Locate 28, 1: Input "X Tile from pos: ", fillx
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Y Ã± from pos: ", filly
+                    Locate 28, 1: Input "Y Tile from pos: ", filly
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
-                            WallTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                            WallTile(PlayerTileX + i, PlayerTileY + ii) = fillid
                         Next
                     Next
+                Case "spl"
+                    SpreadLight (1)
+                Case "sph"
+                    SpreadHeat
 
                 Case "fillgroundtile", "fillgt", "fgt"
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "GroundTile ID: ", fillid
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "X Ã± from pos: ", fillx
+                    Locate 28, 1: Input "X Tile from pos: ", fillx
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Y Ã± from pos: ", filly
+                    Locate 28, 1: Input "Y Tile from pos: ", filly
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
-                            GroundTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                            GroundTile(PlayerTileX + i, PlayerTileY + ii) = fillid
                         Next
                     Next
                 Case "fillceilingtile", "fillct", "fct"
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "WallTile ID: ", fillid
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "X Ã± from pos: ", fillx
+                    Locate 28, 1: Input "X Tile from pos: ", fillx
                     Locate 28, 1: Print "                 "
-                    Locate 28, 1: Input "Y Ã± from pos: ", filly
+                    Locate 28, 1: Input "Y Tile from pos: ", filly
 
                     For i = 0 To fillx Step Sgn(fillx)
                         For ii = 0 To filly Step Sgn(filly)
-                            CeilingTile(Int((Player.x + 8) / 16) + 1 + i, Int((Player.y + 8) / 16) + 1 + ii) = fillid
+                            CeilingTile(PlayerTileX + i, PlayerTileY + ii) = fillid
                         Next
                     Next
 
@@ -3171,7 +3943,7 @@ Sub DEV
                     Locate 28, 1: Print "                 "
                     Locate 28, 1: Input "Select Data Bit: ", databit
                     Locate 28, 1: Print "                   "
-                    Locate 28, 1: Input "Select Data Value: ", TileData(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1, databit)
+                    Locate 28, 1: Input "Select Data Value: ", TileData(PlayerTileX, PlayerTileY, databit)
 
                 Case "itemdata", "id"
                     Locate 28, 1: Print "                 "
@@ -3182,7 +3954,7 @@ Sub DEV
 
 
                 Case "bgdraw"
-                    bgdraw = bgdraw + 1
+                    BGDraw = BGDraw + 1
                 Case "shadowcast", "sh"
                     Flag.CastShadows = Flag.CastShadows + 1
 
@@ -3204,6 +3976,7 @@ Sub DEV
                             UpdateTile ii, i
                         Next
                     Next
+
                     SpreadLight (1)
                 Case "tickrate", "tk"
                     Locate 28, 1: Print "          "
@@ -3239,7 +4012,7 @@ Sub DEV
                     Locate 28, 1: Print "                                            "
                     Locate 28, 1: Input "Number of this entity to spawn ", temp
                     Locate 28, 1: Print "                                            "
-                    Locate 28, 1: Input "Set(0) or Rand(1) Cords ", cord
+                    Locate 28, 1: Input "Rand(0) or Set(1) Cords ", cord
                     If cord = 1 Then
                         Dim entx, enty
                         Locate 28, 1: Print "                              "
@@ -3293,8 +4066,13 @@ Sub DEV
                     Put #1, 4, WorldReadOnly
                     Close #1
 
+                Case "nec", "newcommand"
+                    Locate 28, 1: Input comin
+                    SendChat (comin)
                 Case Else
+
             End Select
+
             KeyClear
             Flag.ScreenRefreshSkip = 1
             Flag.OpenCommand = 0
@@ -3306,7 +4084,362 @@ Sub DEV
     End If
 End Sub
 
+Sub SendChat (ChatMessage As String)
+    'this set up is a bit weird, this sub is ONLY to format and send messages to the chatlog array, which when i get networking working
+    'will be a dynamic array that will be set to the log size of the server or something so it doesnt crash but at the same time i dont have to
+    'do stupid shit
+
+    'messages sent by other players, recieved by client will be added to the array somewhere else
+    'i might repurpose the chr21 header to refer to client only messages idk
+
+    'chat messages sent by non player methods, or just shouldnt have a [player] headder should have this value
+    Dim noPlayerTag
+
+    'check if message has a no player name headder
+    If Left$(ChatMessage, 1) = Chr$(21) Then
+        ChatMessage = Mid$(ChatMessage, 2)
+        noPlayerTag = 1
+    End If
+
+    'check if message is a command, and execute if it is
+    If Left$(ChatMessage, 1) = "/" And noPlayerTag = 0 Then
+        WorldCommands (ChatMessage)
+        Exit Sub
+    End If
+
+
+    If noPlayerTag = 0 Then
+        ChatMessage = "[" + Player.name + "] " + ChatMessage
+    End If
+    If noPlayerTag = 1 Then
+        noPlayerTag = 0
+    End If
+
+
+
+    ChatLastMessage = ChatLastMessage + 1
+    ChatLog(ChatLastMessage, 0) = ChatMessage
+    ChatLog(ChatLastMessage, 1) = "500"
+
+End Sub
+
+Sub GameChat
+    PrintMode FillBackground
+    Color , RGBA(0, 0, 0, 128)
+
+    Dim i
+    Dim ChatStart
+    Dim ChatCount
+    ChatStart = (ScreenRezY / 16) - 7
+    For i = ChatLastMessage To 0 Step -1
+        If Val(ChatLog(i, 1)) >= 0 Then
+            '  Locate 1, 1: Print ChatStart, ChatCount, ChatLastMessage, ChatLog(ChatLastMessage, 0)
+            Locate ChatStart - ChatCount, 1: Print ChatLog(i, 0)
+            ChatCount = ChatCount + 1
+            ChatLog(i, 1) = Str$(Val(ChatLog(i, 1)) - 1)
+        End If
+    Next
+    PrintMode KeepBackground
+    Color , RGBA(0, 0, 0, 0)
+
+End Sub
+
+
+
 Sub WorldCommands (CommandString As String)
+
+    Dim CommandBase As String
+    Dim Parameters(10) As String
+    Dim LastPos
+    Dim i, ii
+
+
+    CommandString = CommandString + " " 'adds an aditional space to the end of the command string so the parameter parse function can actually grab the last parameter
+    CommandBase = LCase$(Trim$(Left$(CommandString, InStr(CommandString, " ")))) 'parses out the base command into a seperate string
+    LastPos = InStr(CommandString, " ") 'pulls the start position of the first parameter (assuming only 1 space before the parameter, awaiting testing for various garbage inputs and thing not expected
+
+    'parses command parameters into an array to make managing a bit easier
+    For i = 0 To 10
+
+        Parameters(i) = LCase$(Trim$(Mid$(CommandString, LastPos, InStr(LastPos, CommandString, " "))))
+        LastPos = InStr(LastPos + 1, CommandString, " ")
+        If Parameters(i) = CommandBase Then Exit For 'kills looping for additional parameters that dont exist and eventually just pulling the command as parameters... not that it really matters, nor does this actually work
+    Next
+
+    Select Case CommandBase
+        Case "/help"
+            SendChat Chr$(21) + "Showing command help list"
+            SendChat Chr$(21) + "/resolution (short: /res) [x] [y] alters the games resolution"
+            SendChat Chr$(21) + "/weather [mode] changes current weather mode"
+            SendChat Chr$(21) + "/settile (short:/st) [layer] [tile] {x} {y}"
+            SendChat Chr$(21) + "/viruslevel (short:/vl) [virus level] changes the current NovaFlux-Xx world infection level"
+            SendChat Chr$(21) + "/filltile (short:/ft) [layer] [tile] {x1} {y1} [x2] [y2]"
+        Case "/res", "/resolution"
+            ScreenRezX = Val(Parameters(0))
+            ScreenRezY = Val(Parameters(1))
+            Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
+            SendChat Chr$(21) + "Resolution set to " + Trim$(Str$(ScreenRezX)) + "x" + Trim$(Str$(ScreenRezY))
+        Case "/vl", "/viruslevel"
+            Virus.Status = Val(Parameters(0))
+            SendChat Chr$(21) + "Virus level updated"
+        Case "/tbm", "/togglebloodmoon"
+            Flag.IsBloodmoon = Flag.IsBloodmoon + 1
+            Swap Texture.Shadows, Texture.Shadows_Bloodmoon
+            If Flag.IsBloodmoon = 1 Then PlaySound Sounds.bloodmoon_spawn
+            SendChat Chr$(21) + "Blood moon has been toggled"
+        Case "/ctp", "/coordinate"
+            Player.x = Val(Parameters(0))
+            Player.y = Val(Parameters(1))
+        Case "/tp"
+            Player.x = Val(Parameters(0)) * 16
+            Player.y = Val(Parameters(1)) * 16
+        Case "/weather"
+            PrecipitationLevel = Val(Parameters(0))
+        Case "/rts"
+            RandomTickRate = Val(Parameters(0))
+        Case "/day"
+            CurrentDay = Val(Parameters(0))
+        Case "/gm", "/gamemode"
+            GameMode = Val(Parameters(0))
+
+
+        Case "/stillcam", "/sc"
+            Flag.StillCam = Flag.StillCam + 1
+        Case "/fullcam", "/fc"
+            Flag.FullCam = Flag.FullCam + 1
+        Case "/freecam", "/frc"
+            Flag.FreeCam = Flag.FreeCam + 1
+        Case "/noclip", "/nc"
+            Flag.NoClip = Flag.NoClip + 1
+        Case "/fullrender", "/fr"
+            Flag.FullRender = Flag.FullRender + 1
+        Case "/framerate-unlock", "/fru"
+            Flag.FrameRateLock = Flag.FrameRateLock + 1
+
+
+
+        Case "/exit"
+            System
+        Case "/error"
+            Error Val(Parameters(0))
+
+
+        Case "/health"
+            Player.health = Val(Parameters(0))
+        Case "/maxhealth"
+            Player.MaxHealth = Val(Parameters(0))
+
+        Case "/tr", "/track"
+            Debug.Tracking = Parameters(0)
+
+        Case "/save"
+            SAVEMAP
+            SAVESETTINGS
+
+        Case "/st", "/settile"
+            Parameters(2) = Str$(PlayerTileX): Parameters(3) = Str$(PlayerTileY)
+            Select Case Val(Parameters(0))
+                Case 0
+                    GroundTile(Val(Parameters(2)), Val(Parameters(3))) = Val(Parameters(1))
+                Case 1
+                    WallTile(Val(Parameters(2)), Val(Parameters(3))) = Val(Parameters(1))
+                Case 2
+                    CeilingTile(Val(Parameters(2)), Val(Parameters(3))) = Val(Parameters(1))
+            End Select
+            SendChat Chr$(21) + "Tile Placed"
+        Case "/ft", "/filltile"
+            SendChat Chr$(21) + "this command is broked at the moment"
+            If Parameters(4) = "" And Parameters(5) = "" Then
+                Parameters(4) = Parameters(2)
+                Parameters(5) = Parameters(3)
+
+                Parameters(2) = Str$(PlayerTileX)
+                Parameters(3) = Str$(PlayerTileY)
+            End If
+            '  If Val(Parameters(2)) > Val(Parameters(4)) Then Swap Parameters(2), Parameters(4)
+            '    If Val(Parameters(3)) > Val(Parameters(5)) Then Swap Parameters(3), Parameters(5)
+
+            For i = Val(Parameters(2)) To Val(Parameters(4))
+                For ii = Val(Parameters(3)) To Val(Parameters(5))
+                    Select Case Val(Parameters(0))
+                        Case 0
+                            GroundTile(i, ii) = Val(Parameters(1))
+                        Case 1
+                            WallTile(i, ii) = Val(Parameters(1))
+                        Case 2
+                            CeilingTile(i, ii) = Val(Parameters(1))
+
+
+                    End Select
+
+                Next
+            Next
+        Case "/um", "/updatemap"
+            For i = 0 To 31
+                For ii = 0 To 41
+                    UpdateTile ii, i
+                Next
+            Next
+
+            SpreadLight (1)
+            SendChat Chr$(21) + "Map Tile Update Preformed"
+        Case Else
+            SendChat Chr$(21) + "Command " + Chr$(34) + CommandBase + Chr$(34) + " Not Found."
+
+    End Select
+
+
+    Exit Sub
+
+    Dim dv, fillid, fillx, filly, databit, dmapx, dmapy
+    Select Case CommandString
+
+
+
+
+        Case "load"
+            Locate 28, 1: Print "                                "
+            Locate 28, 1: Input "Name of Map File to load: ", map.filename
+            LOADMAP (map.filename)
+        Case "loadworld"
+            Locate 28, 1: Print "                                "
+            Locate 28, 1: Input "Name of World Folder to load: ", WorldName
+            LOADWORLD
+        Case "spl"
+            SpreadLight (1)
+        Case "sph"
+            SpreadHeat
+
+
+        Case "network"
+
+            Locate 28, 2: Input "Test Network Multiplayer: ", fillid
+
+
+
+
+
+        Case "tiledata", "td"
+            Locate 28, 1: Print "                 "
+            Locate 28, 1: Input "Select Data Bit: ", databit
+            Locate 28, 1: Print "                   "
+            Locate 28, 1: Input "Select Data Value: ", TileData(PlayerTileX, PlayerTileY, databit)
+
+        Case "itemdata", "id"
+            Locate 28, 1: Print "                 "
+            Locate 28, 1: Input "Select Data Bit: ", databit
+            Locate 28, 1: Print "                   "
+            Locate 28, 1: Input "Select Data Value: ", Inventory(0, CursorHoverX, databit)
+
+
+
+        Case "bgdraw"
+            BGDraw = BGDraw + 1
+        Case "shadowcast", "sh"
+            Flag.CastShadows = Flag.CastShadows + 1
+
+        Case "new"
+            NewWorld
+
+        Case "lightlevel", "ll"
+            Locate 28, 1: Print "                    "
+            Locate 28, 1: Input "Select Light Level:  ", GlobalLightLevel
+        Case "rendermode", "rm"
+            Locate 28, 1: Print "         "
+            Locate 28, 1: Input "Mode:  ", RenderMode
+            If RenderMode = 2 Then Flag.RenderOverride = 0
+            If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
+            If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
+        Case "tickrate", "tk"
+            Locate 28, 1: Print "          "
+            Locate 28, 1: Input "TickRate:  ", Settings.TickRate
+        Case "time"
+            Locate 28, 1: Print "          "
+            Locate 28, 1: Input "Set time:  ", GameTime
+        Case "maptp"
+            Locate 28, 1: Print "              "
+            Locate 28, 1: Input "MapX Cord", dmapx
+            Locate 28, 1: Print "              "
+            Locate 28, 1: Input "MapY Cord", dmapy
+            ChangeMap 1, dmapx, dmapy
+        Case "genmap"
+            GenerateMap
+        Case "masstp"
+            For i = 0 To CurrentEntities
+                entity(i, 4) = Player.x
+                entity(i, 5) = Player.y
+            Next
+        Case "give", "item"
+            Locate 28, 1: Print "                   "
+            Locate 28, 1: Input "ItemID to give ", dmapx
+            Locate 28, 1: Print "                   "
+            Locate 28, 1: Input "Ammount ", dmapy
+
+            NewStack dmapx, dmapy
+        Case "summon"
+            Dim temp As Integer
+            Dim cord As Byte
+            Locate 28, 1: Print "                   "
+            Locate 28, 1: Input "EntityID to summon ", dmapx
+            Locate 28, 1: Print "                                            "
+            Locate 28, 1: Input "Number of this entity to spawn ", temp
+            Locate 28, 1: Print "                                            "
+            Locate 28, 1: Input "Rand(0) or Set(1) Cords ", cord
+            If cord = 1 Then
+                Dim entx, enty
+                Locate 28, 1: Print "                              "
+                Locate 28, 1: Input "X Cord ", entx
+                Locate 28, 1: Print "                                            "
+                Locate 28, 1: Input "Y Cord ", enty
+            End If
+
+
+            '  For DMapY = 0 To 100
+
+            For ii = 0 To temp
+                CurrentEntities = CurrentEntities + 1
+                For i = 0 To EntityParameters
+                    entity(CurrentEntities, i) = SummonEntity(dmapx, i)
+                Next
+                If cord = 1 Then
+                    entity(CurrentEntities, 4) = entx
+                    entity(CurrentEntities, 5) = enty
+                End If
+            Next
+            ' Next
+        Case "kill"
+            Locate 28, 1: Print "                      "
+            Locate 28, 1: Input "EntityNumber to Kill ", dmapx
+            EntityDespawn dmapx
+
+        Case "effect"
+
+            For i = 0 To MaxEffects
+                If EffectArray(i, 0, 0) = 0 Then
+                    For ii = 0 To EffectParameters
+                        Locate 28, 1: Print "                               "
+                        Locate 28, 1: Print "Effect Value", ii, "to apply ";: Input ; dmapx
+
+                        EffectArray(i, ii, 0) = dmapx
+                    Next
+                    Exit For
+                End If
+            Next
+        Case "effectsource", "es"
+            '  Dim CommandString As String
+            Locate 28, 1: Print "                      "
+            Locate 28, 1: Input "Effect source to apply", CommandString
+
+            Effects 1, CommandString, 0
+        Case "togglewriteprotect"
+            WorldReadOnly = WorldReadOnly + 1
+            If WorldReadOnly > 1 Then WorldReadOnly = 0
+            Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+            Put #1, 4, WorldReadOnly
+            Close #1
+
+        Case Else
+    End Select
 
 End Sub
 
@@ -3385,6 +4518,10 @@ Sub LOADWORLD
     Get #1, 11, SpawnMapX
     Get #1, 12, SpawnMapY
     Get #1, 13, WorldSeed
+    Get #1, 14, CurrentDay
+    Get #1, 15, WeatherCountDown
+    Get #1, 16, PrecipitationLevel
+
     Close #1
     Print "Opening player"
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
@@ -3421,8 +4558,8 @@ End Sub
 
 Sub LOADMAP (file As String)
     Dim i, ii As Byte
-    Dim iii As Integer
-    Dim iiii As Byte
+    Dim iii As Single
+    Dim iiii As Single
     Dim MapProtocol As Integer
 
     iii = 1
@@ -3468,17 +4605,23 @@ Sub LOADMAP (file As String)
 
         Print "60%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
+        Print "61%"
         For i = 1 To 30
             For ii = 1 To 40
                 For iiii = 0 To TileParameters
+                    '      Print "61." + Trim$(Str$(iii))
                     Get #1, iii, TileData(ii, i, iiii)
+                    '     Print "62." + Trim$(Str$(iii))
                     iii = iii + 1
                 Next
 
             Next
         Next
+        Print "70%"
         Get #1, iii, map.name
+        Print "71%"
         Close #1
+        Print "72%"
         iii = 1
         Print "80%"
         Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-E.cdf" As #1
@@ -3511,6 +4654,16 @@ Sub ConvertManifest (OldVersion As Integer)
             Put #1, 4, WorldReadOnly
             Close #1
             OldVersion = 1
+        Case 1
+            Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+            Put #1, 14, CurrentDay
+            Put #1, 15, WeatherCountDown
+            Put #1, 16, PrecipitationLevel
+
+            Close #1
+            OldVersion = 2
+
+
         Case Else
             Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
             Put #1, 2, OldVersion
@@ -3600,11 +4753,14 @@ Sub ConvertMap (OldVersion As Integer, MapCord As String)
 
                 Next
             Next
+
             Get #1, iii, map.name
             Close #1
             iii = 1
+            SAVEMAP
+            '            OldVersion = 2
 
-
+        Case 2
 
         Case Else
             Open "Assets\Worlds\" + WorldName + "\Maps\" + MapCord + ".cdf" As #1
@@ -3657,6 +4813,10 @@ Sub SAVEMAP
     Put #1, 11, SpawnMapX
     Put #1, 12, SpawnMapY
     Put #1, 13, WorldSeed
+    Put #1, 14, CurrentDay
+    Put #1, 15, WeatherCountDown
+    Put #1, 16, PrecipitationLevel
+
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
@@ -3799,52 +4959,6 @@ Sub CastShadow
 End Sub
 
 
-Sub SpreadLight (updates)
-    Dim As Byte i, ii
-    For i = 1 To 30
-        For ii = 1 To 40
-            LocalLightLevel(ii, i) = TileData(ii, i, 8)
-        Next
-    Next
-    SpreadLight2 (updates)
-End Sub
-Sub SpreadLight2 (updates)
-    Dim As Byte i, ii, iii, iiii
-    Static UpdateLimit
-    If updates > 0 Then
-        updates = 0
-        For i = 1 To 30
-            For ii = 1 To 40
-                iiii = 1
-                iii = 0
-
-                For iii = 0 To 2
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i) Then LocalLightLevel(ii, i) = LocalLightLevel(ii + (iii - 1), i) - 1
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-
-                iiii = 0
-                iii = 1
-                For iiii = 0 To 2
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii, i + (iiii - 1)) Then LocalLightLevel(ii, i) = LocalLightLevel(ii, i + (iiii - 1)) - 1
-
-                    If LocalLightLevel(ii, i) < LocalLightLevel(ii + (iii - 1), i + (iiii - 1)) - 2 Then updates = updates + 1
-                Next
-                'LocalLightLevel(ii, i) = TileData(ii, i, 8)
-            Next
-        Next
-        If updates = 0 Then UpdateLimit = UpdateLimit + 1: updates = 1
-        If UpdateLimit > 10 Then updates = 0
-        ' Print updates, UpdateLimit
-        ' Display
-        ' Sleep
-
-        SpreadLight2 (updates)
-    Else
-        UpdateLimit = 0
-    End If
-End Sub
 
 
 Sub SetLighting
@@ -3853,10 +4967,21 @@ Sub SetLighting
     Dim TotalLightLevel
     For i = 0 To 31
         For ii = 0 To 41
-            If GlobalLightLevel < LocalLightLevel(ii, i) Then TotalLightLevel = LocalLightLevel(ii, i) Else TotalLightLevel = GlobalLightLevel
+
+            If GlobalLightLevel < LocalLightLevel(ii, i) Then
+                TotalLightLevel = LocalLightLevel(ii, i)
+            Else
+                TotalLightLevel = GlobalLightLevel
+            End If
+            'If PrecipitationLevel = 2 Then TotalLightLevel = TotalLightLevel - 2
+
+
+            'map change overlay mainly
             TotalLightLevel = TotalLightLevel - OverlayLightLevel
+
+
             If TotalLightLevel > 12 Then TotalLightLevel = 12
-            If TotalLightLevel < 0 Then TotalLightLevel = 0
+            If TotalLightLevel < 1 Then TotalLightLevel = 1
 
             PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (TotalLightLevel * 16, 16)-((16 * TotalLightLevel) + 15, 31)
         Next
@@ -3883,7 +5008,7 @@ Sub DayLightCycle
             End If
         End If
     End If
-    If TimeMode > 1 Then TimeMode = 0
+    If TimeMode > 1 Then TimeMode = 0: CurrentDay = CurrentDay + 1
 
     Select Case TimeMode
         Case 0
@@ -3897,6 +5022,7 @@ Sub DayLightCycle
                 GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
             End If
     End Select
+    GlobalLightLevel = GlobalLightLevel - (Int(PrecipitationLevel / 2) * 2)
 End Sub
 
 
@@ -3942,30 +5068,19 @@ Sub INITIALIZE
     OSPROBE
     SwitchRender (DefaultRenderMode)
     RenderMode = DefaultRenderMode
+    If new = 1 Then FirstRun
 
 
 End Sub
 
-Sub CENTERPRINT (nam$)
-    _PrintMode _KeepBackground
-    Dim i As _Byte
-    For i = 0 To Int((ScreenRezX / 8 / 2) - (Len(nam$) / 2) - 1)
-        Print " ";
-    Next
-    _PrintMode _FillBackground
-    Print nam$
+Sub FirstRun
+    Dim i
+    CENTERPRINT "Welcome to TerraQuest"
+    Print
+    For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
+    Print
+    CENTERPRINT "Please choose a username"
 End Sub
-
-Sub ENDPRINT (nam$)
-    _PrintMode _KeepBackground
-    Dim i As Integer
-    For i = 0 To Int((ScreenRezX / 8) - (Len(nam$))) - 1
-        Print " ";
-    Next
-    _PrintMode _FillBackground
-    Print nam$
-End Sub
-
 
 
 Sub ErrorHandler
@@ -4164,7 +5279,7 @@ End Sub
 
 
 Sub SetBG
-    If bgdraw = 0 Then
+    If BGDraw = 0 Then
         Dim i As Integer
         Dim ii As Integer
         For i = 0 To 30
@@ -4220,6 +5335,7 @@ Sub SwitchRender (mode As Byte)
         FreeImage Texture.HudSprites
         FreeImage Texture.Shadows
         FreeImage Texture.Shadows_Bloodmoon
+        FreeImage Texture.Precipitation
 
     End If
 
@@ -4235,6 +5351,7 @@ Sub SwitchRender (mode As Byte)
     Texture.HudSprites = LoadImage(File.HudSprites, mode + 32)
     Texture.Shadows = LoadImage(File.Shadows, mode + 32)
     Texture.Shadows_Bloodmoon = LoadImage(File.Shadows_Bloodmoon, mode + 32)
+    Texture.Precipitation = LoadImage(File.Precipitation, mode + 32)
 
     If Flag.IsBloodmoon = 1 Then Swap Texture.Shadows, Texture.Shadows_Bloodmoon
 
@@ -4291,7 +5408,7 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
         SavedMapX = SavedMapX + 1
         GenerateMap
-    Loop Until GroundTile(Int((Player.x + 8) / 16) + 1, Int((Player.y + 8) / 16) + 1) <> 13
+    Loop Until WallTile(PlayerTileX, PlayerTileY) = 1
 
     SpawnPointX = Player.x
     SpawnPointY = Player.y
@@ -4300,8 +5417,10 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
     Print "map generated, loading world"
     Delay 0.5
+    WorldSeed = 0
     LOADWORLD
 End Sub
+
 
 Sub GenerateMap
     Dim i, ii, iii
@@ -4322,30 +5441,91 @@ Sub GenerateMap
 
 
             'generate terrain
-            PerlinTile = Perlin((ii + (SavedMapX * 40)) / 100, (i + (SavedMapY * 30)) / 100, 0, WorldSeed)
+            PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed)
             Select Case PerlinTile
+                Case Is < 0.235
+                    GroundTile(ii, i) = 25
                 Case Is < 0.35
                     GroundTile(ii, i) = 13
+                Case 0.35 To 0.4
+                    GroundTile(ii, i) = 29
+                Case Is > 0.7
+                    GroundTile(ii, i) = 4
+                    WallTile(ii, i) = 28
+
                 Case Is > 0.6
                     GroundTile(ii, i) = 4
                     WallTile(ii, i) = 19
             End Select
+
+            'generate structures
+
+
         Next
     Next
-    Randomize Using Val(Str$(SavedMapX)) + Val(Str$(SavedMapY)) + Val(Str$(WorldSeed)) 'TODO, include world layer in this too
+
+    'generate biomes
+    For i = 0 To 31
+        For ii = 0 To 41
+            PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.TempScale, (i + (SavedMapY * 30)) / Gen.TempScale, 0, Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed))
+            Select Case PerlinTile
+
+                Case Is < 0.25
+                    'permafrost (being in this biome will damage you
+                Case 0.25 To 0.35
+                    'snowy
+                    Select Case GroundTile(ii, i)
+                        Case 13
+                            GroundTile(ii, i) = 14
+
+                    End Select
+                Case 0.35 To 0.55
+                    'planes
+                Case 0.55 To 0.65
+                    'forrest
+                    '   Case Is > 0.75
+                    'lava    (needless to say being here will damage you, but even on land
+                Case Is > 0.75
+                    'desert
+                    Select Case GroundTile(ii, i)
+                        Case Is <> 13
+                            GroundTile(ii, i) = 29
+                    End Select
+
+
+                    'Case Is < 0.235
+                    '     GroundTile(ii, i) = 25
+                    ' Case Is < 0.35
+                    '    GroundTile(ii, i) = 13
+                    ' Case 0.35 To 0.4
+                    '   GroundTile(ii, i) = 29
+                    ' Case Is > 0.7
+                    '  GroundTile(ii, i) = 4
+                    '  WallTile(ii, i) = 28
+
+                    ' Case Is > 0.6
+                    '  GroundTile(ii, i) = 4
+                    '  WallTile(ii, i) = 19
+            End Select
+
+        Next
+    Next
+
+    'set feature seed
+    Randomize Using Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
+    'generate features
     For i = 0 To 31
         For ii = 0 To 41
 
 
-            If GroundTile(ii, i) <> 13 And WallTile(ii, i) = 1 Then
+            If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
 
-                'generate bushes
-                If Ceil(Rnd * 10) = 1 Then
+                If Ceil(Rnd * 10) = 5 Then
                     WallTile(ii, i) = 5
                 End If
 
                 'generate ground wood items
-                If Ceil(Rnd * 300) = 1 Then
+                If Ceil(Rnd * 150) = 50 Then
                     WallTile(ii, i) = 11
                     NewContainer SavedMapX, SavedMapY, ii, i
                     OpenContainer SavedMapX, SavedMapY, ii, i
@@ -4356,8 +5536,8 @@ Sub GenerateMap
                     CloseContainer SavedMapX, SavedMapY, ii, i
                 End If
 
-                'generate raw stone
-                If Ceil(Rnd * 450) = 1 Then
+                'generate ground Stone items
+                If Ceil(Rnd * 300) = 50 Then
                     WallTile(ii, i) = 11
                     NewContainer SavedMapX, SavedMapY, ii, i
                     OpenContainer SavedMapX, SavedMapY, ii, i
@@ -4370,14 +5550,16 @@ Sub GenerateMap
 
 
                 'generate berry bushes
-                If Ceil(Rnd * 250) = 1 Then
+                If Ceil(Rnd * 250) = 125 Then
                     WallTile(ii, i) = 12
                 End If
 
                 'generate carrots
-                If Ceil(Rnd * 600) = 1 Then
+                If Ceil(Rnd * 600) = 300 Then
                     WallTile(ii, i) = 17
                 End If
+
+
             End If
 
             'update set tiles

@@ -1,0 +1,3 @@
+server - start the game in server mode (with gui for settings)
+server-headless - start the game in server mode (command line only)
+software - force software rendering by default (useful if unable to start due to gpu issues)

@@ -8,12 +8,75 @@ Dim Shared Sounds As Sounds
 Dim Shared Debug As Debug
 
 'Constants
-const TileParameters=16
+const TileParameters=17
 const InvParameters=13
 const EffectParameters=4
 const MaxEffects=20
 Const MaxCraftLevel = 5
-const CreativePages = 5
+const CreativePages = 10
+Const ChatHistory = 1000
+Const logparameters = 2
+
+
+
+Const EntityID = 0
+Const EntityHealth = 1
+Const EntitySpeedMod = 2
+Const EntityAI = 3
+Const EntityX = 4
+Const EntityY = 5
+Const EntityAction = 6
+Const EntityTimerAct = 7
+Const EntityVX = 8
+Const EntityVY = 9
+Const EntityMX = 10 'These 2 values are redundant, could just be calculated if vx and vy != 0
+Const EntityMY = 11
+Const EntityMaxHealth = 12
+Const EntityLX = 13
+Const EntityLY = 14
+Const EntityTimerDespawn = 15
+Const EntityFacing = 16
+Const EntitySpOffY = 17
+
+Const TileLayer = 0
+Const TileSX = 1
+Const TileSY = 2
+Const TileItemID = 3
+
+Const TileDataCollision = 0
+Const TileDataCastShadow = 1
+Const TileDataBlockShadow = 2
+Const TileDataIntShadow = 3
+Const TileDataResistance = 4
+Const TileDataSolid = 5
+Const TileDataLightCast = 6
+Const TileDataContainer = 7
+Const TileDataCraftingLevel = 8
+Const TileDataFriction = 9
+Const TileDataMaxSpeed = 10
+
+
+
+
+'constants to make code more readable
+
+'things to throw into the include files that im too lazy to do right now
+Dim Shared Gen.HeightScale
+Dim Shared Gen.TempScale
+Dim Shared CurrentDay
+
+
+Dim Shared ChatLastMessage
+
+Dim Shared ChatLog(ChatHistory, logparameters) As String
+
+
+Dim Shared RandomTickRate As Integer
+
+
+
+Dim Shared TileThermalMap(41, 31)
+
 
 
 'Map Variables
@@ -25,6 +88,7 @@ Dim Shared SpawnPointX As Single
 Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
+dim shared WeatherCountDown As Long
 
 dim shared Container(20,20,invparameters)
 Dim Shared CursorHoverX, CursorHoverY, CursorHoverPage, CursorSelectedX, CursorSelectedY, CursorSelectedPage, CursorMode
@@ -86,7 +150,7 @@ Dim Shared Game.Designation As String
 Dim Shared Game.32Bit as unsigned bit
 dim shared Game.MapProtocol as integer
 dim shared Game.ManifestProtocol as integer
-dim shared Game.NetPort as         integer
+dim shared Game.NetPort as integer
 
 Dim Shared perlin_octaves As Single, perlin_amp_falloff As Single
 
@@ -94,6 +158,7 @@ Dim Shared ImmunityTimer
 Dim Shared CreativePage As Byte
 Dim Shared WorldReadOnly As Byte
 Dim Shared HealthWheelOffset
+dim shared CurrentDimension as byte
 
 Const EntityLimit = 1560
 Const EntityParameters = 20
@@ -120,8 +185,14 @@ dim shared Flag.InitialRender as byte
 dim shared Flag.ContainerOpen as byte
 dim shared Flag.FullRender as unsigned bit
 dim shared Flag.IsBloodmoon as unsigned bit
-Dim Shared bgdraw As Unsigned Bit
+dim shared Flag.FadeIn as unsigned bit
+dim shared Flag.ExperimentalFeature as unsigned bit
+
+
+dim shared    PrecipitationLevel as byte
+Dim Shared BGDraw As Unsigned Bit
 dim shared RenderMode as byte
+
 
 Dim Shared new As Unsigned Bit 'has not been updated, because might not exist
 
@@ -134,6 +205,10 @@ Type Debug
 End Type
 
 
+Type Virus
+    Status As Byte
+End Type
+Dim Shared Virus As Virus
 
 
 
@@ -157,6 +232,7 @@ Type File
     HudSprites As String
     Shadows As String
     Shadows_Bloodmoon as string
+    Precipitation as string
 End Type
 
 Type Texture
@@ -164,12 +240,12 @@ Type Texture
     PlayerSheet as long
     ZombieSheet as long
     DuckSheet as long
-
     TileSheet As Long
     ItemSheet as long
     HudSprites As Long
     Shadows As Long
     Shadows_Bloodmoon as long
+    Precipitation as long
 End Type
 
 Type Sounds
@@ -190,7 +266,7 @@ Type Character
     lasty As Single
     vx as single
     vy as single
-
+       name as string
     tile As Byte
     tilefacing As Byte
     facing As Byte
@@ -202,6 +278,7 @@ Type Character
     CraftingLevel as byte
 
     MaxHealth as integer
+    BodyTemp as byte
 
     level As Byte
     health As integer
