@@ -197,7 +197,7 @@ Type Character
     lasty As Single
     vx as single
     vy as single
-
+       name as string
     tile As Byte
     tilefacing As Byte
     facing As Byte

@@ -1,0 +1,23 @@
+1.2
+
+Clean up directory
+Add texture pack to settings menu
+make menu system fully functional (menu background to come later)
+fix edge of map freezing/thawing water error exception (add check for within bounds)
+FIX COMBAT
+Make saves use next incriment protocol, update accordingly
+prompt warning before converting worlds
+
+1.3
+
+fix ice campfires to work, as well as ice naturally cooling the air above it (run 2 spread loops, one for cooling first then a second one for heating)
+Armor sets
+Armor wheel, next to health, shows how much defence you have currently, from armor and effects
+logic (wiring gates etc)
+more farming options 
+seeds can occasionally drop from cutting grass TBD
+Generated structures
+possible high performance seamless mode?
+renewable wood?
+online multiplayer
+

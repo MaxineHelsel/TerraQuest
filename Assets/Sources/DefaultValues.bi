@@ -3,8 +3,8 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta 1.2 Edge Build 230607A
-Game.Version = "B1.2-230607A
+Game.Buildinfo = "Beta 1.2 Edge Build 230708RC1
+Game.Version = "B1.2-230708RC1
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -37,6 +37,7 @@ Sounds.walk_water = "Assets/Sounds/walk_water.mp3"
 Sounds.bloodmoon_spawn = "Assets/Sounds/bloodmoon_spawn.mp3
 
 'Debug values that are only set here for testing purposes
+player.name = "Player"
 Player.health = 8
 Player.MaxHealth = 0
 GameMode = 2

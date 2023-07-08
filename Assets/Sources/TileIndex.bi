@@ -166,7 +166,7 @@ TileIndexData(10, 3) = 0 'has interior shadow
 TileIndexData(10, 4) = 15 'resistance
 TileIndexData(10, 5) = 0 'is solid
 TileIndexData(10, 6) = 14 'light casts
-tileindexdata(10,16)=0.13 'thermal output
+TileIndexData(10, 16) = 0.13 'thermal output
 
 TileName(11, 0) = "Ground Item" 'Name of the tile
 TileName(11, 1) = "Placeholder" 'tooltip
@@ -434,7 +434,7 @@ TileIndexData(29, 4) = 19 'resistance
 TileIndexData(29, 5) = 0 'is solid
 TileIndexData(29, 9) = 0.12 'friction
 TileIndexData(29, 10) = 0.9
-tileindexdata(29,15)=1
+TileIndexData(29, 15) = 1
 
 '30 Glass
 TileName(30, 0) = "Glass" 'Name of the tile
@@ -444,8 +444,8 @@ TileIndex(30, 1) = 16 'x position on tilesheet
 TileIndex(30, 2) = 32 'y position on tilesheet
 TileIndex(30, 3) = 116 'itemid
 TileIndexData(30, 0) = 1 'collision
-TileIndexData(30, 1) = 0 'casts shadow
-TileIndexData(30, 2) = 0 'blocks shadow
+TileIndexData(30, 1) = 1 'casts shadow
+TileIndexData(30, 2) = 1 'blocks shadow
 TileIndexData(30, 3) = 0 'has interior shadow
 TileIndexData(30, 4) = 5 'resistance
 TileIndexData(30, 5) = 0 'is solid
@@ -527,7 +527,7 @@ TileIndexData(35, 4) = 10 'resistance
 TileIndexData(35, 5) = 0 'is solid
 TileIndexData(35, 9) = 0 'Friction
 
-''36-41 aetherian wall 
+''36-41 aetherian wall
 
 TileName(36, 0) = "Aetherian Wall" 'Name of the tile
 TileName(36, 1) = "Placeholder" 'tooltip
@@ -638,7 +638,7 @@ TileIndexData(43, 3) = 0 'has interior shadow
 TileIndexData(43, 4) = 5 'resistance
 TileIndexData(43, 5) = 0 'is solid
 TileIndexData(43, 6) = 9 'light casts
-tileindexdata(43,16) = 0
+TileIndexData(43, 16) = 0
 
 '44 Ice Campfire
 TileName(44, 0) = "Ice Campfire" 'Name of the tile
@@ -654,4 +654,4 @@ TileIndexData(44, 3) = 0 'has interior shadow
 TileIndexData(44, 4) = 15 'resistance
 TileIndexData(44, 5) = 0 'is solid
 TileIndexData(44, 6) = 8 'light casts
-tileindexdata(44,16) = -0.08  
+TileIndexData(44, 16) = -0.08
