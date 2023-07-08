@@ -19,16 +19,6 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
-'ideas to add
-'3034997111
-'wires, and power
-'doors
-'switches
-'buttons
-'tile interaction with empty item slot
-'fix combat hitboxes to not be tile based
-
-
 
 
 'parse command line arguments
@@ -43,80 +33,15 @@ Select Case LCase$(Command$)
     Case "software"
         DefaultRenderMode = 0
         Flag.RenderOverride = 1
+    Case "experimental"
+        Flag.ExperimentalFeature = 1
 End Select
 
-Type Virus
-    Status As Byte
-End Type
-Dim Shared Virus As Virus
-
-'constants to make code more readable
-
-'things to throw into the include files that im too lazy to do right now
-Dim Shared Gen.HeightScale
-Dim Shared Gen.TempScale
-Dim Shared CurrentDay
-
-
-Const ChatHistory = 1000
-Const logparameters = 2
-Dim Shared ChatLastMessage
-
-Dim Shared ChatLog(ChatHistory, logparameters) As String
-
-Gen.HeightScale = 100
-Gen.TempScale = 500
-
-Dim Shared RandomTickRate As Integer
-
-RandomTickRate = 5
-
-
-Dim Shared TileThermalMap(41, 31)
-
-
-Const EntityID = 0
-Const EntityHealth = 1
-Const EntitySpeedMod = 2
-Const EntityAI = 3
-Const EntityX = 4
-Const EntityY = 5
-Const EntityAction = 6
-Const EntityTimerAct = 7
-Const EntityVX = 8
-Const EntityVY = 9
-Const EntityMX = 10 'These 2 values are redundant, could just be calculated if vx and vy != 0
-Const EntityMY = 11
-Const EntityMaxHealth = 12
-Const EntityLX = 13
-Const EntityLY = 14
-Const EntityTimerDespawn = 15
-Const EntityFacing = 16
-Const EntitySpOffY = 17
-
-Const TileLayer = 0
-Const TileSX = 1
-Const TileSY = 2
-Const TileItemID = 3
-
-Const TileDataCollision = 0
-Const TileDataCastShadow = 1
-Const TileDataBlockShadow = 2
-Const TileDataIntShadow = 3
-Const TileDataResistance = 4
-Const TileDataSolid = 5
-Const TileDataLightCast = 6
-Const TileDataContainer = 7
-Const TileDataCraftingLevel = 8
-Const TileDataFriction = 9
-Const TileDataMaxSpeed = 10
-
-
-
+Flag.ExperimentalFeature = 0
 
 temptitle:
 INITIALIZE
-GoTo oldtitle
+If Flag.ExperimentalFeature = 0 Then GoTo oldtitle
 Do
     Dim Selected
     Cls
@@ -458,7 +383,7 @@ Sub TileTickUpdates
 End Sub
 
 Sub RandomUpdates
-    Static WeatherCountDown As Long
+
     Static TileCountDown As Long
     Static WaterSpreadCountDown As Long
     Static LongTimeOut As Long
@@ -4593,6 +4518,10 @@ Sub LOADWORLD
     Get #1, 11, SpawnMapX
     Get #1, 12, SpawnMapY
     Get #1, 13, WorldSeed
+    Get #1, 14, CurrentDay
+    Get #1, 15, WeatherCountDown
+    Get #1, 16, PrecipitationLevel
+
     Close #1
     Print "Opening player"
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
@@ -4725,6 +4654,16 @@ Sub ConvertManifest (OldVersion As Integer)
             Put #1, 4, WorldReadOnly
             Close #1
             OldVersion = 1
+        Case 1
+            Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+            Put #1, 14, CurrentDay
+            Put #1, 15, WeatherCountDown
+            Put #1, 16, PrecipitationLevel
+
+            Close #1
+            OldVersion = 2
+
+
         Case Else
             Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
             Put #1, 2, OldVersion
@@ -4814,11 +4753,14 @@ Sub ConvertMap (OldVersion As Integer, MapCord As String)
 
                 Next
             Next
+
             Get #1, iii, map.name
             Close #1
             iii = 1
+            SAVEMAP
+            '            OldVersion = 2
 
-
+        Case 2
 
         Case Else
             Open "Assets\Worlds\" + WorldName + "\Maps\" + MapCord + ".cdf" As #1
@@ -4871,6 +4813,10 @@ Sub SAVEMAP
     Put #1, 11, SpawnMapX
     Put #1, 12, SpawnMapY
     Put #1, 13, WorldSeed
+    Put #1, 14, CurrentDay
+    Put #1, 15, WeatherCountDown
+    Put #1, 16, PrecipitationLevel
+
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1

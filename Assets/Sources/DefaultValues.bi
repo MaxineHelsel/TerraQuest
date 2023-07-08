@@ -48,6 +48,11 @@ Flag.RenderOverride = 0
 DefaultRenderMode = 2
 bloodmoonspawnrate= 5
 entitynatspawnlim=15
+RandomTickRate = 5
+Gen.HeightScale = 100
+Gen.TempScale = 500
+
+
 Dim ii, iii, iiii
 For ii = 0 To 3
     For iii = 0 To 5
