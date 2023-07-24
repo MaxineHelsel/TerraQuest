@@ -1,7 +1,8 @@
 ﻿
 # TerraQuest
 
-### WARNING This is the edge branch, meaning this version could be incomplete, unstable, untested, broken, etc. If you are looking for the latest released version, switch to stable.
+### WARNING WARNING WARNING
+#### This is a development branch for a feature or features that require significant changes to code, this brach is about 1000x more unstable than edge, and is only to be used for testing and developing this feature, not for general update testing or gameplay, worlds may become corrupt, standard features or functionality may be severely broken, and the game may straight up not work, enter with caution
 
 # Download instructions
 

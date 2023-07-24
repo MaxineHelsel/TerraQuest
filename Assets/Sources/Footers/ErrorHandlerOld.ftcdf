@@ -1,0 +1,186 @@
+
+Sub ErrorHandlerOld
+    AutoDisplay
+    Cls
+    '  PlaySound Sounds.error
+    Delay 0.5
+    KeyClear
+    Locate 5, 1
+    CENTERPRINT "CDF ERROR HANDLER"
+    Print "Error Code:"; Err
+    Locate 6, 1
+    ENDPRINT "Error Line:" + Str$(ErrorLine)
+    locate 9,1
+    Dim i
+    For i = 0 To Int((gamepars.resx / 8) - 1): Print "-";: Next
+    '    Print "--------------------------------------------------------------------------------"
+    Print
+    '       PRINT "--------------------------------------------------------------------------------"
+    Select Case Err
+        Case 100
+            CENTERPRINT "Assets folder is incomplete, this error can be triggered by one or more of the"
+            CENTERPRINT "following conditions:"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "The assets folder is missing"
+            CENTERPRINT ""
+            CENTERPRINT "Sub-directories in the Assets folder are missing"
+            CENTERPRINT ""
+            CENTERPRINT "The contents of assets, or the directory itself is corrupted"
+            CENTERPRINT ""
+            CENTERPRINT "You do not have proper permissions to access the assets directory"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "Make sure the entireity of the assets folder is present and accessible to your"
+            CENTERPRINT "user account and, if necessary, redownload the assets folder."
+            CENTERPRINT ""
+            CENTERPRINT "The assets folder, and its contents are necessary for the game to load, as it"
+            CENTERPRINT "contains all sprite and texture files, sounds and music, user saved data, and"
+            CENTERPRINT "world files. Without these, the game will not play correctly. It is advised to"
+            CENTERPRINT "not continue."
+            CONTPROMPT
+
+        Case 101
+            CENTERPRINT "This is a legacy error code, and should never be triggered in game, if it has"
+            CENTERPRINT "been triggered, not due to the /error command, please contact the developer"
+            CONTPROMPT
+
+        Case 102
+            CENTERPRINT "Invalid Code Position, This error occurs when the program flow enters an area"
+            CENTERPRINT "that it should not be, This is most likely a programming issue, and not an end"
+            CENTERPRINT "user issue."
+            CENTERPRINT ""
+            CENTERPRINT "There is no user solution to this issue, if this is reproducable, please file"
+            CENTERPRINT "a bug report to the github, including the line number and what you were doing"
+            CENTERPRINT "when it occured."
+            CONTPROMPT
+        Case 258
+            CENTERPRINT "Invalid handle, An handle used for an image, sound, font etc. was invalid."
+            CENTERPRINT "Be sure to check the return values of functions like _LOADFONT and _LOADIMAGE."
+            CONTPROMPT
+        Case 103
+            CENTERPRINT "This world was not made for this version of " + Game.Title + ". This means one of"
+            CENTERPRINT "the following cases is true:"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "You are attempting to load an out of date world"
+            CENTERPRINT ""
+            CENTERPRINT "You are attempting to load a world designed for a newer version of " + Game.Title
+            CENTERPRINT ""
+            CENTERPRINT "Your world manifest is corrupted"
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "Double check the world version and game version."
+            CENTERPRINT "World: (" + mapversion + ") Game: (" + Game.Version + ")"
+            CENTERPRINT ""
+            CENTERPRINT "If you are certain that this is a mistake, you may try to update the manifest"
+            CENTERPRINT "here. Note that this does not update old worlds, just broken manifest files"
+            CENTERPRINT "Otherwise you can try to load a different world. " + Game.Title + ""
+            CENTERPRINT "does not support loading out of version worlds."
+            CENTERPRINT ""
+            CENTERPRINT ""
+            CENTERPRINT "(U)pdate manifest, (R)eturn to existing map, (Q)uit to desktop."
+            Do
+                If KeyDown(113) Then System
+                If KeyDown(114) Then Exit Do
+                If KeyDown(117) Then
+                    Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+                    Put #1, 3, Game.Version
+                    Close #1
+
+                    Exit Do
+
+                End If
+            Loop
+        Case 104
+            CENTERPRINT "No, Landyn. I'm not adding a miku easter egg"
+            CENTERPRINT ""
+            CENTERPRINT "...i guess this is one, you win"
+            CENTERPRINT "_"
+            CENTERPRINT "/   \"
+            CENTERPRINT "/       \"
+            CENTERPRINT "/     o     \"
+            CENTERPRINT "/             \"
+            CENTERPRINT "/_______________\"
+            CENTERPRINT "|                 |"
+            CENTERPRINT "|    HATSUNE      |"
+            CENTERPRINT "|      MIKU       |"
+            CENTERPRINT "|_________________|"
+            CENTERPRINT "/                   \"
+            CENTERPRINT "/                     \"
+            CENTERPRINT "/                       \"
+            CENTERPRINT "/_________________________\"
+            CONTPROMPT
+        Case 105
+            CENTERPRINT "This world is missing files, unable to load world."
+            CENTERPRINT ""
+            CENTERPRINT "This is currently a fatal error, pres (q) to exit to desktop."
+            Do
+                If KeyDown(113) Then System
+            Loop
+
+
+        Case 2
+            CENTERPRINT "Syntax error, READ attempted to read a number but could not parse the next"
+            CENTERPRINT "DATA item."
+            CENTERPRINT ""
+            CONTPROMPT
+        Case 3
+            CENTERPRINT "RETURN without GOSUB, The RETURN statement was encounted without first"
+            CENTERPRINT " executing a corresponding GOSUB."
+            CENTERPRINT ""
+            CONTPROMPT
+        Case 4
+            CENTERPRINT "Out of DATA, The READ statement has read past the end of a DATA block."
+            CENTERPRINT " Use RESTORE to change the current data item if necessary."
+            CENTERPRINT ""
+            CONTPROMPT
+
+        Case 9
+            CENTERPRINT "Subscript out of range, this error occurs when an array exceeds its bounds"
+            CENTERPRINT "This is most likely a programming error, please let the developer know."
+            CENTERPRINT ""
+            CONTPROMPT
+
+
+        Case Else
+            CENTERPRINT "Unrecognized error, contact developers"
+            CONTPROMPT
+
+    End Select
+
+    KeyClear
+    Cls
+End Sub
+
+Sub CONTPROMPT
+    Print
+    Print
+
+    CENTERPRINT "(I)gnore this error and continue anyway, (Q)uit to desktop"
+    Do
+        If KeyDown(113) Then System
+        If KeyDown(105) Then Exit Do
+    Loop
+End Sub
+Sub CENTERPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As _Byte
+    For i = 0 To Int((gamepars.resx / 8 / 2) - (Len(nam$) / 2) - 1)
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
+End Sub
+
+Sub ENDPRINT (nam$)
+    _PrintMode _KeepBackground
+    Dim i As Integer
+    For i = 0 To Int((gamepars.resx / 8) - (Len(nam$))) - 1
+        Print " ";
+    Next
+    _PrintMode _FillBackground
+    Print nam$
+End Sub
+
+

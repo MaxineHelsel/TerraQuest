@@ -3,10 +3,10 @@
 
 'Default variables that are required to be set on initial load
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta 1.2 Edge Build 230708RC1
-Game.Version = "B1.2-230708RC1
-Game.MapProtocol = 1
-Game.ManifestProtocol = 1
+Game.Buildinfo = "(1.2RC1) Network Multiplayer Test 1
+Game.Version = "B1.2-NT1
+Game.MapProtocol = 2
+Game.ManifestProtocol = 2
 Game.Designation = "Edge"
 Game.FCV = 1
 Game.NetPort = 46290
