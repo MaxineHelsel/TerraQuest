@@ -441,7 +441,11 @@ Sub RandomUpdates
             Case 4
                 If LocalTemperature(Rx, Ry) > 0.3 Then
                     'make only target within bounds
-                    If GroundTile(Rx - 1, Ry) = 2 Or GroundTile(Rx + 1, Ry) = 2 Or GroundTile(Rx, Ry - 1) = 2 Or GroundTile(Rx, Ry + 1) = 2 Then GroundTile(Rx, Ry) = 2
+                    If Rx > 0 And Rx < 41 And Ry > 0 And Ry < 31 Then 'to ensure that this doesnt test for out of map tiles
+                        If WallTile(Rx, Ry) = 1 Then 'to ensure there is air above
+                            If GroundTile(Rx - 1, Ry) = 2 Or GroundTile(Rx + 1, Ry) = 2 Or GroundTile(Rx, Ry - 1) = 2 Or GroundTile(Rx, Ry + 1) = 2 Then GroundTile(Rx, Ry) = 2
+                        End If
+                    End If
                 End If
             Case 3
                 If LocalTemperature(Rx, Ry) > 0.3 Then GroundTile(Rx, Ry) = 2
@@ -830,15 +834,18 @@ Sub UseItem (Slot)
             If CurrentTick >= WeaponCooldown Then
                 For i = 1 To CurrentEntities
                     Select Case Player.facing
-                        Case 0, 1 'up down
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 Then DamageEntity (i): Exit Select
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 - 1 Then DamageEntity (i): Exit Select
-                            If FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 And FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 + 1 Then DamageEntity (i): Exit Select
-                        Case 2, 3 'left right
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 Then DamageEntity (i): Exit Select
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 - 1 Then DamageEntity (i): Exit Select
-                            If FacingX = Int(((entity(i, 4) + 8) / 16)) + 1 And FacingY = Int(((entity(i, 5) + 8) / 16)) + 1 + 1 Then DamageEntity (i): Exit Select
+                        Case 1 'down
+                            If entity(i, 4) + 8 > Player.x + 8 - 16 - 8 And entity(i, 4) + 8 < Player.x + 8 + 16 + 8 And entity(i, 5) + 8 > Player.y + 8 + 16 And entity(i, 5) + 8 < Player.y + 8 + 16 + 8 Then DamageEntity (i): Exit Select
+
+                        Case 0 'up
+                            If entity(i, 4) + 8 > Player.x + 8 - 16 - 8 And entity(i, 4) + 8 < Player.x + 8 + 16 + 8 And entity(i, 5) + 8 < Player.y + 8 - 16 And entity(i, 5) + 8 > Player.y + 8 - 16 - 8 Then DamageEntity (i): Exit Select
+                        Case 2 'left
+                            If entity(i, 4) + 8 < Player.x + 8 - 16 And entity(i, 4) + 8 > Player.x + 8 - 16 - 8 And entity(i, 5) + 8 > Player.y + 8 - 16 - 8 And entity(i, 5) + 8 < Player.y + 8 + 16 + 8 Then DamageEntity (i): Exit Select
+                        Case 3 'right
+                            If entity(i, 4) + 8 > Player.x + 8 + 16 And entity(i, 4) + 8 < Player.x + 8 + 16 + 8 And entity(i, 5) + 8 > Player.y + 8 - 16 - 8 And entity(i, 5) + 8 < Player.y + 8 + 16 + 8 Then DamageEntity (i): Exit Select
+
                     End Select
+
                 Next
                 'apply weapon cooldown
                 WeaponCooldown = CurrentTick + Inventory(0, Slot, 5)
@@ -864,7 +871,9 @@ Sub UseItem (Slot)
 
     End Select
 
-
+    For i = 1 To CurrentEntities
+        Print entity(i, 4), entity(i, 5), Player.x, Player.y
+    Next
     If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
         WallTile(FacingX, FacingY) = 1
         UpdateTile FacingX, FacingY
@@ -1353,7 +1362,7 @@ Sub EntityDespawn (id)
     'make sure tile to be set on is air
 
     'set ground item
-    SetGroundItem LootTable(2, entity(id, 0)), LootTable(3, entity(id, 0)), Int(entity(id, 4) / 16) + 1, Int(entity(id, 5) / 16) + 1
+    SetGroundItem LootTable(2, entity(id, 0)), LootTable(3, entity(id, 0)), Int((entity(id, 4) + 8) / 16) + 1, Int((entity(id, 5) + 8) / 16) + 1
 
     'shift all entity data down 1 slot over the dead entiyt data
     For i = id To CurrentEntities
@@ -3674,15 +3683,15 @@ Sub DEV
         Print "Gamemode: ";
         Select Case GameMode
             Case 0
-                Print "Legacy Map Editor"
+                Print "Title Screen"
             Case 1
                 Print "Creative"
             Case 2
                 Print "Survival"
             Case 3
-                Print "Combat"
+                Print "Camera"
             Case 4
-                Print "Hub"
+                Print "Spectator"
         End Select
 
         Print
@@ -5028,10 +5037,12 @@ End Sub
 
 Sub INITIALIZE
     Dim As Byte i, ii, iii
-    ScreenRezX = DesktopWidth
-    ScreenRezY = DesktopHeight
+    'ScreenRezX = DesktopWidth
+    'ScreenRezY = DesktopHeight
+    ScreenRezX = 640
+    ScreenRezY = 480
     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
-    FullScreen SquarePixels
+    ' FullScreen SquarePixels
 
     If DirExists("Assets") Then
         If DirExists("Assets\Sprites") = 0 Then Error 100
