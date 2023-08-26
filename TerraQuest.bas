@@ -19,7 +19,17 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
+Game.Title = "TerraQuest"
+Game.Buildinfo = "Beta 1.2 Edge Build 230724B"
+Game.Version = "B1.2-230724B"
+Game.MapProtocol = 1
+Game.ManifestProtocol = 1
+Game.Designation = "Edge"
+Game.FCV = 1
+Game.NetPort = 46290
 
+Dim Shared RefreshOpt As Byte
+Dim Shared CurrentRefresh As Byte
 
 'parse command line arguments
 Select Case LCase$(Command$)
@@ -127,12 +137,12 @@ Do
         OnTopEffect i
         Effects 0, "", i
     Next
-    SetBG
-    SetMap
-    CastShadow
+    If CurrentRefresh <= 0 Then SetBG
+    If CurrentRefresh <= 0 Then SetMap
+    If CurrentRefresh <= 0 Then CastShadow
     Move
     COLDET (0)
-    RenderEntities (1)
+    If CurrentRefresh <= 0 Then RenderEntities (1)
     Entities (0)
     Entities (1)
     TileTickUpdates
@@ -140,7 +150,7 @@ Do
     DelayUpdates
     SpreadHeat
     Precip2
-    SetLighting
+    If CurrentRefresh <= 0 Then SetLighting
     INTER
     Hud2
     ContainerUpdate
@@ -160,7 +170,14 @@ Do
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
-    If Flag.ScreenRefreshSkip = 0 Then Display
+    If Flag.ScreenRefreshSkip = 0 Then
+        If CurrentRefresh <= 0 Then
+            Display
+            CurrentRefresh = RefreshOpt
+        Else
+            CurrentRefresh = CurrentRefresh - 1
+        End If
+    End If
     Flag.ScreenRefreshSkip = 0
     If Flag.OpenCommand = 1 Then
         DisplayOrder Hardware , Software
@@ -241,7 +258,7 @@ Sub Textbox (Diag, Opt)
                 Case 0
                     CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Disabled"
                 Case 1
-                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Mixed"
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Exclusive"
                 Case 2
                     CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Enabled"
             End Select
@@ -3633,6 +3650,7 @@ Sub DEV
         If RenderMode = 1 Then ENDPRINT "Render Mode: Hardware Exclusive"
         If RenderMode = 2 Then ENDPRINT "Render Mode: Hardware"
         If Game.32Bit = 1 Then ENDPRINT "32-Bit Compatability Mode"
+        If RefreshOpt > 0 Then ENDPRINT "FrameSkip Enabled (" + Str$(RefreshOpt) + " fpf)"
         ENDPRINT "Screen Resolution:" + Str$(ScreenRezX) + " x" + Str$(ScreenRezY)
         Print
         ENDPRINT "Facing tile data:"
@@ -3851,6 +3869,10 @@ Sub DEV
                 Case "day"
                     Locate 28, 1: Print "               "
                     Locate 28, 1: Input "Set Current Day: ", CurrentDay
+
+                Case "fs"
+                    Locate 28, 1: Print "               "
+                    Locate 28, 1: Input "Set Frame Skip Level: ", RefreshOpt
 
 
                 Case "bdtmp"
