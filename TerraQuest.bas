@@ -30,9 +30,12 @@ Game.NetPort = 46290
 
 Dim Shared RefreshOpt As Byte
 Dim Shared CurrentRefresh As Byte
+Dim Shared ForcedWindowed As Byte
 
 'parse command line arguments
 Select Case LCase$(Command$)
+    Case "windowed"
+        ForcedWindowed = 1
     Case "server"
         ServerInit
         ServerLoop
@@ -5078,6 +5081,7 @@ Sub INITIALIZE
     'ScreenRezY = 480
     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
     FullScreen SquarePixels
+    If ForcedWindowed = 1 Then ScreenRezX = 640: ScreenRezY = 480: FullScreen Off
 
     If DirExists("Assets") Then
         If DirExists("Assets\Sprites") = 0 Then Error 100
@@ -5109,7 +5113,7 @@ Sub INITIALIZE
     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
     If Settings.FullScreen = 1 Then FullScreen SquarePixels
     If Settings.FullScreen = 0 Then FullScreen Off
-
+    If ForcedWindowed = 1 Then ScreenRezX = 640: ScreenRezY = 480: FullScreen Off
     Print "Loading Assets"
     OSPROBE
     SwitchRender (DefaultRenderMode)
