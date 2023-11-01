@@ -21,7 +21,7 @@ Title "TerraQuest"
 
 Game.Title = "TerraQuest"
 Game.Buildinfo = "Beta 1.3 Edge Build 231003A"
-Game.Version = "B1.3-231003A"
+Game.Version = "B1.3-231101A"
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -32,6 +32,7 @@ Dim Shared RefreshOpt As Byte
 Dim Shared CurrentRefresh As Byte
 Dim Shared ForcedWindowed As Byte
 
+Dim Shared Flag.FullBright As Unsigned Bit
 'parse command line arguments
 Select Case LCase$(Command$)
     Case "windowed"
@@ -138,6 +139,8 @@ Flag.FadeIn = 1
 Do
     For i = 0 To CurrentEntities
         OnTopEffect i
+        InSideEffect i
+        UnderEffect i
         Effects 0, "", i
     Next
     If CurrentRefresh <= 0 Then SetBG
@@ -891,9 +894,6 @@ Sub UseItem (Slot)
 
     End Select
 
-    For i = 1 To CurrentEntities
-        Print entity(i, 4), entity(i, 5), Player.x, Player.y
-    Next
     If TileData(FacingX, FacingY, 7) = 0 And GroundTile(FacingX, FacingY) = 0 Then
         WallTile(FacingX, FacingY) = 1
         UpdateTile FacingX, FacingY
@@ -2601,6 +2601,25 @@ Sub OnTopEffect (Entity As Single)
         Effects 1, "OnTop " + TileName(GroundTile(Int((posx + 8) / 16) + 1, Int((posy + 8) / 16) + 1), 0), Entity
     End If
 End Sub
+Sub InSideEffect (entity As Single)
+    Dim As Single posx, posy
+    If WithinBounds = 1 Then
+
+        If entity = 0 Then posx = Player.x: posy = Player.y Else posx = entity(entity, 4): posy = entity(entity, 5)
+
+        Effects 1, "Inside " + TileName(WallTile(Int((posx + 8) / 16) + 1, Int((posy + 8) / 16) + 1), 0), entity
+    End If
+End Sub
+Sub UnderEffect (entity As Single)
+    Dim As Single posx, posy
+    If WithinBounds = 1 Then
+
+        If entity = 0 Then posx = Player.x: posy = Player.y Else posx = entity(entity, 4): posy = entity(entity, 5)
+
+        Effects 1, "Under " + TileName(CeilingTile(Int((posx + 8) / 16) + 1, Int((posy + 8) / 16) + 1), 0), entity
+    End If
+End Sub
+
 
 
 
@@ -2676,8 +2695,33 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
                 entity(Entity, 1) = entity(Entity, 1) - Val1
             End If
 
+        Case 11
+            If WallTile(PlayerTileX, PlayerTileY) = 16 Then
+                If Entity = 0 Then
+                    SAVEMAP
+                    CurrentDimension = CurrentDimension + 1
+                    LOADMAP SavedMap
+                    GroundTile(PlayerTileX, PlayerTileY) = 16
+                    UpdateTile PlayerTileX, PlayerTileY
+                    SpreadLight 10
+                    Exit Select
 
 
+                End If
+
+            End If
+            If GroundTile(PlayerTileX, PlayerTileY) = 16 Then
+                If Entity = 0 Then
+                    SAVEMAP
+                    CurrentDimension = CurrentDimension - 1
+                    LOADMAP SavedMap
+                    WallTile(PlayerTileX, PlayerTileY) = 16
+                    UpdateTile PlayerTileX, PlayerTileY
+                    SpreadLight 10
+                    Exit Select
+                End If
+
+            End If
 
 
     End Select
@@ -2783,6 +2827,32 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 3
                     EffectIndex = 7
             End Select
+        Case "OnTop Wooden Ladder"
+            Select Case Value
+                Case 0
+                    EffectIndex = 11 'effectid
+                Case 1
+                    EffectIndex = 2 'frame duration
+                Case 2
+                    EffectIndex = 600 'frame cooldown
+                Case 3
+                    EffectIndex = 0
+
+            End Select
+        Case "Inside Wooden Ladder"
+            Select Case Value
+                Case 0
+                    EffectIndex = 11 'effectid
+                Case 1
+                    EffectIndex = 2 'frame duration
+                Case 2
+                    EffectIndex = 600 'frame cooldown
+                Case 3
+                    EffectIndex = 0
+
+            End Select
+
+
         Case "Consume Red Berries"
             Select Case Value
                 Case 0
@@ -3678,6 +3748,7 @@ Sub DEV
         If Flag.FrameRateLock = 1 Then ENDPRINT "Engine Tickrate Unlocked"
         If Flag.FullRender = 1 Then ENDPRINT "Render Optimizations Disabled"
         If Flag.IsBloodmoon = 1 Then ENDPRINT "Blood Moon is Active"
+        If Flag.FullBright = 1 Then ENDPRINT "Fullbright is Active"
 
 
         Locate 1, 1
@@ -3897,6 +3968,8 @@ Sub DEV
                     Flag.NoClip = Flag.NoClip + 1
                 Case "fullrender", "fr"
                     Flag.FullRender = Flag.FullRender + 1
+                Case "fullbright", "fb"
+                    Flag.FullBright = Flag.FullBright + 1
                 Case "exit"
                     System
                 Case "error"
@@ -5056,7 +5129,7 @@ Sub DayLightCycle
                 GlobalLightLevel = 12 - (((GameTime - 38200) / 1000)) * 2
             End If
         Case 1
-            GlobalLightLevel = 4
+            GlobalLightLevel = 2
             If GameTime > 38200 Then
                 GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
             End If
@@ -5066,10 +5139,11 @@ Sub DayLightCycle
     Select Case CurrentDimension
         Case 0
         Case -1, Is < 0
-            GlobalLightLevel = 3
+            GlobalLightLevel = 0
         Case 1, Is > 0
             GlobalLightLevel = 0
     End Select
+    If Flag.FullBright = 1 Then GlobalLightLevel = 12
 End Sub
 
 
@@ -5670,7 +5744,7 @@ Sub GenerateMap (Dimension As Byte)
                     Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, DimensionSeed)
                         Case Is > 0.73 'connect vshaft to above layer
                             WallTile(ii, i) = 1
-                            CeilingTile(ii, i) = 48
+                            GroundTile(ii, i) = 48
 
 
                         Case Is > 0.69 'lol
@@ -5678,7 +5752,7 @@ Sub GenerateMap (Dimension As Byte)
 
                         Case Is < 0.23 'connect vshaft to above layer
                             WallTile(ii, i) = 14
-                            CeilingTile(ii, i) = 48
+                            GroundTile(ii, i) = 48
 
 
                         Case Is < 0.27 'fill in vshaft

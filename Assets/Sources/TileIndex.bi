@@ -1,4 +1,3 @@
-
 Dim Shared TileIndex(1000, 5)
 Dim Shared TileIndexData(1000, TileParameters) As Single
 Dim Shared ContainerData(1000, 3)
@@ -252,7 +251,7 @@ TileIndex(16, 0) = 0 'layer definition
 TileIndex(16, 1) = 0 'x position on tilesheet
 TileIndex(16, 2) = 16 'y position on tilesheet
 TileIndex(16, 3) = 25 'itemid
-TileIndexData(16, 0) = 1 'collision
+TileIndexData(16, 0) = 0 'collision
 TileIndexData(16, 1) = 0 'casts shadow
 TileIndexData(16, 2) = 1 'blocks shadow
 TileIndexData(16, 3) = 1 'has interior shadow
@@ -385,7 +384,7 @@ TileIndexData(25, 10) = 0.4
 TileIndexData(25, 11) = 1
 
 
-'26 Cave Entrance void (overworld)
+'26 Entrance void (overworld)
 TileName(26, 0) = "Cave Entrance" 'Name of the tile
 TileName(26, 1) = "Placeholder" 'tooltip
 TileIndex(26, 0) = 0 'layer definition
@@ -695,3 +694,6 @@ TileIndexData(48, 6) = 10 'light casts
 '49 Aquifer wall
 
 '50 Respawn Anchor (change name)
+
+'51 wooden ladder wall
+
