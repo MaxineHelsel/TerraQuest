@@ -20,8 +20,8 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta 1.2 Edge Build 230724B"
-Game.Version = "B1.2-230724B"
+Game.Buildinfo = "Beta 1.3 Edge Build 231003A"
+Game.Version = "B1.3-231003A"
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -1844,7 +1844,7 @@ Sub NewContainer (MapX, Mapy, Tilex, Tiley)
     empty = -1
     total = 1
     If DirExists("Assets\Worlds\" + WorldName + "\Containers") = 0 Then MkDir "Assets\Worlds\" + WorldName + "\Containers"
-    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + Str$(CurrentDimension) + ".cdf" As #1
     Put #1, total, ContainerData(containertype, 0): total = total + 1
     Put #1, total, ContainerData(containertype, 1): total = total + 1
     Put #1, total, ContainerData(containertype, 2): total = total + 1
@@ -1863,7 +1863,7 @@ Sub OpenContainer (MapX, Mapy, Tilex, Tiley)
     Dim i, ii, iii, empty
     empty = -1
     total = 1
-    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + Str$(CurrentDimension) + ".cdf" As #1
     Get #1, total, ContainerSizeX: total = total + 1
     Get #1, total, ContainerSizeY: total = total + 1
     Get #1, total, ContainerOTU: total = total + 1
@@ -1882,7 +1882,7 @@ Sub CloseContainer (MapX, Mapy, Tilex, Tiley)
     Dim i, ii, iii, empty
     empty = -1
     total = 1
-    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + ".cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Containers\" + Str$(MapX) + Str$(Mapy) + Str$(Tilex) + Str$(Tiley) + Str$(CurrentDimension) + ".cdf" As #1
     Put #1, total, ContainerSizeX: total = total + 1
     Put #1, total, ContainerSizeY: total = total + 1
     Put #1, total, ContainerOTU: total = total + 1
@@ -3682,7 +3682,7 @@ Sub DEV
         Print
         Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
-        Print "Current World: "; WorldName; " (" + SavedMap + ")";
+        Print "Current World: "; WorldName; " (" + SavedMap + Str$(CurrentDimension) + ")";
         If WorldReadOnly = 1 Then Print "(R/O)"
         If WorldReadOnly = 0 Then Print
         Print "World Seed:"; WorldSeed
@@ -3830,6 +3830,11 @@ Sub DEV
             KeyClear
             Locate 28, 1: Input "Command:", comin
             Select Case comin
+                Case "cd"
+                    SAVEMAP
+                    Locate 28, 1: Print "                 "
+                    Locate 28, 1: Input "Change Dimension to", CurrentDimension
+                    LOADMAP SavedMap
                 Case "teleport", "tp"
                     Locate 28, 1: Print "               "
                     Locate 28, 1: Input "Teleport x: ", Player.x
@@ -4022,7 +4027,7 @@ Sub DEV
                     Locate 28, 1: Input "MapY Cord", DMapY
                     ChangeMap 1, DMapX, DMapY
                 Case "genmap"
-                    GenerateMap
+                    GenerateMap 0
                 Case "masstp"
                     For i = 0 To CurrentEntities
                         entity(i, 4) = Player.x
@@ -4394,7 +4399,7 @@ Sub WorldCommands (CommandString As String)
             Locate 28, 1: Input "MapY Cord", dmapy
             ChangeMap 1, dmapx, dmapy
         Case "genmap"
-            GenerateMap
+            GenerateMap 0
         Case "masstp"
             For i = 0 To CurrentEntities
                 entity(i, 4) = Player.x
@@ -4596,14 +4601,14 @@ Sub LOADMAP (file As String)
     iii = 1
     Print "locating existing map data"
     'TODO make this a sub with 2 parameterss, 1
-    If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf") Then
+    If FileExists("Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + ".cdf") Then
         Print "loading map data"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + ".cdf" As #1
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + ".cdf" As #1
         Get #1, 1, MapProtocol
         Close #1
         If MapProtocol <> Game.MapProtocol Then ConvertMap MapProtocol, file: Exit Sub
         Print "0%"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-0.cdf" As #1
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-0.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
                 Get #1, iii, GroundTile(ii, i)
@@ -4613,7 +4618,7 @@ Sub LOADMAP (file As String)
         Close #1
         iii = 1
         Print "20%"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-1.cdf" As #1
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-1.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
                 Get #1, iii, WallTile(ii, i)
@@ -4624,7 +4629,7 @@ Sub LOADMAP (file As String)
         iii = 1
         Print "40%"
 
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-2.cdf" As #1
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-2.cdf" As #1
         For i = 1 To 30
             For ii = 1 To 40
                 Get #1, iii, CeilingTile(ii, i)
@@ -4635,7 +4640,7 @@ Sub LOADMAP (file As String)
         iii = 1
 
         Print "60%"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-3.cdf" As #1
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-3.cdf" As #1
         Print "61%"
         For i = 1 To 30
             For ii = 1 To 40
@@ -4655,7 +4660,7 @@ Sub LOADMAP (file As String)
         Print "72%"
         iii = 1
         Print "80%"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + "-E.cdf" As #1
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-E.cdf" As #1
         Get #1, 1, CurrentEntities
         iii = iii + 1
         For i = 1 To CurrentEntities
@@ -4671,7 +4676,7 @@ Sub LOADMAP (file As String)
 
 
     Else
-        GenerateMap
+        GenerateMap CurrentDimension
         SAVEMAP
     End If
 
@@ -4847,7 +4852,7 @@ Sub SAVEMAP
     Put #1, 14, CurrentDay
     Put #1, 15, WeatherCountDown
     Put #1, 16, PrecipitationLevel
-
+    Put #1, 17, CurrentDimension
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
@@ -4873,7 +4878,7 @@ Sub SAVEMAP
     Put #1, total, Player.MaxHealth: total = total + 1
     Close #1
     iii = 1
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-0.cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-0.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
             Put #1, iii, GroundTile(ii, i)
@@ -4883,7 +4888,7 @@ Sub SAVEMAP
     Close #1
     iii = 1
 
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-1.cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-1.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
             Put #1, iii, WallTile(ii, i)
@@ -4894,7 +4899,7 @@ Sub SAVEMAP
     iii = 1
 
 
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-2.cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-2.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
             Put #1, iii, CeilingTile(ii, i)
@@ -4905,7 +4910,7 @@ Sub SAVEMAP
     iii = 1
 
 
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-3.cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-3.cdf" As #1
     For i = 1 To 30
         For ii = 1 To 40
             For iiii = 0 To TileParameters
@@ -4918,7 +4923,7 @@ Sub SAVEMAP
     Close #1
     iii = 1
 
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + "-E.cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-E.cdf" As #1
     Put #1, iii, CurrentEntities
     iii = iii + 1
     For i = 1 To CurrentEntities
@@ -4929,7 +4934,7 @@ Sub SAVEMAP
     Next
     Close #1
     iii = 1
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + ".cdf" As #1
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + ".cdf" As #1
     Put #1, 1, Game.MapProtocol
     Close #1
 
@@ -5048,23 +5053,31 @@ Sub DayLightCycle
                 GlobalLightLevel = 12 - (((GameTime - 38200) / 1000)) * 2
             End If
         Case 1
-            GlobalLightLevel = 2
+            GlobalLightLevel = 4
             If GameTime > 38200 Then
                 GlobalLightLevel = 2 + (((GameTime - 38200) / 1000)) * 2
             End If
     End Select
     GlobalLightLevel = GlobalLightLevel - (Int(PrecipitationLevel / 2) * 2)
+    'change global light level based on current dimension
+    Select Case CurrentDimension
+        Case 0
+        Case -1, Is < 0
+            GlobalLightLevel = 3
+        Case 1, Is > 0
+            GlobalLightLevel = 0
+    End Select
 End Sub
 
 
 Sub INITIALIZE
     Dim As Byte i, ii, iii
-    'ScreenRezX = DesktopWidth
-    'ScreenRezY = DesktopHeight
-    ScreenRezX = 640
-    ScreenRezY = 480
+    ScreenRezX = DesktopWidth
+    ScreenRezY = DesktopHeight
+    'ScreenRezX = 640
+    'ScreenRezY = 480
     Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
-    ' FullScreen SquarePixels
+    FullScreen SquarePixels
 
     If DirExists("Assets") Then
         If DirExists("Assets\Sprites") = 0 Then Error 100
@@ -5209,9 +5222,6 @@ Sub ErrorHandler
                 End If
             Loop
         Case 104
-            CENTERPRINT "No, Landyn. I'm not adding a miku easter egg"
-            CENTERPRINT ""
-            CENTERPRINT "...i guess this is one, you win"
             CENTERPRINT "_"
             CENTERPRINT "/   \"
             CENTERPRINT "/       \"
@@ -5433,14 +5443,15 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     SavedMapY = 0
     Player.x = 320
     Player.y = 200
+    CurrentDimension = 0
 
     SAVEMAP 'necessary for at least 1 map to be saved before running generate map, because savemap is also responsible for creating the file structure for the world
-    GenerateMap 'generates -1,0 so that its not just saving a completely empty map
+    GenerateMap 0 'generates -1,0 so that its not just saving a completely empty map
     SAVEMAP 'saves that generated map
 
     Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
         SavedMapX = SavedMapX + 1
-        GenerateMap
+        GenerateMap 0
     Loop Until WallTile(PlayerTileX, PlayerTileY) = 1
 
     SpawnPointX = Player.x
@@ -5454,151 +5465,242 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     LOADWORLD
 End Sub
 
+Function ValidSpawn
 
-Sub GenerateMap
+End Function
+
+Function Cave1DimSeed
+    Cave1DimSeed = Perlin(((SavedMapX * 40)) / Gen.TempScale, ((SavedMapY * 30)) / Gen.TempScale, 0, Perlin((1 + SavedMapX * 40) / Gen.HeightScale, (1 + SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed))
+End Function
+
+Sub GenerateMap (Dimension As Byte)
     Dim i, ii, iii
     Dim PerlinTile As Double
+    Dim DimensionSeed As Double
+
+    Select Case Dimension
+        Case 0
+            'generate overworld
+            For i = 0 To 31
+                For ii = 0 To 41
+
+                    'generate base tiles
+                    GroundTile(ii, i) = 2
+                    TileData(ii, i, 4) = 255
+                    WallTile(ii, i) = 1
+                    TileData(ii, i, 5) = 255
+                    CeilingTile(ii, i) = 1
+                    TileData(ii, i, 6) = 255
 
 
-    'if map is layer 0
-    For i = 0 To 31
-        For ii = 0 To 41
+                    'generate terrain
+                    PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed)
+                    Select Case PerlinTile
 
-            'generate base tiles
-            GroundTile(ii, i) = 2
-            TileData(ii, i, 4) = 255
-            WallTile(ii, i) = 1
-            TileData(ii, i, 5) = 255
-            CeilingTile(ii, i) = 1
-            TileData(ii, i, 6) = 255
-
-
-            'generate terrain
-            PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed)
-            Select Case PerlinTile
-                Case Is < 0.235
-                    GroundTile(ii, i) = 25
-                Case Is < 0.35
-                    GroundTile(ii, i) = 13
-                Case 0.35 To 0.4
-                    GroundTile(ii, i) = 29
-                Case Is > 0.7
-                    GroundTile(ii, i) = 4
-                    WallTile(ii, i) = 28
-
-                Case Is > 0.6
-                    GroundTile(ii, i) = 4
-                    WallTile(ii, i) = 19
-            End Select
-
-            'generate structures
-
-
-        Next
-    Next
-
-    'generate biomes
-    For i = 0 To 31
-        For ii = 0 To 41
-            PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.TempScale, (i + (SavedMapY * 30)) / Gen.TempScale, 0, Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed))
-            Select Case PerlinTile
-
-                Case Is < 0.25
-                    'permafrost (being in this biome will damage you
-                Case 0.25 To 0.35
-                    'snowy
-                    Select Case GroundTile(ii, i)
-                        Case 13
-                            GroundTile(ii, i) = 14
-
-                    End Select
-                Case 0.35 To 0.55
-                    'planes
-                Case 0.55 To 0.65
-                    'forrest
-                    '   Case Is > 0.75
-                    'lava    (needless to say being here will damage you, but even on land
-                Case Is > 0.75
-                    'desert
-                    Select Case GroundTile(ii, i)
-                        Case Is <> 13
+                        Case Is < 0.35
+                            GroundTile(ii, i) = 13
+                        Case 0.35 To 0.4
                             GroundTile(ii, i) = 29
+                        Case Is > 0.7
+                            GroundTile(ii, i) = 4
+                            WallTile(ii, i) = 28
+
+                        Case Is > 0.6
+                            GroundTile(ii, i) = 4
+                            WallTile(ii, i) = 19
+                    End Select
+
+                    'generate structures
+
+
+                Next
+            Next
+
+            'generate biomes
+            For i = 0 To 31
+                For ii = 0 To 41
+                    PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.TempScale, (i + (SavedMapY * 30)) / Gen.TempScale, 0, Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed))
+                    Select Case PerlinTile
+
+                        Case Is < 0.25
+                            'permafrost (being in this biome will damage you
+                        Case 0.25 To 0.35
+                            'snowy
+                            Select Case GroundTile(ii, i)
+                                Case 13
+                                    GroundTile(ii, i) = 14
+
+                            End Select
+                        Case 0.35 To 0.55
+                            'planes
+                        Case 0.55 To 0.65
+                            'forrest
+                            '   Case Is > 0.75
+                            'lava    (needless to say being here will damage you, but even on land
+                        Case Is > 0.75
+                            'desert
+                            Select Case GroundTile(ii, i)
+                                Case Is <> 13
+                                    GroundTile(ii, i) = 29
+                            End Select
+
+
+                    End Select
+
+                Next
+            Next
+
+            'set feature seed
+            Randomize Using Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
+
+            'generate features
+            For i = 0 To 31
+                For ii = 0 To 41
+
+
+                    If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
+
+                        If Ceil(Rnd * 10) = 5 Then
+                            WallTile(ii, i) = 5
+                        End If
+
+                        'generate ground wood items
+                        If Ceil(Rnd * 150) = 50 Then
+                            WallTile(ii, i) = 11
+                            NewContainer SavedMapX, SavedMapY, ii, i
+                            OpenContainer SavedMapX, SavedMapY, ii, i
+                            For iii = 0 To InvParameters
+                                Container(0, 0, iii) = ItemIndex(19, iii)
+                            Next
+                            Container(0, 0, 7) = Ceil(Rnd * 3)
+                            CloseContainer SavedMapX, SavedMapY, ii, i
+                        End If
+
+                        'generate ground Stone items
+                        If Ceil(Rnd * 300) = 50 Then
+                            WallTile(ii, i) = 11
+                            NewContainer SavedMapX, SavedMapY, ii, i
+                            OpenContainer SavedMapX, SavedMapY, ii, i
+                            For iii = 0 To InvParameters
+                                Container(0, 0, iii) = ItemIndex(29, iii)
+                            Next
+                            Container(0, 0, 7) = Ceil(Rnd * 2)
+                            CloseContainer SavedMapX, SavedMapY, ii, i
+                        End If
+
+
+                        'generate berry bushes
+                        If Ceil(Rnd * 250) = 125 Then
+                            WallTile(ii, i) = 12
+                        End If
+
+                        'generate carrots
+                        If Ceil(Rnd * 600) = 300 Then
+                            WallTile(ii, i) = 17
+                        End If
+
+
+                    End If
+
+                    'update set tiles
+                    UpdateTile ii, i
+                Next
+            Next
+            'generate cave entrance
+            For i = 0 To 31
+                For ii = 0 To 41
+
+                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, Cave1DimSeed)
+                        Case Is > 0.73 'connect vshaft to above layer
+                            WallTile(ii, i) = 1
+                            GroundTile(ii, i) = 26
+
+
+                        Case Is > 0.69 'lol
+                            WallTile(ii, i) = 1
+
+
+                        Case Is < 0.23 'connect vshaft to above layer
+                            WallTile(ii, i) = 14
+                            GroundTile(ii, i) = 26
+
+
+                        Case Is < 0.27 'fill in vshaft
+                            WallTile(ii, i) = 1
+
+                    End Select
+
+                Next
+            Next
+            'add a way for generatemap to save to its specific dimension file, and for genmap to actually know what dimension its generating
+            'essentially make genmap have its own saving function or some shit idk
+
+        Case -1 'caves
+
+            'set Cave1 seed
+            DimensionSeed = Cave1DimSeed
+            'generate cave1
+
+            For i = 0 To 31
+                For ii = 0 To 41
+
+                    'generate base tiles
+                    GroundTile(ii, i) = 4 '47
+                    TileData(ii, i, 4) = 255
+                    WallTile(ii, i) = 19
+                    TileData(ii, i, 5) = 255
+                    CeilingTile(ii, i) = 1
+                    TileData(ii, i, 6) = 255
+
+
+                    'generate hShafts
+                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 10, DimensionSeed)
+                        Case 0.27 To 0.3 'low val cave
+                            WallTile(ii, i) = 1
+                        Case 0.5 To 0.56 'high val cave
+                            WallTile(ii, i) = 1
+                    End Select
+
+                    'generate vShafts
+
+                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, DimensionSeed)
+                        Case Is > 0.73 'connect vshaft to above layer
+                            WallTile(ii, i) = 1
+                            CeilingTile(ii, i) = 48
+
+
+                        Case Is > 0.69 'lol
+                            WallTile(ii, i) = 1
+
+                        Case Is < 0.23 'connect vshaft to above layer
+                            WallTile(ii, i) = 14
+                            CeilingTile(ii, i) = 48
+
+
+                        Case Is < 0.27 'fill in vshaft
+                            WallTile(ii, i) = 1
+
                     End Select
 
 
-                    'Case Is < 0.235
-                    '     GroundTile(ii, i) = 25
-                    ' Case Is < 0.35
-                    '    GroundTile(ii, i) = 13
-                    ' Case 0.35 To 0.4
-                    '   GroundTile(ii, i) = 29
-                    ' Case Is > 0.7
-                    '  GroundTile(ii, i) = 4
-                    '  WallTile(ii, i) = 28
 
-                    ' Case Is > 0.6
-                    '  GroundTile(ii, i) = 4
-                    '  WallTile(ii, i) = 19
-            End Select
+                    'generate structures
 
-        Next
-    Next
-
-    'set feature seed
-    Randomize Using Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
-    'generate features
-    For i = 0 To 31
-        For ii = 0 To 41
+                    UpdateTile ii, i
+                Next
+            Next
 
 
-            If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
+            'generate vShaft
+            'connect vShaft to above layer
 
-                If Ceil(Rnd * 10) = 5 Then
-                    WallTile(ii, i) = 5
-                End If
+            'generate hShaft
 
-                'generate ground wood items
-                If Ceil(Rnd * 150) = 50 Then
-                    WallTile(ii, i) = 11
-                    NewContainer SavedMapX, SavedMapY, ii, i
-                    OpenContainer SavedMapX, SavedMapY, ii, i
-                    For iii = 0 To InvParameters
-                        Container(0, 0, iii) = ItemIndex(19, iii)
-                    Next
-                    Container(0, 0, 7) = Ceil(Rnd * 3)
-                    CloseContainer SavedMapX, SavedMapY, ii, i
-                End If
+            'set features
 
-                'generate ground Stone items
-                If Ceil(Rnd * 300) = 50 Then
-                    WallTile(ii, i) = 11
-                    NewContainer SavedMapX, SavedMapY, ii, i
-                    OpenContainer SavedMapX, SavedMapY, ii, i
-                    For iii = 0 To InvParameters
-                        Container(0, 0, iii) = ItemIndex(29, iii)
-                    Next
-                    Container(0, 0, 7) = Ceil(Rnd * 2)
-                    CloseContainer SavedMapX, SavedMapY, ii, i
-                End If
+        Case 1 'aquifer
 
-
-                'generate berry bushes
-                If Ceil(Rnd * 250) = 125 Then
-                    WallTile(ii, i) = 12
-                End If
-
-                'generate carrots
-                If Ceil(Rnd * 600) = 300 Then
-                    WallTile(ii, i) = 17
-                End If
-
-
-            End If
-
-            'update set tiles
-            UpdateTile ii, i
-        Next
-    Next
+    End Select
 End Sub
 
 

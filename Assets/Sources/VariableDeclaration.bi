@@ -19,6 +19,8 @@ Const logparameters = 2
 
 
 
+
+
 Const EntityID = 0
 Const EntityHealth = 1
 Const EntitySpeedMod = 2
@@ -89,6 +91,8 @@ Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
 Dim Shared SavePointY As Single
 dim shared WeatherCountDown As Long
+dim shared CurrentDimension as byte 
+
 
 dim shared Container(20,20,invparameters)
 Dim Shared CursorHoverX, CursorHoverY, CursorHoverPage, CursorSelectedX, CursorSelectedY, CursorSelectedPage, CursorMode
@@ -158,7 +162,6 @@ Dim Shared ImmunityTimer
 Dim Shared CreativePage As Byte
 Dim Shared WorldReadOnly As Byte
 Dim Shared HealthWheelOffset
-dim shared CurrentDimension as byte
 
 Const EntityLimit = 1560
 Const EntityParameters = 20
@@ -266,7 +269,7 @@ Type Character
     lasty As Single
     vx as single
     vy as single
-       name as string
+    name as string
     tile As Byte
     tilefacing As Byte
     facing As Byte
@@ -285,6 +288,8 @@ Type Character
     points As Byte
     experience As Long
     gold As Long
+
+
 
 End Type
 

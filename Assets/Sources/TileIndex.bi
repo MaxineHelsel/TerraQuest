@@ -87,7 +87,7 @@ TileIndex(5, 2) = 0 'y position on tilesheet
 TileIndex(5, 3) = 5 'itemid
 TileIndexData(5, 0) = 1 'collision
 TileIndexData(5, 1) = 0 'casts shadow
-TileIndexData(5, 2) = 1 'blocks shadow
+TileIndexData(5, 2) = 0 'blocks shadow
 TileIndexData(5, 3) = 0 'has interior shadow
 TileIndexData(5, 4) = 10 'resistance
 TileIndexData(5, 5) = 0 'is solid
@@ -101,7 +101,7 @@ TileIndex(6, 2) = 0 'y position on tilesheet
 TileIndex(6, 3) = 6 'itemid
 TileIndexData(6, 0) = 1 'collision
 TileIndexData(6, 1) = 0 'casts shadow
-TileIndexData(6, 2) = 1 'blocks shadow
+TileIndexData(6, 2) = 0 'blocks shadow
 TileIndexData(6, 3) = 0 'has interior shadow
 TileIndexData(6, 4) = 14 'resistance
 TileIndexData(6, 5) = 0 'is solid
@@ -148,7 +148,7 @@ TileIndex(9, 2) = 0 'y position on tilesheet
 TileIndex(9, 3) = 9 'itemid
 TileIndexData(9, 0) = 1 'collision
 TileIndexData(9, 1) = 0 'casts shadow
-TileIndexData(9, 2) = 1 'blocks shadow
+TileIndexData(9, 2) = 0 'blocks shadow
 TileIndexData(9, 3) = 0 'has interior shadow
 TileIndexData(9, 4) = 15 'resistance
 TileIndexData(9, 5) = 0 'is solid
@@ -161,7 +161,7 @@ TileIndex(10, 2) = 0 'y position on tilesheet
 TileIndex(10, 3) = 10 'itemid
 TileIndexData(10, 0) = 1 'collision
 TileIndexData(10, 1) = 0 'casts shadow
-TileIndexData(10, 2) = 1 'blocks shadow
+TileIndexData(10, 2) = 0 'blocks shadow
 TileIndexData(10, 3) = 0 'has interior shadow
 TileIndexData(10, 4) = 15 'resistance
 TileIndexData(10, 5) = 0 'is solid
@@ -194,7 +194,7 @@ TileIndex(12, 2) = 0 'y position on tilesheet
 TileIndex(12, 3) = 20 'itemid
 TileIndexData(12, 0) = 1 'collision
 TileIndexData(12, 1) = 0 'casts shadow
-TileIndexData(12, 2) = 1 'blocks shadow
+TileIndexData(12, 2) = 0 'blocks shadow
 TileIndexData(12, 3) = 0 'has interior shadow
 TileIndexData(12, 4) = 11 'resistance
 TileIndexData(12, 5) = 0 'is solid
@@ -385,23 +385,37 @@ TileIndexData(25, 10) = 0.4
 TileIndexData(25, 11) = 1
 
 
-'26 void
+'26 Cave Entrance void (overworld)
+TileName(26, 0) = "Cave Entrance" 'Name of the tile
+TileName(26, 1) = "Placeholder" 'tooltip
+TileIndex(26, 0) = 0 'layer definition
+TileIndex(26, 1) = 0 'x position on tilesheet
+TileIndex(26, 2) = 0 'y position on tilesheet
+TileIndex(26, 3) = 26 'itemid
+TileIndexData(26, 0) = 1 'collision
+TileIndexData(26, 1) = 0 'casts shadow
+TileIndexData(26, 2) = 0 'blocks shadow
+TileIndexData(26, 3) = 1 'has interior shadow
+TileIndexData(26, 4) = 1000 'resistance
+TileIndexData(26, 5) = 1 'is solid
+
+
 
 '27 Sandstone
-TileName(28, 0) = "Sandstone Wall" 'Name of the tile
-TileName(28, 1) = "Placeholder" 'tooltip
-TileIndex(28, 0) = 1 'layer definition
-TileIndex(28, 1) = 0 'x position on tilesheet
-TileIndex(28, 2) = 32 'y position on tilesheet
-TileIndex(28, 3) = 28 'itemid
-TileIndexData(28, 0) = 1 'collision
-TileIndexData(28, 1) = 1 'casts shadow
-TileIndexData(28, 2) = 1 'blocks shadow
-TileIndexData(28, 3) = 0 'has interior shadow
-TileIndexData(28, 4) = 54 'resistance
-TileIndexData(28, 5) = 1 'is solid
-TileIndexData(28, 14) = 1 'requires pickaxe
-TileIndexData(28, 15) = 1 'has lootpool
+TileName(27, 0) = "Sandstone Wall" 'Name of the tile
+TileName(27, 1) = "Placeholder" 'tooltip
+TileIndex(27, 0) = 1 'layer definition
+TileIndex(27, 1) = 240 'x position on tilesheet
+TileIndex(27, 2) = 16 'y position on tilesheet
+TileIndex(27, 3) = 27 'itemid
+TileIndexData(27, 0) = 1 'collision
+TileIndexData(27, 1) = 1 'casts shadow
+TileIndexData(27, 2) = 1 'blocks shadow
+TileIndexData(27, 3) = 0 'has interior shadow
+TileIndexData(27, 4) = 54 'resistance
+TileIndexData(27, 5) = 1 'is solid
+TileIndexData(27, 14) = 1 'requires pickaxe
+TileIndexData(27, 15) = 1 'has lootpool
 
 '28 Calcite
 TileName(28, 0) = "Calcite Wall" 'Name of the tile
@@ -655,3 +669,29 @@ TileIndexData(44, 4) = 15 'resistance
 TileIndexData(44, 5) = 0 'is solid
 TileIndexData(44, 6) = 8 'light casts
 TileIndexData(44, 16) = -0.08
+
+
+'45 Ground Fire
+
+'46 Wall Fire
+
+'47 Cave Ground
+
+'48 Cave Vertical Shaft Indicator
+TileName(48, 0) = "Cave Exit" 'Name of the tile
+TileName(48, 1) = "Placeholder" 'tooltip
+TileIndex(48, 0) = 2 'layer definition
+TileIndex(48, 1) = 0 'x position on tilesheet
+TileIndex(48, 2) = 0 'y position on tilesheet
+TileIndex(48, 3) = 48 'itemid
+TileIndexData(48, 0) = 0 'collision
+TileIndexData(48, 1) = 0 'casts shadow
+TileIndexData(48, 2) = 0 'blocks shadow
+TileIndexData(48, 3) = 0 'has interior shadow
+TileIndexData(48, 4) = 1000 'resistance
+TileIndexData(48, 5) = 0 'is solid
+TileIndexData(48, 6) = 10 'light casts
+
+'49 Aquifer wall
+
+'50 Respawn Anchor (change name)
