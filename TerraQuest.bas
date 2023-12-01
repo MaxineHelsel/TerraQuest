@@ -20,8 +20,8 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta 1.3 Edge Build 231130A"
-Game.Version = "B1.3-231130A"
+Game.Buildinfo = "Beta 1.3 Edge Build 231130B"
+Game.Version = "B1.3-231130B"
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -31,6 +31,10 @@ Game.NetPort = 46290
 Dim Shared RefreshOpt As Byte
 Dim Shared CurrentRefresh As Byte
 Dim Shared ForcedWindowed As Byte
+
+Dim Shared ScreenShake.Strength As Byte
+Dim Shared ScreenShake.Duration As Integer
+Dim Shared ScreenShake.Remaining As Integer
 
 Dim Shared Flag.FullBright As Unsigned Bit
 'parse command line arguments
@@ -161,6 +165,7 @@ Do
     Hud2
     ContainerUpdate
     ZOOM
+
     DEV
     ChangeMap 0, 0, 0
     DayLightCycle
@@ -194,6 +199,43 @@ Do
 Loop
 
 Error 102
+
+
+Sub ScreenShake
+    Dim Xoffset
+    Dim Yoffset
+    If ScreenShake.Remaining > 0 Then
+        Xoffset = (Rnd * ScreenShake.Strength * 2)
+        CameraPositionX = CameraPositionX + Xoffset - ScreenShake.Strength
+        Yoffset = (Rnd * ScreenShake.Strength * 2)
+        CameraPositionY = CameraPositionY + Yoffset - ScreenShake.Strength
+        ScreenShake.Remaining = ScreenShake.Remaining - Settings.TickRate
+
+    End If
+End Sub
+
+Sub ZOOM
+    If Flag.StillCam = 0 And Flag.FreeCam = 0 Then
+        CameraPositionX = Player.x
+        CameraPositionY = Player.y
+    End If
+
+    If CameraPositionX - (ScreenRezX / 4 / 2) + 8 < 0 Then CameraPositionX = (ScreenRezX / 4 / 2) - 8
+    If CameraPositionY - (ScreenRezY / 4 / 2) + 8 < 0 Then CameraPositionY = (ScreenRezY / 4 / 2) - 8
+    If CameraPositionX + (ScreenRezX / 4 / 2) + 8 > 640 Then CameraPositionX = 640 - ((ScreenRezX / 4 / 2) + 8)
+    If CameraPositionY + (ScreenRezY / 4 / 2) + 8 > 480 Then CameraPositionY = 480 - ((ScreenRezY / 4 / 2) + 8)
+    ScreenShake
+    If Flag.FullCam = 0 Then Window Screen(CameraPositionX - ((ScreenRezX / 4 / 2) - 8), CameraPositionY - ((ScreenRezY / 4 / 2) - 8))-(CameraPositionX + ((ScreenRezX / 4 / 2) + 8), CameraPositionY + ((ScreenRezY / 4 / 2) + 8)) Else Window
+
+End Sub
+
+Sub PlaySound (nam$)
+    Dim sndhnd As Long
+    sndhnd = SndOpen(nam$)
+    SndPlay sndhnd
+End Sub
+
+
 
 Sub ServerInit
     INITIALIZE
@@ -2620,7 +2662,13 @@ Sub UnderEffect (entity As Single)
     End If
 End Sub
 
+Sub DamageBump (Strength As Byte)
+    ScreenShake.Strength = Strength
+    ScreenShake.Remaining = 3
+    ScreenShake
+    ZOOM
 
+End Sub
 
 
 Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
@@ -2628,7 +2676,10 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
     Select Case ID
         Case 1 'Instant Damage
             If Entity = 0 Then
-                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                If GameMode <> 1 And ImmunityTimer = 0 Then
+                    Player.health = Player.health - Val1
+                    DamageBump Val1
+                End If
                 'possibly move damage sound here, and play a different sound for entity??
             Else
                 entity(Entity, 1) = entity(Entity, 1) - Val1
@@ -2655,7 +2706,7 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
         Case 6 'poison
             If Entity = 0 Then
                 HealthWheelOffset = 64
-                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1: DamageBump Val1
             Else
                 entity(Entity, 1) = entity(Entity, 1) - Val1
             End If
@@ -2673,7 +2724,7 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
             End If
         Case 8 'Melee damage
             If Entity = 0 Then
-                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1: DamageBump Val1
                 'possibly move damage sound here, and play a different sound for entity??
             Else
                 entity(Entity, 1) = entity(Entity, 1) - Val1
@@ -2681,7 +2732,7 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
             If ImmunityTimer = 0 Then PlaySound Sounds.damage_melee
         Case 9
             If Entity = 0 Then
-                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1: DamageBump Val1
                 Player.BodyTemp = 2
             Else
                 entity(Entity, 1) = entity(Entity, 1) - Val1
@@ -2689,7 +2740,7 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
 
         Case 10
             If Entity = 0 Then
-                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1
+                If GameMode <> 1 And ImmunityTimer = 0 Then Player.health = Player.health - Val1: DamageBump Val1
                 Player.BodyTemp = 1
             Else
                 entity(Entity, 1) = entity(Entity, 1) - Val1
@@ -2938,6 +2989,8 @@ Sub EffectEnd (EffectID As Integer, EffectSlot As Integer, Entity As Single)
 
     Select Case EffectID
         Case 1
+            '   ScreenShake.Strength = 1
+            '  ScreenShake.Remaining = 5
         Case 2
             If Entity = 0 Then SwimOffset = 0 Else entity(Entity, 17) = 0
         Case 3
@@ -3697,9 +3750,6 @@ Sub COLDET (entity)
 End Sub
 
 
-
-
-
 Sub DEV
     'Exit Sub
     If Flag.DebugMode = 1 Or CurrentTick < 1 Then
@@ -3904,6 +3954,13 @@ Sub DEV
             KeyClear
             Locate 28, 1: Input "Command:", comin
             Select Case comin
+                Case "screenshake", "ss"
+                    Locate 28, 1: Print "                              "
+                    Locate 28, 1: Input "Screen Shake Strength", ScreenShake.Strength
+                    Locate 28, 1: Print "                              "
+                    Locate 28, 1: Input "Screen Shake Duration (Ticks)", ScreenShake.Remaining
+
+
                 Case "cd"
                     SAVEMAP
                     Locate 28, 1: Print "                 "
@@ -5478,26 +5535,6 @@ Sub SwitchRender (mode As Byte)
 
     FirstSkip = 1
 
-End Sub
-
-Sub ZOOM
-    If Flag.StillCam = 0 And Flag.FreeCam = 0 Then
-        CameraPositionX = Player.x
-        CameraPositionY = Player.y
-    End If
-
-    If CameraPositionX - (ScreenRezX / 4 / 2) + 8 < 0 Then CameraPositionX = (ScreenRezX / 4 / 2) - 8
-    If CameraPositionY - (ScreenRezY / 4 / 2) + 8 < 0 Then CameraPositionY = (ScreenRezY / 4 / 2) - 8
-    If CameraPositionX + (ScreenRezX / 4 / 2) + 8 > 640 Then CameraPositionX = 640 - ((ScreenRezX / 4 / 2) + 8)
-    If CameraPositionY + (ScreenRezY / 4 / 2) + 8 > 480 Then CameraPositionY = 480 - ((ScreenRezY / 4 / 2) + 8)
-
-    If Flag.FullCam = 0 Then Window Screen(CameraPositionX - ((ScreenRezX / 4 / 2) - 8), CameraPositionY - ((ScreenRezY / 4 / 2) - 8))-(CameraPositionX + ((ScreenRezX / 4 / 2) + 8), CameraPositionY + ((ScreenRezY / 4 / 2) + 8)) Else Window
-End Sub
-
-Sub PlaySound (nam$)
-    Dim sndhnd As Long
-    sndhnd = SndOpen(nam$)
-    SndPlay sndhnd
 End Sub
 
 
