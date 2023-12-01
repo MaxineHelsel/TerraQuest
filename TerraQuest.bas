@@ -20,8 +20,8 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta 1.3 Edge Build 231101A"
-Game.Version = "B1.3-231101A"
+Game.Buildinfo = "Beta 1.3 Edge Build 231130A"
+Game.Version = "B1.3-231130A"
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
