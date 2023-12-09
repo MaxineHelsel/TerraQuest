@@ -401,7 +401,7 @@ TileIndexData(26, 5) = 1 'is solid
 
 
 '27 Sandstone
-TileName(27, 0) = "Sandstone Wall" 'Name of the tile
+TileName(27, 0) = "Limestone Wall" 'Name of the tile
 TileName(27, 1) = "Placeholder" 'tooltip
 TileIndex(27, 0) = 1 'layer definition
 TileIndex(27, 1) = 240 'x position on tilesheet
@@ -689,7 +689,7 @@ TileIndexData(48, 2) = 0 'blocks shadow
 TileIndexData(48, 3) = 0 'has interior shadow
 TileIndexData(48, 4) = 1000 'resistance
 TileIndexData(48, 5) = 0 'is solid
-TileIndexData(48, 6) = 10 'light casts
+TileIndexData(48, 6) = 5 'light casts
 
 '49 Aquifer wall
 

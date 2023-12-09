@@ -19,9 +19,9 @@ Title "TerraQuest"
 
 '$include: 'Assets\Sources\SplashText.bi'
 
-Game.Title = "TerraQuest"
-Game.Buildinfo = "Beta 1.3 Edge Build 231130B"
-Game.Version = "B1.3-231130B"
+Game.Title = "TerraQuest: Tales of Aetheria"
+Game.Buildinfo = "Beta 1.3 Edge Build 231209A"
+Game.Version = "B1.3-231209A"
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -155,6 +155,7 @@ Do
     If CurrentRefresh <= 0 Then RenderEntities (1)
     Entities (0)
     Entities (1)
+
     TileTickUpdates
     RandomUpdates
     DelayUpdates
@@ -200,6 +201,69 @@ Loop
 
 Error 102
 
+RepeaterOutpost:
+
+Data
+Sub Explosion (Xpos, Ypos, Strength, isIncendiary)
+    Dim DetonationSpread(40, 30) As Byte
+    Dim i, ii As Byte
+    Dim bx, by
+    Dim BlastFactor
+
+    'imma be honest chief, i didnt even know how this worked when i wrote it. good luck if this breaks
+
+    For i = Strength + 1 To 0 Step -1 'iterate for each ring around detonation
+        BlastFactor = i / Strength 'set blast factor
+
+        For bx = -ii To ii
+            For by = -ii To ii
+                If Rnd < BlastFactor Then DetonationSpread(Xpos + bx, Ypos + by) = BlastFactor * 20 * Strength 'set weather tile is exploded and how strong of an exploseion it is
+
+            Next
+        Next
+
+        ii = ii + 1
+    Next
+
+    For i = 1 To 40 'apply the detonation
+        For ii = 1 To 30
+            If TileIndexData(GroundTile(i, ii), 4) < DetonationSpread(i, ii) Then GroundTile(i, ii) = 0
+            If TileIndexData(WallTile(i, ii), 4) < DetonationSpread(i, ii) Then WallTile(i, ii) = 1
+            UpdateTile i, ii
+        Next
+    Next
+    SpreadLight 10
+    ScreenShake.Strength = Strength
+    ScreenShake.Remaining = 60 * ((Strength / 4))
+
+
+
+    'fix so A: knockback is a function that can be used elsewhere. B: blast knockback doesnt require no clip to work. C: doesnt apply when aligned only on one axis
+    If Abs(PlayerTileX - Xpos) < Strength + 3 Then
+        If PlayerTileX > Xpos Then Player.vx = Strength Else Player.vx = -Strength
+    End If
+
+    If Abs(PlayerTileY - Ypos) < Strength + 3 Then
+        If PlayerTileY > Ypos Then Player.vy = Strength Else Player.vy = -Strength
+    End If
+
+    '  Player.vx = 3
+    ' Player.movingx = 1
+
+    'fix so that damage is applied only to entites in blast radius
+    Player.health = Player.health - Strength
+
+End Sub
+
+Function Ray (angle, distance, Ox, Oy, returnVal)
+
+    Select Case returnVal
+        Case 0
+
+        Case 1
+    End Select
+
+End Function
 
 Sub ScreenShake
     Dim Xoffset
@@ -1378,8 +1442,11 @@ Function LootTable (tType As Byte, ID As Integer)
                     LootTable = 116 'sand
                     If Int(Rnd * 400) < 5 Then LootTable = 105 'ruby
                     If Int(Rnd * 400) < 5 Then LootTable = 106 'saphire
-                    If Int(Rnd * 1000) < 3 And CurrentDimension = 3 Then LootTable = 103 'Imbuement Refraction Core
-
+                    If Int(Rnd * 1000) < 3 And CurrentDimension = 1 Then LootTable = 103 'Imbuement Refraction Core
+                Case 27 'limestone
+                    LootTable = 114
+                    If Int(Rnd * 150) < 16 Then LootTable = 42 'titanium
+                    If Int(Rnd * 700) < 5 Then LootTable = 109 'Amethyst
 
             End Select
         Case 2 'mob drops
@@ -2780,6 +2847,14 @@ Sub EffectExecute (ID As Integer, Val1 As Single, Entity As Single)
 
 End Sub
 
+Sub ChangeDimension (NewDim As Byte)
+    SAVEMAP
+    CurrentDimension = NewDim
+    LOADMAP SavedMap
+    UpdateTile PlayerTileX, PlayerTileY
+    SpreadLight 10
+End Sub
+
 Function EffectIndex (Sources As String, Value As Single)
     Select Case Sources
         Case "Temperature Freezing"
@@ -3954,6 +4029,13 @@ Sub DEV
             KeyClear
             Locate 28, 1: Input "Command:", comin
             Select Case comin
+                Case "explode"
+                    Dim testval ,tx,ty
+                    Locate 28, 1: Print "Experimental, use no clip or you may get stuck"
+              Locate 29, 1: Input "Explosion X cord ", tx
+              Locate 29, 1: Input "Explosion Y cord ", ty
+                    Locate 29, 1: Input "Explosion strength ", testval
+                    Explosion tx, ty, testval, 0
                 Case "screenshake", "ss"
                     Locate 28, 1: Print "                              "
                     Locate 28, 1: Input "Screen Shake Strength", ScreenShake.Strength
@@ -5196,7 +5278,7 @@ Sub DayLightCycle
     Select Case CurrentDimension
         Case 0
         Case -1, Is < 0
-            GlobalLightLevel = 0
+            GlobalLightLevel = 2
         Case 1, Is > 0
             GlobalLightLevel = 0
     End Select
@@ -5725,23 +5807,23 @@ Sub GenerateMap (Dimension As Byte)
             For i = 0 To 31
                 For ii = 0 To 41
 
-                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, Cave1DimSeed)
+                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 30, Cave1DimSeed)
                         Case Is > 0.73 'connect vshaft to above layer
-                            WallTile(ii, i) = 1
-                            GroundTile(ii, i) = 26
+                            WallTile(ii, i) = 26
+                            GroundTile(ii, i) = 4
 
 
                         Case Is > 0.69 'lol
-                            WallTile(ii, i) = 1
+                            WallTile(ii, i) = 4
 
 
                         Case Is < 0.23 'connect vshaft to above layer
-                            WallTile(ii, i) = 14
-                            GroundTile(ii, i) = 26
+                            WallTile(ii, i) = 26
+                            GroundTile(ii, i) = 4
 
 
                         Case Is < 0.27 'fill in vshaft
-                            WallTile(ii, i) = 1
+                            WallTile(ii, i) = 4
 
                     End Select
 
@@ -5762,7 +5844,7 @@ Sub GenerateMap (Dimension As Byte)
                     'generate base tiles
                     GroundTile(ii, i) = 4 '47
                     TileData(ii, i, 4) = 255
-                    WallTile(ii, i) = 19
+                    WallTile(ii, i) = 27
                     TileData(ii, i, 5) = 255
                     CeilingTile(ii, i) = 1
                     TileData(ii, i, 6) = 255
@@ -5778,7 +5860,7 @@ Sub GenerateMap (Dimension As Byte)
 
                     'generate vShafts
 
-                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, DimensionSeed)
+                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 30, DimensionSeed)
                         Case Is > 0.73 'connect vshaft to above layer
                             WallTile(ii, i) = 1
                             GroundTile(ii, i) = 48
