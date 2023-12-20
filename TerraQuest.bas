@@ -20,8 +20,8 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 231220A"
-Game.Version = "B1.3-231220A"
+Game.Buildinfo = "Beta 1.3 Edge Build 231220B"
+Game.Version = "B1.3-231220B
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -676,7 +676,7 @@ End Function
 
 
 Sub SpreadHeat
-    Dim As Byte i, ii
+    Dim As Integer i, ii
     Static LagDelay
 
     LagDelay = LagDelay + 1
@@ -692,7 +692,7 @@ Sub SpreadHeat
     SpreadHeat2 (1)
 End Sub
 Sub SpreadHeat2 (updates)
-    Dim As Byte i, ii, iii, iiii
+    Dim As Integer i, ii, iii, iiii
     Static UpdateLimit
     If updates > 0 Then
         updates = 0
@@ -753,7 +753,7 @@ End Sub
 
 Sub SpreadLight (updates)
 
-    Dim As Byte i, ii
+    Dim As Integer i, ii
     For i = 1 To Exp.MapSizeY
         For ii = 1 To Exp.MapSizeX
             LocalLightLevel(ii, i) = TileData(ii, i, 8)
@@ -762,7 +762,7 @@ Sub SpreadLight (updates)
     SpreadLight2 (updates)
 End Sub
 Sub SpreadLight2 (updates)
-    Dim As Byte i, ii, iii, iiii
+    Dim As Integer i, ii, iii, iiii
     Static UpdateLimit
     If updates > 0 Then
         updates = 0
@@ -866,7 +866,7 @@ Sub PrecipOverlay
             If AnimDelay > 3 Then AnimFrame = AnimFrame + 1: AnimDelay = 0
     End Select
     If AnimFrame > 3 Then AnimFrame = 0: AnimDelay = 0
-    Dim i, ii As Byte
+    Dim i, ii As Integer
     AnimDelay = AnimDelay + 1
     If PrecipitationLevel > 0 Then
         For i = 0 To Exp.MapSizeY
@@ -4769,7 +4769,7 @@ End Function
 Sub LOADWORLD
     Print "began loading world"
     Dim defaultmap As String
-    Dim As Byte i, ii
+    Dim As integer i, ii
     Dim As Integer iii
     Dim total
     Dim MapProtocol As Integer
@@ -5062,7 +5062,7 @@ End Sub
 
 
 Sub SAVEMAP
-    Dim i, ii, iiii As Byte
+    Dim i, ii, iiii As Integer
     Dim iii As Integer
     Dim defaultmap As String
     Dim temppw As String
@@ -5202,8 +5202,8 @@ End Sub
 
 Sub CastShadow
     If Flag.CastShadows = 0 Then
-        Dim i As Byte
-        Dim ii As Byte
+        Dim i As Integer
+        Dim ii As Integer
         For i = 1 To Exp.MapSizeY
             For ii = 1 To Exp.MapSizeX
                 If VisibleCheck(ii, i) = 1 Then
@@ -5252,8 +5252,8 @@ End Sub
 
 
 Sub SetLighting
-    Dim i As Byte
-    Dim ii As Byte
+    Dim i As Integer
+    Dim ii As Integer
     Dim TotalLightLevel
     For i = 0 To Exp.MapSizeY + 1
         For ii = 0 To Exp.MapSizeX + 1
