@@ -20,8 +20,8 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 231209A"
-Game.Version = "B1.3-231209A"
+Game.Buildinfo = "Beta 1.3 Edge Build 231220A"
+Game.Version = "B1.3-231220A"
 Game.MapProtocol = 1
 Game.ManifestProtocol = 1
 Game.Designation = "Edge"
@@ -37,8 +37,21 @@ Dim Shared ScreenShake.Duration As Integer
 Dim Shared ScreenShake.Remaining As Integer
 
 Dim Shared Flag.FullBright As Unsigned Bit
+
+Dim Shared Exp.Active As Byte
+Dim Shared Exp.MapSizeX As Integer
+Dim Shared Exp.MapSizeY As Integer
+Dim Shared Exp.ParLen As Integer
+
+Exp.MapSizeX = 40
+Exp.MapSizeY = 30
+Exp.ParLen = 128
 'parse command line arguments
 Select Case LCase$(Command$)
+    Case "experimental"
+        Print Game.Title + " has been launched with experimental mode enabled."
+        Print "Please select which active experiment number you wish to enable"
+        Input "", Exp.Active
     Case "windowed"
         ForcedWindowed = 1
     Case "server"
@@ -51,15 +64,28 @@ Select Case LCase$(Command$)
     Case "software"
         DefaultRenderMode = 0
         Flag.RenderOverride = 1
-    Case "experimental"
-        Flag.ExperimentalFeature = 1
 End Select
 
-Flag.ExperimentalFeature = 0
+If Exp.Active = 2 Then
+    '  Print "ParLen = Number of Parameters 'XYL-3.cdf' ( > X*Y*" + Trim$(Str$(TileParameters)) + ")"
+    Input "MapSizeX", Exp.MapSizeX
+    Input "MapSizeY", Exp.MapSizeY
+    Print Exp.MapSizeX * Exp.MapSizeY
+    Print "Set this to at least 128 for classic sized maps, 256 for custom sizes"
+    Input "ParLen", Exp.ParLen
+End If
+
+Dim Shared GroundTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+Dim Shared WallTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+Dim Shared CeilingTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+Dim Shared TileData(Exp.MapSizeX + 1, Exp.MapSizeY + 1, TileParameters)
+Dim Shared LocalLightLevel(Exp.MapSizeX + 1, Exp.MapSizeY + 1) As Byte
+Dim Shared TileThermalMap(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+
 
 temptitle:
 INITIALIZE
-If Flag.ExperimentalFeature = 0 Then GoTo oldtitle
+If Exp.Active <> 1 Then GoTo oldtitle
 Do
     Dim Selected
     Cls
@@ -106,8 +132,8 @@ Select Case LCase$(InputString)
 
     Case "c"
         NewWorld
-        For i = 0 To 31
-            For ii = 0 To 41
+        For i = 0 To Exp.MapSizeY + 1
+            For ii = 0 To Exp.MapSizeX + 1
                 UpdateTile ii, i
             Next
         Next
@@ -179,6 +205,7 @@ Do
         If TileIndexData(WallTile(FacingX, FacingY), 8) > 0 Then Player.CraftingLevel = TileIndexData(WallTile(FacingX, FacingY), 8) Else Player.CraftingLevel = 2
     End If
 
+    If Exp.Active <> 0 Then Locate 1, 1: CENTERPRINT "EXPERIMENTAL MODE ENABLED (" + Game.Version + "-EX" + Trim$(Str$(Exp.Active)) + "+)"
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
@@ -205,7 +232,7 @@ RepeaterOutpost:
 
 Data
 Sub Explosion (Xpos, Ypos, Strength, isIncendiary)
-    Dim DetonationSpread(40, 30) As Byte
+    Dim DetonationSpread(Exp.MapSizeX, Exp.MapSizeY) As Byte
     Dim i, ii As Byte
     Dim bx, by
     Dim BlastFactor
@@ -225,8 +252,8 @@ Sub Explosion (Xpos, Ypos, Strength, isIncendiary)
         ii = ii + 1
     Next
 
-    For i = 1 To 40 'apply the detonation
-        For ii = 1 To 30
+    For i = 1 To Exp.MapSizeX 'apply the detonation
+        For ii = 1 To Exp.MapSizeY
             If TileIndexData(GroundTile(i, ii), 4) < DetonationSpread(i, ii) Then GroundTile(i, ii) = 0
             If TileIndexData(WallTile(i, ii), 4) < DetonationSpread(i, ii) Then WallTile(i, ii) = 1
             UpdateTile i, ii
@@ -286,8 +313,8 @@ Sub ZOOM
 
     If CameraPositionX - (ScreenRezX / 4 / 2) + 8 < 0 Then CameraPositionX = (ScreenRezX / 4 / 2) - 8
     If CameraPositionY - (ScreenRezY / 4 / 2) + 8 < 0 Then CameraPositionY = (ScreenRezY / 4 / 2) - 8
-    If CameraPositionX + (ScreenRezX / 4 / 2) + 8 > 640 Then CameraPositionX = 640 - ((ScreenRezX / 4 / 2) + 8)
-    If CameraPositionY + (ScreenRezY / 4 / 2) + 8 > 480 Then CameraPositionY = 480 - ((ScreenRezY / 4 / 2) + 8)
+    If CameraPositionX + (ScreenRezX / 4 / 2) + 8 > Exp.MapSizeX * 16 Then CameraPositionX = (Exp.MapSizeX * 16) - ((ScreenRezX / 4 / 2) + 8)
+    If CameraPositionY + (ScreenRezY / 4 / 2) + 8 > Exp.MapSizeY * 16 Then CameraPositionY = (Exp.MapSizeY * 16) - ((ScreenRezY / 4 / 2) + 8)
     ScreenShake
     If Flag.FullCam = 0 Then Window Screen(CameraPositionX - ((ScreenRezX / 4 / 2) - 8), CameraPositionY - ((ScreenRezY / 4 / 2) - 8))-(CameraPositionX + ((ScreenRezX / 4 / 2) + 8), CameraPositionY + ((ScreenRezY / 4 / 2) + 8)) Else Window
 
@@ -494,8 +521,8 @@ End Sub
 Sub TileTickUpdates
     Static WaterDelay
     Dim i, ii
-    For i = 1 To 30
-        For ii = 1 To 40
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             Select Case GroundTile(ii, i)
                 Case 13
                     If GroundTile(ii - 1, i) = 0 Then GroundTile(ii - 1, i) = 13: UpdateTile ii - 1, i
@@ -516,10 +543,10 @@ Sub RandomUpdates
     Static TileCountDown As Long
     Static WaterSpreadCountDown As Long
     Static LongTimeOut As Long
-    Static PriorCheck(40, 30)
+    Static PriorCheck(Exp.MapSizeX + 1, Exp.MapSizeY + 1) As Integer
     Static TileTimeOut
     Dim i, ii
-    Dim Rx, Ry As Byte
+    Dim Rx, Ry As Integer
 
     ' Const EggplantLTB = 0.35
     'weather
@@ -538,12 +565,13 @@ Sub RandomUpdates
         WeatherCountDown = WeatherCountDown - RandomTickRate
     End If
     'tile updates
+    GoTo skipthisshit
     Do
-        Rx = Int(Rnd * 41)
-        Ry = Int(Rnd * 31)
+        Rx = Int(Rnd * Exp.MapSizeX + 1)
+        Ry = Int(Rnd * Exp.MapSizeY + 1)
         If TileTimeOut = 15 Then
-            For ii = 0 To 41
-                For i = 0 To 31
+            For ii = 0 To Exp.MapSizeX + 1
+                For i = 0 To Exp.MapSizeY + 1
                     PriorCheck(ii, i) = 0
                     Exit Do
                 Next
@@ -553,6 +581,7 @@ Sub RandomUpdates
     Loop Until PriorCheck(Rx, Ry) = 0
     PriorCheck(Rx, Ry) = 1
     TileTimeOut = 0
+    skipthisshit:
 
 
     'delayed tile updates
@@ -570,7 +599,7 @@ Sub RandomUpdates
             Case 4
                 If LocalTemperature(Rx, Ry) > 0.3 Then
                     'make only target within bounds
-                    If Rx > 0 And Rx < 41 And Ry > 0 And Ry < 31 Then 'to ensure that this doesnt test for out of map tiles
+                    If Rx > 0 And Rx < Exp.MapSizeX + 1 And Ry > 0 And Ry < Exp.MapSizeY + 1 Then 'to ensure that this doesnt test for out of map tiles
                         If WallTile(Rx, Ry) = 1 Then 'to ensure there is air above
                             If GroundTile(Rx - 1, Ry) = 2 Or GroundTile(Rx + 1, Ry) = 2 Or GroundTile(Rx, Ry - 1) = 2 Or GroundTile(Rx, Ry + 1) = 2 Then GroundTile(Rx, Ry) = 2
                         End If
@@ -617,11 +646,11 @@ Function PlayerTileY
 End Function
 
 Function MapSeed
-    MapSeed = Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
+    MapSeed = Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed)
 End Function
 
 Function BiomeTemperature (Tx, Ty)
-    BiomeTemperature = Perlin((Tx + SavedMapX * 40) / Gen.TempScale, (Ty + SavedMapY * 30) / Gen.TempScale, 0, MapSeed)
+    BiomeTemperature = Perlin((Tx + SavedMapX * Exp.MapSizeX) / Gen.TempScale, (Ty + SavedMapY * Exp.MapSizeY) / Gen.TempScale, 0, MapSeed)
 End Function
 
 Function LocalTemperature (Tx, Ty)
@@ -654,8 +683,8 @@ Sub SpreadHeat
     If LagDelay > 30 Then LagDelay = 0
     If LagDelay <> 15 Then Exit Sub
 
-    For i = 1 To 30
-        For ii = 1 To 40
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             TileThermalMap(ii, i) = 0
             TileThermalMap(ii, i) = TileData(ii, i, 16)
         Next
@@ -667,8 +696,8 @@ Sub SpreadHeat2 (updates)
     Static UpdateLimit
     If updates > 0 Then
         updates = 0
-        For i = 1 To 30
-            For ii = 1 To 40
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
                 iiii = 1
                 iii = 0
 
@@ -725,8 +754,8 @@ End Sub
 Sub SpreadLight (updates)
 
     Dim As Byte i, ii
-    For i = 1 To 30
-        For ii = 1 To 40
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             LocalLightLevel(ii, i) = TileData(ii, i, 8)
         Next
     Next
@@ -737,8 +766,8 @@ Sub SpreadLight2 (updates)
     Static UpdateLimit
     If updates > 0 Then
         updates = 0
-        For i = 1 To 30
-            For ii = 1 To 40
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
                 iiii = 1
                 iii = 0
 
@@ -776,7 +805,7 @@ Sub Precip2
     Static RainDelay As Byte
     Static SnowFrame As Byte
     Static RainFrame As Byte
-    Static LocalTempGrab(40, 30)
+    Static LocalTempGrab(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
     Static TempGrabDelay
 
     Dim i, ii
@@ -798,10 +827,12 @@ Sub Precip2
     If RainFrame > 3 Then RainFrame = 0: RainDelay = 0
     If SnowFrame > 3 Then SnowFrame = 0: SnowDelay = 0
     If PrecipitationLevel > 0 Then
-        For i = 0 To 30
-            For ii = 0 To 40
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
+                GoTo skipthisfuckinshittoo
                 If TempGrabDelay = 0 Then LocalTempGrab(ii, i) = NaturalTemperature(ii, i)
 
+                '  GoTo skipthisfuckinshittoo
                 If VisibleCheck(ii, i) = 1 Then
                     If LocalTempGrab(ii, i) < 0.34 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * SnowFrame), 0)-(15 + (16 * SnowFrame), 15)
@@ -810,7 +841,9 @@ Sub Precip2
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * RainFrame), 0 + 16)-(15 + (16 * RainFrame), 15 + 16)
 
                     End If
+
                 End If
+                skipthisfuckinshittoo:
             Next
         Next
     End If
@@ -836,8 +869,8 @@ Sub PrecipOverlay
     Dim i, ii As Byte
     AnimDelay = AnimDelay + 1
     If PrecipitationLevel > 0 Then
-        For i = 0 To 30
-            For ii = 0 To 40
+        For i = 0 To Exp.MapSizeY
+            For ii = 0 To Exp.MapSizeX
                 If VisibleCheck(ii, i) = 1 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * AnimFrame), 0 + (16 * (PrecipitationLevel - 1)))-(15 + (16 * AnimFrame), 15 + (16 * (PrecipitationLevel - 1)))
                 End If
@@ -1321,9 +1354,9 @@ Sub Entities (Command As Byte)
                 entity(i, 5) = entity(i, 5) + entity(i, 9)
 
                 'make sure entity isnt exceding map boundaries
-                If entity(i, 4) > 640 - 16 Then entity(i, 4) = 640 - 16
+                If entity(i, 4) > (Exp.MapSizeX * 16) - 16 Then entity(i, 4) = (Exp.MapSizeX * 16) - 16
                 If entity(i, 4) < 0 Then entity(i, 4) = 0
-                If entity(i, 5) > 480 - 16 Then entity(i, 5) = 480 - 16
+                If entity(i, 5) > (Exp.MapSizeY * 16) - 16 Then entity(i, 5) = (Exp.MapSizeY * 16) - 16
                 If entity(i, 5) < 0 Then entity(i, 5) = 0
 
                 'check for collisions
@@ -1369,9 +1402,9 @@ Function SummonEntity (ID, Parameter)
                 Case 3 'AI type
                     SummonEntity = 0
                 Case 4 'x cord
-                    SummonEntity = Int(Rnd * 640)
+                    SummonEntity = Int(Rnd * (Exp.MapSizeX * 16))
                 Case 5 'y cord
-                    SummonEntity = Int(Rnd * 480)
+                    SummonEntity = Int(Rnd * (Exp.MapSizeY * 16))
                 Case 6 'current action
                 Case 7 'time left
                 Case 8 'velocity x
@@ -1398,9 +1431,9 @@ Function SummonEntity (ID, Parameter)
                 Case 3 'AI type
                     SummonEntity = 1
                 Case 4 'x cord
-                    SummonEntity = Int(Rnd * 640)
+                    SummonEntity = Int(Rnd * (Exp.MapSizeX * 16))
                 Case 5 'y cord
-                    SummonEntity = Int(Rnd * 480)
+                    SummonEntity = Int(Rnd * (Exp.MapSizeY * 16))
                 Case 6 'current action
                 Case 7 'time left
                 Case 8 'velocity x
@@ -2673,7 +2706,7 @@ Function EntitySheet& (ID)
 End Function
 
 Function WithinBounds
-    If Player.x > 0 And Player.y > 0 And Player.x < 640 - 16 And Player.y < 480 - 16 Then WithinBounds = 1 Else WithinBounds = 0
+    If Player.x > 0 And Player.y > 0 And Player.x < (Exp.MapSizeX * 16) - 16 And Player.y < (Exp.MapSizeY * 16) - 16 Then WithinBounds = 1 Else WithinBounds = 0
 End Function
 
 
@@ -3208,8 +3241,8 @@ Sub Move
     'stops the player from going out of bounds
     If Player.x <= 0 Then Player.x = 0
     If Player.y <= 0 Then Player.y = 0
-    If Player.x >= 640 - 16 Then Player.x = 640 - 16
-    If Player.y >= 480 - 16 Then Player.y = 480 - 16
+    If Player.x >= (Exp.MapSizeX * 16) - 16 Then Player.x = (Exp.MapSizeX * 16) - 16
+    If Player.y >= (Exp.MapSizeY * 16) - 16 Then Player.y = (Exp.MapSizeY * 16) - 16
 
     'self explanitory, but if you must know its to control the camera in freecam mode
     If Flag.FreeCam = 1 Then
@@ -3352,11 +3385,11 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
             Case 0
                 If Player.y <= 0 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 1
-                If Player.y >= 480 - 16 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.y >= (Exp.MapSizeY * 16) - 16 And Player.x = Player.lastx And Player.movingy = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 2
                 If Player.x <= 0 And Player.y = Player.lasty And Player.movingx = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
             Case 3
-                If Player.x >= 640 - 16 And Player.y = Player.lasty And Player.movingx = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
+                If Player.x >= (Exp.MapSizeX * 16) - 16 And Player.y = Player.lasty And Player.movingx = 1 Then TickDelay = TickDelay + Settings.TickRate: TotalDelay = TotalDelay + Settings.TickRate
 
 
         End Select
@@ -3371,7 +3404,7 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
                 Case 0
                     SavedMapY = SavedMapY - 1
                     LOADMAP (SavedMap)
-                    Player.y = 480
+                    Player.y = Exp.MapSizeY * 16
                 Case 1
                     SavedMapY = SavedMapY + 1
                     LOADMAP (SavedMap)
@@ -3379,7 +3412,7 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
                 Case 2
                     SavedMapX = SavedMapX - 1
                     LOADMAP (SavedMap)
-                    Player.x = 640
+                    Player.x = Exp.MapSizeX * 16
                 Case 3
                     SavedMapX = SavedMapX + 1
                     LOADMAP (SavedMap)
@@ -3391,8 +3424,8 @@ Sub ChangeMap (Command, CommandMapX, CommandMapY)
             SavedMapY = CommandMapY
             LOADMAP (SavedMap)
         End If
-        For i = 0 To 31
-            For ii = 0 To 41
+        For i = 0 To Exp.MapSizeY + 1
+            For ii = 0 To Exp.MapSizeX + 1
                 UpdateTile ii, i
             Next
         Next
@@ -3417,12 +3450,7 @@ Sub UpdateTile (TileX, TileY)
     '  TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
     '  TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
     TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
-    For i = 1 To 30
-        For ii = 1 To 40
-            TileData(TileX, TileY, 8) = 0
-        Next
-    Next
-
+    TileData(TileX, TileY, 8) = 0
     If TileIndexData(GroundTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(GroundTile(TileX, TileY), 6)
     If TileIndexData(WallTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(WallTile(TileX, TileY), 6)
     If TileIndexData(CeilingTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(CeilingTile(TileX, TileY), 6)
@@ -3669,13 +3697,13 @@ Sub COLDET (entity)
             If Player.y - 8 <= 0 Then Exit Select
             Player.tilefacing = GroundTile(PlayerTileX, Int((Player.y + 8 - 16) / 16) + 1)
         Case 1
-            If Player.y + 8 + 16 >= 480 Then Exit Select
+            If Player.y + 8 + 16 >= Exp.MapSizeY * 16 Then Exit Select
             Player.tilefacing = GroundTile(PlayerTileX, Int((Player.y + 8 + 16) / 16) + 1)
         Case 2
             If Player.x - 8 <= 0 Then Exit Select
             Player.tilefacing = GroundTile(Int((Player.x + 8 - 16) / 16) + 1, PlayerTileY)
         Case 3
-            If Player.x + 8 + 16 >= 640 Then Exit Select
+            If Player.x + 8 + 16 >= Exp.MapSizeX * 16 Then Exit Select
             Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, PlayerTileY)
     End Select
 
@@ -3852,7 +3880,7 @@ Sub DEV
         ENDPRINT "Screen Resolution:" + Str$(ScreenRezX) + " x" + Str$(ScreenRezY)
         Print
         ENDPRINT "Facing tile data:"
-        If Player.x >= 0 And Player.x <= 640 - 16 And Player.y >= 0 And Player.y <= 480 - 16 Then
+        If Player.x >= 0 And Player.x <= (Exp.MapSizeX * 16) - 16 And Player.y >= 0 And Player.y <= (Exp.MapSizeY * 16) - 16 Then
 
             For i = 0 To TileParameters
                 dummystring = dummystring + Str$(TileData(FacingX, FacingY, i))
@@ -3920,7 +3948,7 @@ Sub DEV
             Case "player", "1"
                 Print "Player"
                 Print "POS:"; Player.x; ","; Player.y; "("; PlayerTileX; ","; PlayerTileY; ")"
-                Print "GlobalPOS"; "("; PlayerTileX + (SavedMapX * 40); ","; PlayerTileY + (SavedMapY * 30); ")"
+                Print "GlobalPOS"; "("; PlayerTileX + (SavedMapX * Exp.MapSizeX); ","; PlayerTileY + (SavedMapY * Exp.MapSizeY); ")"
                 Print "Velocity:"; Player.vx; Player.vy
                 Print "Facing:"; Player.facing
                 Print "Motion:"; Player.movingx; Player.movingy
@@ -4001,13 +4029,13 @@ Sub DEV
                 ' Print entity(1, 4), entity(1, 5), entity(1, 4) / 16, entity(1, 5) / 16
             Case "7"
                 Print "World Data Viewer"
-                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * 40)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 0, WorldSeed))
                 Print "Biome Scale(Current Tile):"; BiomeTemperature((PlayerTileX), (PlayerTileY))
                 Print "Temperature (Biome+SeasonOffset+TOD+TTO):"; LocalTemperature((PlayerTileX), (PlayerTileY))
                 Print "Temperature Factors:"; BiomeTemperature(PlayerTileX, PlayerTileY); ","; SeasonalOffset; ","; TODoffset; ","; TileThermalOffset(PlayerTileX, PlayerTileY)
             Case "7h"
                 Print "World Data Viewer (Human Readable)"
-                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * 40)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed))
+                Print "Height Scale(Current Tile):" + Str$(Perlin((PlayerTileX + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (PlayerTileY + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 0, WorldSeed))
                 Print "Biome Scale(Current Tile):"; BiomeTemperature((PlayerTileX), (PlayerTileY))
                 Print "Temperature (Biome+SeasonOffset+TOD+TTO):"; Int(LocalTemperature((PlayerTileX), (PlayerTileY)) * 100)
                 Print "Temperature Factors:"; Int(BiomeTemperature(PlayerTileX, PlayerTileY) * 100); ","; Int(SeasonalOffset * 100); ","; Int(TODoffset * 100); ","; Int(TileThermalOffset(PlayerTileX, PlayerTileY) * 100)
@@ -4030,10 +4058,10 @@ Sub DEV
             Locate 28, 1: Input "Command:", comin
             Select Case comin
                 Case "explode"
-                    Dim testval ,tx,ty
+                    Dim testval, tx, ty
                     Locate 28, 1: Print "Experimental, use no clip or you may get stuck"
-              Locate 29, 1: Input "Explosion X cord ", tx
-              Locate 29, 1: Input "Explosion Y cord ", ty
+                    Locate 29, 1: Input "Explosion X cord ", tx
+                    Locate 29, 1: Input "Explosion Y cord ", ty
                     Locate 29, 1: Input "Explosion strength ", testval
                     Explosion tx, ty, testval, 0
                 Case "screenshake", "ss"
@@ -4222,8 +4250,8 @@ Sub DEV
                     If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
                     If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
                 Case "updatemap", "um"
-                    For i = 0 To 31
-                        For ii = 0 To 41
+                    For i = 0 To Exp.MapSizeY + 1
+                        For ii = 0 To Exp.MapSizeX + 1
                             UpdateTile ii, i
                         Next
                     Next
@@ -4526,8 +4554,8 @@ Sub WorldCommands (CommandString As String)
                 Next
             Next
         Case "/um", "/updatemap"
-            For i = 0 To 31
-                For ii = 0 To 41
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
                     UpdateTile ii, i
                 Next
             Next
@@ -4808,7 +4836,7 @@ End Sub
 
 
 Sub LOADMAP (file As String)
-    Dim i, ii As Byte
+    Dim i, ii As Integer
     Dim iii As Single
     Dim iiii As Single
     Dim MapProtocol As Integer
@@ -4823,9 +4851,9 @@ Sub LOADMAP (file As String)
         Close #1
         If MapProtocol <> Game.MapProtocol Then ConvertMap MapProtocol, file: Exit Sub
         Print "0%"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-0.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-0.cdf" As #1 Len = Exp.ParLen
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
                 Get #1, iii, GroundTile(ii, i)
                 iii = iii + 1
             Next
@@ -4833,9 +4861,9 @@ Sub LOADMAP (file As String)
         Close #1
         iii = 1
         Print "20%"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-1.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-1.cdf" As #1 Len = Exp.ParLen
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
                 Get #1, iii, WallTile(ii, i)
                 iii = iii + 1
             Next
@@ -4844,9 +4872,9 @@ Sub LOADMAP (file As String)
         iii = 1
         Print "40%"
 
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-2.cdf" As #1
-        For i = 1 To 30
-            For ii = 1 To 40
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-2.cdf" As #1 Len = Exp.ParLen
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
                 Get #1, iii, CeilingTile(ii, i)
                 iii = iii + 1
             Next
@@ -4855,10 +4883,11 @@ Sub LOADMAP (file As String)
         iii = 1
 
         Print "60%"
-        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-3.cdf" As #1
+        Open "Assets\Worlds\" + WorldName + "\Maps\" + file + Str$(CurrentDimension) + "-3.cdf" For Random As #1 Len = Exp.ParLen
         Print "61%"
-        For i = 1 To 30
-            For ii = 1 To 40
+        GoTo skiptiledata
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
                 For iiii = 0 To TileParameters
                     '      Print "61." + Trim$(Str$(iii))
                     Get #1, iii, TileData(ii, i, iiii)
@@ -4868,6 +4897,13 @@ Sub LOADMAP (file As String)
 
             Next
         Next
+        skiptiledata:
+        For i = 0 To Exp.MapSizeX
+            For ii = 0 To Exp.MapSizeY
+                UpdateTile i, ii
+            Next
+        Next
+
         Print "70%"
         Get #1, iii, map.name
         Print "71%"
@@ -5093,9 +5129,9 @@ Sub SAVEMAP
     Put #1, total, Player.MaxHealth: total = total + 1
     Close #1
     iii = 1
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-0.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-0.cdf" As #1 Len = Exp.ParLen
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             Put #1, iii, GroundTile(ii, i)
             iii = iii + 1
         Next
@@ -5103,9 +5139,9 @@ Sub SAVEMAP
     Close #1
     iii = 1
 
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-1.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-1.cdf" As #1 Len = Exp.ParLen
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             Put #1, iii, WallTile(ii, i)
             iii = iii + 1
         Next
@@ -5114,9 +5150,9 @@ Sub SAVEMAP
     iii = 1
 
 
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-2.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-2.cdf" As #1 Len = Exp.ParLen
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             Put #1, iii, CeilingTile(ii, i)
             iii = iii + 1
         Next
@@ -5125,17 +5161,20 @@ Sub SAVEMAP
     iii = 1
 
 
-    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-3.cdf" As #1
-    For i = 1 To 30
-        For ii = 1 To 40
+    Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-3.cdf" For Random As #1 Len = Exp.ParLen
+    GoTo skipparamsave
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             For iiii = 0 To TileParameters
                 Put #1, iii, TileData(ii, i, iiii)
                 iii = iii + 1
             Next
         Next
     Next
+    skipparamsave:
     Put #1, iii, map.name
     Close #1
+
     iii = 1
 
     Open "Assets\Worlds\" + WorldName + "\Maps\" + SavedMap + Str$(CurrentDimension) + "-E.cdf" As #1
@@ -5165,8 +5204,8 @@ Sub CastShadow
     If Flag.CastShadows = 0 Then
         Dim i As Byte
         Dim ii As Byte
-        For i = 1 To 30
-            For ii = 1 To 40
+        For i = 1 To Exp.MapSizeY
+            For ii = 1 To Exp.MapSizeX
                 If VisibleCheck(ii, i) = 1 Then
                     If TileData(ii, i + 1, 1) = 1 And TileData(ii, i, 2) = 0 Then
                         PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (0, 0)-(15, 15)
@@ -5216,8 +5255,8 @@ Sub SetLighting
     Dim i As Byte
     Dim ii As Byte
     Dim TotalLightLevel
-    For i = 0 To 31
-        For ii = 0 To 41
+    For i = 0 To Exp.MapSizeY + 1
+        For ii = 0 To Exp.MapSizeX + 1
 
             If GlobalLightLevel < LocalLightLevel(ii, i) Then
                 TotalLightLevel = LocalLightLevel(ii, i)
@@ -5342,7 +5381,8 @@ Sub FirstRun
     Print
     For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
     Print
-    CENTERPRINT "Please choose a username"
+    Print "Move: WASD | Open Inventory: E | Use Hotbar 1-6 (Inv closed) / Spacebar (Inv open) | Debug: F3"
+    Print "Inventory: Move Cursor: Arrows | Select: ENTER | Cycle Inv Sections: Tab/LShift | Split: \ | Drop: Q"
 End Sub
 
 
@@ -5357,6 +5397,7 @@ Sub ErrorHandler
     Print "Error Code:"; Err
     Locate 2, 1
     ENDPRINT "Error Line:" + Str$(ErrorLine)
+    Print Exp.MapSizeX, Exp.MapSizeY
     Dim i
     For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
     '    Print "--------------------------------------------------------------------------------"
@@ -5542,8 +5583,8 @@ Sub SetBG
     If BGDraw = 0 Then
         Dim i As Integer
         Dim ii As Integer
-        For i = 0 To 30
-            For ii = 0 To 40
+        For i = 0 To Exp.MapSizeY
+            For ii = 0 To Exp.MapSizeX
                 If VisibleCheck(ii, i) = 1 Then
                     PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (16, 0)-(31, 15)
                 End If
@@ -5556,8 +5597,8 @@ End Sub
 Sub SetMap
     Dim i As Integer
     Dim ii As Integer
-    For i = 1 To 30
-        For ii = 1 To 40
+    For i = 1 To Exp.MapSizeY
+        For ii = 1 To Exp.MapSizeX
             If VisibleCheck(ii, i) = 1 Then
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
@@ -5667,7 +5708,7 @@ Function ValidSpawn
 End Function
 
 Function Cave1DimSeed
-    Cave1DimSeed = Perlin(((SavedMapX * 40)) / Gen.TempScale, ((SavedMapY * 30)) / Gen.TempScale, 0, Perlin((1 + SavedMapX * 40) / Gen.HeightScale, (1 + SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed))
+    Cave1DimSeed = Perlin(((SavedMapX * Exp.MapSizeX)) / Gen.TempScale, ((SavedMapY * Exp.MapSizeY)) / Gen.TempScale, 0, Perlin((1 + SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (1 + SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed))
 End Function
 
 Sub GenerateMap (Dimension As Byte)
@@ -5678,8 +5719,8 @@ Sub GenerateMap (Dimension As Byte)
     Select Case Dimension
         Case 0
             'generate overworld
-            For i = 0 To 31
-                For ii = 0 To 41
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
 
                     'generate base tiles
                     GroundTile(ii, i) = 2
@@ -5691,7 +5732,7 @@ Sub GenerateMap (Dimension As Byte)
 
 
                     'generate terrain
-                    PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 0, WorldSeed)
+                    PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 0, WorldSeed)
                     Select Case PerlinTile
 
                         Case Is < 0.35
@@ -5714,9 +5755,9 @@ Sub GenerateMap (Dimension As Byte)
             Next
 
             'generate biomes
-            For i = 0 To 31
-                For ii = 0 To 41
-                    PerlinTile = Perlin((ii + (SavedMapX * 40)) / Gen.TempScale, (i + (SavedMapY * 30)) / Gen.TempScale, 0, Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed))
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+                    PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.TempScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.TempScale, 0, Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed))
                     Select Case PerlinTile
 
                         Case Is < 0.25
@@ -5748,11 +5789,11 @@ Sub GenerateMap (Dimension As Byte)
             Next
 
             'set feature seed
-            Randomize Using Perlin((SavedMapX * 40) / Gen.HeightScale, (SavedMapY * 30) / Gen.HeightScale, 0, WorldSeed)
+            Randomize Using Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed)
 
             'generate features
-            For i = 0 To 31
-                For ii = 0 To 41
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
 
 
                     If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
@@ -5804,10 +5845,10 @@ Sub GenerateMap (Dimension As Byte)
                 Next
             Next
             'generate cave entrance
-            For i = 0 To 31
-                For ii = 0 To 41
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
 
-                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 30, Cave1DimSeed)
+                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 30, Cave1DimSeed)
                         Case Is > 0.73 'connect vshaft to above layer
                             WallTile(ii, i) = 26
                             GroundTile(ii, i) = 4
@@ -5838,8 +5879,8 @@ Sub GenerateMap (Dimension As Byte)
             DimensionSeed = Cave1DimSeed
             'generate cave1
 
-            For i = 0 To 31
-                For ii = 0 To 41
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
 
                     'generate base tiles
                     GroundTile(ii, i) = 4 '47
@@ -5851,7 +5892,7 @@ Sub GenerateMap (Dimension As Byte)
 
 
                     'generate hShafts
-                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 10, DimensionSeed)
+                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY + 1)) / Gen.HeightScale, 10, DimensionSeed)
                         Case 0.27 To 0.3 'low val cave
                             WallTile(ii, i) = 1
                         Case 0.5 To 0.56 'high val cave
@@ -5860,7 +5901,7 @@ Sub GenerateMap (Dimension As Byte)
 
                     'generate vShafts
 
-                    Select Case Perlin((ii + (SavedMapX * 40)) / Gen.HeightScale, (i + (SavedMapY * 30)) / Gen.HeightScale, 30, DimensionSeed)
+                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY + 1)) / Gen.HeightScale, 30, DimensionSeed)
                         Case Is > 0.73 'connect vshaft to above layer
                             WallTile(ii, i) = 1
                             GroundTile(ii, i) = 48

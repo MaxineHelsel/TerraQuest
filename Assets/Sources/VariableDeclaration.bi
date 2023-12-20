@@ -77,15 +77,9 @@ Dim Shared RandomTickRate As Integer
 
 
 
-Dim Shared TileThermalMap(41, 31)
-
 
 
 'Map Variables
-Dim Shared GroundTile(41, 31) As Unsigned Integer
-Dim Shared WallTile(41, 31) As Unsigned Integer
-Dim Shared CeilingTile(41, 31) As Unsigned Integer
-Dim Shared TileData(41, 31, tileparameters) As single
 Dim Shared SpawnPointX As Single
 Dim Shared SpawnPointY As Single
 Dim Shared SavePointX As Single
@@ -116,7 +110,7 @@ Dim Shared WorldName As String
 dim shared WorldSeed as integer64
 
 Dim Shared GlobalLightLevel as byte
-dim shared LocalLightLevel(41,31) as byte
+
 dim shared OverlayLightLevel as byte
 
                                          dim shared GameTime as long
