@@ -20,10 +20,10 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 231220B"
-Game.Version = "B1.3-231220B
-Game.MapProtocol = 1
-Game.ManifestProtocol = 1
+Game.Buildinfo = "Beta 1.3 Edge Build 231231A"
+Game.Version = "B1.3-231231A"
+Game.MapProtocol = 2
+Game.ManifestProtocol = 2
 Game.Designation = "Edge"
 Game.FCV = 1
 Game.NetPort = 46290
@@ -45,7 +45,9 @@ Dim Shared Exp.ParLen As Integer
 
 Exp.MapSizeX = 40
 Exp.MapSizeY = 30
-Exp.ParLen = 128
+Exp.ParLen = 256
+
+
 'parse command line arguments
 Select Case LCase$(Command$)
     Case "experimental"
@@ -71,35 +73,117 @@ If Exp.Active = 2 Then
     Input "MapSizeX", Exp.MapSizeX
     Input "MapSizeY", Exp.MapSizeY
     Print Exp.MapSizeX * Exp.MapSizeY
-    Print "Set this to at least 128 for classic sized maps, 256 for custom sizes"
+    Print "Set this to at least 128 for classic sized maps, 256 or higher for custom sizes"
     Input "ParLen", Exp.ParLen
 End If
 
-Dim Shared GroundTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
-Dim Shared WallTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
-Dim Shared CeilingTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
-Dim Shared TileData(Exp.MapSizeX + 1, Exp.MapSizeY + 1, TileParameters)
-Dim Shared LocalLightLevel(Exp.MapSizeX + 1, Exp.MapSizeY + 1) As Byte
-Dim Shared TileThermalMap(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+ReDim Shared GroundTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+ReDim Shared WallTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+ReDim Shared CeilingTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+ReDim Shared TileData(Exp.MapSizeX + 1, Exp.MapSizeY + 1, TileParameters)
+ReDim Shared LocalLightLevel(Exp.MapSizeX + 1, Exp.MapSizeY + 1) As Byte
+ReDim Shared TileThermalMap(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+
+
+Dim Shared Title.WorldName As String
+Dim Shared Title.MapSize As Unsigned Byte
+Title.MapSize = 50
+
 
 
 temptitle:
 INITIALIZE
 If Exp.Active <> 1 Then GoTo oldtitle
+mainmenu:
 Do
     Dim Selected
     Cls
     Selected = Menu(0)
     Display
     Select Case Selected
-        Case 0
+
         Case 1
-            GoTo oldtitle
+            GoTo createorload
         Case 3
             GoTo Settings
     End Select
 Loop
 Error 102
+createorload:
+Do
+    Cls
+    Selected = Menu(2)
+    Display
+    Select Case Selected
+
+        Case 1
+            GoTo createworldmenu
+        Case 2
+            GoTo loadworldmenu
+        Case 3
+            GoTo mainmenu
+    End Select
+Loop
+
+loadworldmenu:
+Do
+    Cls
+    Input "Please enter a world name to load", WorldName
+    LOADWORLD
+Loop
+
+createworldmenu:
+Do
+    Cls
+    Selected = Menu(3)
+    Display
+    Select Case Selected
+        Case 1
+            While InKey$ <> "": Wend
+            AutoDisplay
+            Input "World Name: ", WorldName
+
+        Case 2
+            While InKey$ <> "": Wend
+            AutoDisplay
+            Input "World Seed: ", WorldSeed
+
+        Case 3
+            While InKey$ <> "": Wend
+            AutoDisplay
+            Input "Map Size: ", Title.MapSize
+
+        Case 4
+            While InKey$ <> "": Wend
+            AutoDisplay
+            GameMode = GameMode + 1
+            If GameMode > 2 Then GameMode = 1
+        Case 5
+            If WorldName = "" Or WorldName = "Worldname cannot be blank!" Then
+                WorldName = "Worldname cannot be blank!"
+                Exit Select
+            End If
+            Exp.MapSizeX = Title.MapSize
+            Exp.MapSizeY = Title.MapSize
+            ChangeMapSize
+            NewWorld
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+                    UpdateTile ii, i
+                Next
+            Next
+            SpreadLight 1
+            GoTo game
+
+
+        Case 6
+            GoTo mainmenu
+    End Select
+    Limit 60
+Loop
+
+
+
 Settings:
 Do
     Cls
@@ -111,7 +195,7 @@ Do
 
         Case 2
         Case 6
-            GoTo oldtitle
+            GoTo mainmenu
     End Select
 Loop
 
@@ -123,7 +207,7 @@ CENTERPRINT "Temporary title screen"
 CENTERPRINT Game.Buildinfo
 Print
 Dim InputString As String
-Input "(L)oad world, (C)reate new world, (H)ost network game, (J)oin network game, (V)iew WIP Title Screen: ", InputString
+Input "(L)oad world, (C)reate new world, (V)iew TitleScreen2.0, (Reboot with 'experimental' flag and choose 1 for TitleScreen3.0)", InputString
 
 Select Case LCase$(InputString)
     Case "l"
@@ -152,7 +236,6 @@ GoTo game
 
 Error 102
 
-
 ERRORHANDLE:
 ErrorHandler
 Resume Next
@@ -167,24 +250,33 @@ If DefaultRenderMode = 2 Then
 End If
 Flag.FadeIn = 1
 Do
+    'Run status effects
     For i = 0 To CurrentEntities
         OnTopEffect i
         InSideEffect i
         UnderEffect i
         Effects 0, "", i
     Next
+
+    'Draw the map
     If CurrentRefresh <= 0 Then SetBG
     If CurrentRefresh <= 0 Then SetMap
     If CurrentRefresh <= 0 Then CastShadow
+
+    'Calculate player and entity movements
     Move
-    COLDET (0)
     If CurrentRefresh <= 0 Then RenderEntities (1)
     Entities (0)
     Entities (1)
 
+    'Colision Detection
+    COLDET (0)
+
+    'Run regular map tile updates
     TileTickUpdates
     RandomUpdates
     DelayUpdates
+
     SpreadHeat
     Precip2
     If CurrentRefresh <= 0 Then SetLighting
@@ -196,16 +288,21 @@ Do
     DEV
     ChangeMap 0, 0, 0
     DayLightCycle
-    MinMemFix
+
     GameChat
 
+    'Bug fixes/hacks
+    MinMemFix
+    ExplosionNoClip 0
+
+    'other shit that the main loop needs to do that im too lazy to put in its own function
     If Player.health <= 0 Then Respawn
     If Flag.FadeIn = 1 Then FadeIn
     If WithinBounds = 1 Then
         If TileIndexData(WallTile(FacingX, FacingY), 8) > 0 Then Player.CraftingLevel = TileIndexData(WallTile(FacingX, FacingY), 8) Else Player.CraftingLevel = 2
     End If
 
-    If Exp.Active <> 0 Then Locate 1, 1: CENTERPRINT "EXPERIMENTAL MODE ENABLED (" + Game.Version + "-EX" + Trim$(Str$(Exp.Active)) + "+)"
+    If Exp.Active <> 0 Then Locate 1, 1: CENTERPRINT "EXPERIMENTAL MODE ENABLED (" + Game.Version + "-EX" + Trim$(Str$(Exp.Active)) + ")"
     KeyPressed = KeyHit
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
@@ -217,20 +314,385 @@ Do
             CurrentRefresh = CurrentRefresh - 1
         End If
     End If
+    ScreenShot
     Flag.ScreenRefreshSkip = 0
     If Flag.OpenCommand = 1 Then
         DisplayOrder Hardware , Software
         Flag.OpenCommand = 2
     End If
     If Flag.OpenCommand = 0 Then DisplayOrder GLRender , Hardware , Software
+
     Cls
 Loop
 
 Error 102
 
+
+'$include: 'Assets\Sources\StructureData.bi'
+
+
+
 RepeaterOutpost:
 
 Data
+
+Sub ScreenShot
+    Static Mode
+    Static PriorRender
+    Static SSName As String
+    If DirExists("Assets\ScreenShots\") = 0 Then MkDir "Assets\ScreenShots\"
+
+    'listen for f2
+    If KeyPressed = 15360 Then
+        Mode = 1
+    End If
+
+    'do this stupid shit become sOmE language developer decided that hardware images dont get saved
+    Select Case Mode
+        Case 1 'software mode makes a sudden comeback
+            Mode = 2
+            PriorRender = RenderMode
+            RenderMode = 0
+            TempRender
+            Exit Select
+        Case 2 'save that bitch
+            SSName = Date$ + "_" + Time$ 'Generate screenshot name
+            SaveImage SSName, , "PNG" ' save screenshot
+            Select Case Game.HostOS 'move screenshot to the screenshots directory, because path in filename doesnt work
+                Case "Linux", "Mac OS"
+                    Shell Hide "mv " + SSName + ".png ./Assets/ScreenShots/"
+                Case "Windows"
+                    Shell Hide "move " + SSName + ".png .\Assets\ScreenShots\"
+            End Select
+            Mode = 3
+        Case 3 'put shit back the way its supposed to be
+            RenderMode = PriorRender
+            TempRender
+            Mode = 0
+    End Select
+End Sub
+
+Sub GenerateMap (Dimension As Byte)
+    Dim i, ii, iii
+    Dim PerlinTile As Double
+    Dim DimensionSeed As Double
+
+    Select Case Dimension
+        Case 0
+            'generate overworld
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+
+                    'generate base tiles
+                    GroundTile(ii, i) = 2
+                    TileData(ii, i, 4) = 255
+                    WallTile(ii, i) = 1
+                    TileData(ii, i, 5) = 255
+                    CeilingTile(ii, i) = 1
+                    TileData(ii, i, 6) = 255
+
+
+                    'generate terrain
+                    PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 0, WorldSeed)
+                    Select Case PerlinTile
+
+                        Case Is < 0.35
+                            GroundTile(ii, i) = 13
+                        Case 0.35 To 0.4
+                            GroundTile(ii, i) = 29
+                        Case Is > 0.7
+                            GroundTile(ii, i) = 4
+                            WallTile(ii, i) = 28
+
+                        Case Is > 0.6
+                            GroundTile(ii, i) = 4
+                            WallTile(ii, i) = 19
+                    End Select
+
+                    'generate structures
+
+
+                Next
+            Next
+
+            'generate biomes
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+                    PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.TempScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.TempScale, 0, Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed))
+                    Select Case PerlinTile
+
+                        Case Is < 0.25
+                            'permafrost (being in this biome will damage you
+                        Case 0.25 To 0.35
+                            'snowy
+                            Select Case GroundTile(ii, i)
+                                Case 13
+                                    GroundTile(ii, i) = 14
+
+                            End Select
+                        Case 0.35 To 0.55
+                            'planes
+                        Case 0.55 To 0.65
+                            'forrest
+                            '   Case Is > 0.75
+                            'lava    (needless to say being here will damage you, but even on land
+                        Case Is > 0.75
+                            'desert
+                            Select Case GroundTile(ii, i)
+                                Case Is <> 13
+                                    GroundTile(ii, i) = 29
+                            End Select
+
+
+                    End Select
+
+                Next
+            Next
+
+            'set feature seed
+            Randomize Using Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed)
+
+            'generate features
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+
+
+                    If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
+
+                        If Ceil(Rnd * 10) = 5 Then
+                            WallTile(ii, i) = 5
+                        End If
+
+                        'generate ground wood items
+                        If Ceil(Rnd * 150) = 50 Then
+                            WallTile(ii, i) = 11
+                            NewContainer SavedMapX, SavedMapY, ii, i
+                            OpenContainer SavedMapX, SavedMapY, ii, i
+                            For iii = 0 To InvParameters
+                                Container(0, 0, iii) = ItemIndex(19, iii)
+                            Next
+                            Container(0, 0, 7) = Ceil(Rnd * 3)
+                            CloseContainer SavedMapX, SavedMapY, ii, i
+                        End If
+
+                        'generate ground Stone items
+                        If Ceil(Rnd * 300) = 50 Then
+                            WallTile(ii, i) = 11
+                            NewContainer SavedMapX, SavedMapY, ii, i
+                            OpenContainer SavedMapX, SavedMapY, ii, i
+                            For iii = 0 To InvParameters
+                                Container(0, 0, iii) = ItemIndex(29, iii)
+                            Next
+                            Container(0, 0, 7) = Ceil(Rnd * 2)
+                            CloseContainer SavedMapX, SavedMapY, ii, i
+                        End If
+
+
+                        'generate berry bushes
+                        If Ceil(Rnd * 250) = 125 Then
+                            WallTile(ii, i) = 12
+                        End If
+
+                        'generate carrots
+                        If Ceil(Rnd * 600) = 300 Then
+                            WallTile(ii, i) = 17
+                        End If
+
+
+                    End If
+
+                    'update set tiles
+                    UpdateTile ii, i
+                Next
+            Next
+
+            If Rnd * 500 < 5 Then GenerateStructure "TestStructure"
+
+            'generate cave entrance
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+
+                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 30, Cave1DimSeed)
+                        Case Is > 0.73 'connect vshaft to above layer
+                            WallTile(ii, i) = 26
+                            GroundTile(ii, i) = 4
+
+
+
+                        Case Is < 0.23 'connect vshaft to above layer
+                            WallTile(ii, i) = 26
+                            GroundTile(ii, i) = 4
+
+
+
+                    End Select
+
+                Next
+            Next
+            'add a way for generatemap to save to its specific dimension file, and for genmap to actually know what dimension its generating
+            'essentially make genmap have its own saving function or some shit idk
+
+        Case -1 'caves
+
+            'set Cave1 seed
+            DimensionSeed = Cave1DimSeed
+            'generate cave1
+
+            For i = 0 To Exp.MapSizeY + 1
+                For ii = 0 To Exp.MapSizeX + 1
+
+                    'generate base tiles
+                    GroundTile(ii, i) = 4 '47
+                    TileData(ii, i, 4) = 255
+                    WallTile(ii, i) = 27
+                    TileData(ii, i, 5) = 255
+                    CeilingTile(ii, i) = 1
+                    TileData(ii, i, 6) = 255
+
+
+                    'generate hShafts
+                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY + 1)) / Gen.HeightScale, 10, DimensionSeed)
+                        Case 0.27 To 0.3 'low val cave
+                            WallTile(ii, i) = 1
+                        Case 0.5 To 0.56 'high val cave
+                            WallTile(ii, i) = 1
+                    End Select
+
+                    'generate vShafts
+
+                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY + 1)) / Gen.HeightScale, 30, DimensionSeed)
+                        Case Is > 0.73 'connect vshaft to above layer
+                            WallTile(ii, i) = 1
+                            GroundTile(ii, i) = 48
+
+
+                        Case Is > 0.69 'lol
+                            WallTile(ii, i) = 1
+
+                        Case Is < 0.23 'connect vshaft to above layer
+                            WallTile(ii, i) = 1
+                            GroundTile(ii, i) = 48
+
+
+                        Case Is < 0.27 'fill in vshaft
+                            WallTile(ii, i) = 1
+
+                    End Select
+
+
+
+                    'generate structures
+
+                    UpdateTile ii, i
+                Next
+            Next
+
+
+            'generate vShaft
+            'connect vShaft to above layer
+
+            'generate hShaft
+
+            'set features
+
+        Case 1 'aquifer
+
+    End Select
+End Sub
+
+Sub GenerateStructure (StructName As String)
+
+
+    'generate test structure
+    Dim StructSizeX
+    Dim StructSizeY
+    Dim StructStartX
+    Dim StructStartY
+    Dim TileBK
+    Dim i, ii
+
+    Select Case StructName
+        Case "TestStructure"
+            StructSizeX = 4
+            StructSizeY = 4
+            Restore TestStructure
+
+    End Select
+
+
+    StructStartX = Int(Rnd * (Exp.MapSizeX - StructSizeX)) + 1
+    StructStartY = Int(Rnd * (Exp.MapSizeY - StructSizeY)) + 1
+
+    'ground
+    For ii = StructStartY To StructStartY + StructSizeY
+        For i = StructStartX To StructStartX + StructSizeX
+            TileBK = GroundTile(i, ii)
+            Read GroundTile(i, ii)
+            If GroundTile(i, ii) = -1 Then GroundTile(i, ii) = TileBK
+        Next
+    Next
+
+    'wall
+    For ii = StructStartY To StructStartY + StructSizeY
+        For i = StructStartX To StructStartX + StructSizeX
+            TileBK = GroundTile(i, ii)
+            Read WallTile(i, ii)
+            If GroundTile(i, ii) = -1 Then GroundTile(i, ii) = TileBK
+        Next
+    Next
+
+    'ceil
+
+    'wall containers
+    Dim LootName As String
+    For ii = StructStartY To StructStartY + StructSizeY
+        For i = StructStartX To StructStartX + StructSizeX
+            If TileIndexData(WallTile(i, ii), 7) = 1 Then
+                NewContainer SavedMapX, SavedMapY, i, ii
+                OpenContainer SavedMapX, SavedMapY, i, ii
+                Read LootName
+                ChestLoot LootName
+                CloseContainer SavedMapX, SavedMapY, i, ii
+            End If
+        Next
+    Next
+
+
+    '  End If
+End Sub
+
+
+
+Sub ChestLoot (Table As String)
+    Dim iii
+    Select Case Table
+        Case "TestStructure-Chest"
+            For iii = 0 To InvParameters
+                Container(0, 0, iii) = ItemIndex(24, iii) 'health wheel
+            Next
+            Container(0, 0, 7) = 1
+            For iii = 0 To InvParameters
+                Container(1, 0, iii) = ItemIndex(104, iii) 'AES
+            Next
+            Container(0, 1, 7) = 1
+            For iii = 0 To InvParameters
+                Container(2, 0, iii) = ItemIndex(37, iii) 'Eggplant seeds
+            Next
+            Container(0, 2, 7) = 3
+
+
+    End Select
+End Sub
+
+Sub ChangeMapSize
+    ReDim GroundTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+    ReDim WallTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+    ReDim CeilingTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+    ReDim TileData(Exp.MapSizeX + 1, Exp.MapSizeY + 1, TileParameters)
+    ReDim LocalLightLevel(Exp.MapSizeX + 1, Exp.MapSizeY + 1) As Byte
+    ReDim TileThermalMap(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
+End Sub
+
 Sub Explosion (Xpos, Ypos, Strength, isIncendiary)
     Dim DetonationSpread(Exp.MapSizeX, Exp.MapSizeY) As Byte
     Dim i, ii As Byte
@@ -278,8 +740,33 @@ Sub Explosion (Xpos, Ypos, Strength, isIncendiary)
     ' Player.movingx = 1
 
     'fix so that damage is applied only to entites in blast radius
-    Player.health = Player.health - Strength
+    If Player.x > Xpos - Strength And Player.x < Xpos + Strength Then
+        If Player.y > Ypos - Strength And Player.y < Ypos + Strength Then
+            Player.health = Player.health - Strength
+            ExplosionNoClip 1
+        End If
+    End If
+    ExplosionNoClip 1
 
+End Sub
+
+Sub ExplosionNoClip (mode)
+    'bro im writing this after waking up from a 350mg edible, i pray to richard stallman himself that this works
+    Static isActive
+    Select Case mode
+        Case 1
+            isActive = 1
+        Case 0
+            If isActive = 2 Then
+                Flag.NoClip = 0
+                isActive = 0
+            End If
+            If isActive = 1 Then
+                Flag.NoClip = 1
+
+                If GroundTile(PlayerTileX, PlayerTileY) <> 0 And WallTile(PlayerTileX, PlayerTileY) = 1 Then isActive = 2
+            End If
+    End Select
 End Sub
 
 Function Ray (angle, distance, Ox, Oy, returnVal)
@@ -397,7 +884,7 @@ Sub Textbox (Diag, Opt)
                 Case 0
                     CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Disabled"
                 Case 1
-                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Exclusive"
+                    CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Exclusive "
                 Case 2
                     CENTERPRINT DiagSel(2, Opt) + "Hardware Accelerated Rendering: Enabled"
             End Select
@@ -411,7 +898,39 @@ Sub Textbox (Diag, Opt)
             Print
             Print
             CENTERPRINT DiagSel(6, Opt) + "Main Menu"
+        Case 2
+            CENTERPRINT DiagSel(1, Opt) + "Create World"
+            Print
+            CENTERPRINT DiagSel(2, Opt) + "Load World"
+            Print
+            Print
+            Print
+            CENTERPRINT DiagSel(3, Opt) + "Go Back"
 
+        Case 3
+            CENTERPRINT DiagSel(1, Opt) + "World Name: " + WorldName
+            Print
+            If WorldSeed = 0 Then
+                CENTERPRINT DiagSel(2, Opt) + "World Seed: Random"
+            Else
+                CENTERPRINT DiagSel(2, Opt) + "World Seed: " + Trim$(Str$(WorldSeed))
+            End If
+            Print
+            CENTERPRINT DiagSel(3, Opt) + "Map Size: " + Trim$(Str$(Title.MapSize))
+            Print
+            If GameMode = 1 Then
+                CENTERPRINT DiagSel(4, Opt) + "Game Mode: Creative"
+            ElseIf GameMode = 2 Then
+                CENTERPRINT DiagSel(4, Opt) + "Game Mode: Survival"
+            Else
+                CENTERPRINT DiagSel(4, Opt) + "Game Mode: " + Trim$(Str$(GameMode))
+            End If
+            Print
+            Print
+            Print
+            CENTERPRINT DiagSel(5, Opt) + "Create World"
+            Print
+            CENTERPRINT DiagSel(6, Opt) + "Go Back"
 
 
     End Select
@@ -447,6 +966,7 @@ End Function
 
 Function Menu (MenuNum)
     Static HighlightedOption
+
     Dim i
     Dim OptCount
     Menu = 0
@@ -461,7 +981,7 @@ Function Menu (MenuNum)
             'put title screen icon
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
-            CENTERPRINT "Terraquest " + Game.Buildinfo
+            CENTERPRINT Game.Title + " " + Game.Buildinfo
             'put splash text
             'Draw Options buttons
 
@@ -471,14 +991,36 @@ Function Menu (MenuNum)
             'put title screen icon
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
-            CENTERPRINT "Terraquest " + Game.Buildinfo
+            CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
             CENTERPRINT "Settings"
             'put splash text
             'Draw Options buttons
 
             Textbox 1, HighlightedOption
-            OptCount = 5
+            OptCount = 6
+        Case 2
+            'put title screen icon
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT Game.Title + " " + Game.Buildinfo
+            Print
+            CENTERPRINT "Single Player"
+            'put splash text
+            'Draw Options buttons
+
+            Textbox 2, HighlightedOption
+            OptCount = 3
+        Case 3
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT Game.Title + " " + Game.Buildinfo
+            Print
+            CENTERPRINT "Single Player"
+            Textbox 3, HighlightedOption
+            OptCount = 6
+
+
 
     End Select
     'check for key input if options is more than 1
@@ -567,8 +1109,8 @@ Sub RandomUpdates
     'tile updates
     GoTo skipthisshit
     Do
-        Rx = Int(Rnd * Exp.MapSizeX + 1)
-        Ry = Int(Rnd * Exp.MapSizeY + 1)
+        Rx = Int(Rnd * Exp.MapSizeX) + 1
+        Ry = Int(Rnd * Exp.MapSizeY) + 1
         If TileTimeOut = 15 Then
             For ii = 0 To Exp.MapSizeX + 1
                 For i = 0 To Exp.MapSizeY + 1
@@ -578,7 +1120,8 @@ Sub RandomUpdates
             Next
         End If
         TileTimeOut = TileTimeOut + 1
-    Loop Until PriorCheck(Rx, Ry) = 0
+
+    Loop Until PriorCheck(Rx, Ry) = 0 'BRUH. WHY THE F U C K IS THIS CAUSING A SUBSCRIPT OUT OF RANGE, IT IS DEFINATELY WITHIN RANGE
     PriorCheck(Rx, Ry) = 1
     TileTimeOut = 0
     skipthisshit:
@@ -610,7 +1153,6 @@ Sub RandomUpdates
         End Select
         LongTimeOut = 500
     End If
-
 
     'quick tile updates
 
@@ -1230,25 +1772,80 @@ Sub SpawnEntity (EntityID)
 
 End Sub
 
+Function ValidSpawn (TileX, TileY)
+    TileX = (Int((TileX + 8) / 16) + 1)
+    TileY = (Int((TileY + 8) / 16) + 1)
+    ValidSpawn = 1
+    If GroundTile(TileX, TileY) = 0 Then ValidSpawn = 0
+    If GroundTile(TileX, TileY) = 13 Then ValidSpawn = 0
+    If WallTile(TileX, TileY) <> 1 Then ValidSpawn = 0
+    If LocalTemperature(TileX, TileY) < 0 Or LocalTemperature(TileX, TileY) > 1 Then ValidSpawn = 0
+End Function
+
 Sub Entities (Command As Byte)
     Randomize Timer
     Dim i, ii
+    Dim EntX, EntY
+    Dim SpawnRetry
     Static EntityDespawnOffset
     Select Case Command
         Case 0 'attempt to summon
 
-            For i = 1 To CurrentEntities
-                If Flag.DebugMode = 2 Then
-                    Print "Entity: "; i;
-                    For ii = 0 To EntityParameters
-                        Print entity(i, ii);
-                    Next
-                    Print "DESPAWN:"; entity(i, 15);
-                    Print
-                End If
+            Select Case CurrentDimension
+                Case 0 'overworld
+                    Select Case TimeMode 'check if its day or night
+                        Case 0 'day
+                            Select Case Ceil(Rnd * 1000000)
+                                Case 0 To 2000 'pig
+                                    Do 're roll if needed, if need more than 100 times, give up
+                                        EntX = Int(Rnd * (Exp.MapSizeX * 16)): EntY = Int(Rnd * (Exp.MapSizeY * 16)) 'OKAY, THIS SETS THE ENTITY POS AT PIXEL POSITION
+                                        SpawnRetry = SpawnRetry + 1
+                                        If SpawnRetry > 100 Then Exit Select
+                                    Loop While ValidSpawn(EntX, EntY) = 0 'CHECKS FOR SPAWN VALIDITY... AGAIN ON THE PIXEL SCALE
 
-            Next
+                                    SpawnEntity (1) 'spawn it and move to valid spawn
+                                    'AND YET... FOR SOME REASON.... THIS SEEMS TO BE ACTING ON TILE SCALE
+                                    entity(CurrentEntities, 4) = EntX * 16 'either im stoned as fuck rn, or this should not need to be multiplied by 16
+                                    entity(CurrentEntities, 5) = EntY * 16 'but birds keep spawning in top left only
 
+                            End Select
+                        Case 1
+                            Select Case Ceil(Rnd * 1000000)
+                                Case 0 To 2000 'zombie
+                                    Do 're roll if needed, if need more than 100 times, give up
+                                        EntX = Int(Rnd * (Exp.MapSizeX * 16)): EntY = Int(Rnd * (Exp.MapSizeY * 16))
+                                        SpawnRetry = SpawnRetry + 1
+                                        If SpawnRetry > 100 Then Exit Select
+                                    Loop While ValidSpawn(EntX, EntY) = 0
+
+                                    SpawnEntity (2) 'spawn it and move to valid spawn
+                                    entity(CurrentEntities, 4) = EntX * 16
+                                    entity(CurrentEntities, 5) = EntY * 16
+                                Case 2001 To 4000 'bloodmood zombie
+                                    If Flag.IsBloodmoon = 1 Then
+                                        Do 're roll if needed, if need more than 100 times, give up
+                                            EntX = Int(Rnd * (Exp.MapSizeX * 16)): EntY = Int(Rnd * (Exp.MapSizeY * 16))
+                                            SpawnRetry = SpawnRetry + 1
+                                            If SpawnRetry > 100 Then Exit Select
+                                        Loop While ValidSpawn(EntX, EntY) = 0
+
+                                        SpawnEntity (2) 'spawn it and move to valid spawn
+                                        entity(CurrentEntities, 4) = EntX * 16
+                                        entity(CurrentEntities, 5) = EntY * 16
+                                    End If
+                            End Select
+
+                    End Select
+                Case -1
+            End Select
+
+            'something something fucky wucky with the spawn cord jumping between pixel and tile precision fix errors uwu
+            If entity(CurrentEntities, 4) > (Exp.MapSizeX * 16) - 16 Then entity(CurrentEntities, 4) = (Exp.MapSizeX * 16) - 16
+            If entity(CurrentEntities, 4) < 0 Then entity(CurrentEntities, 4) = 0
+            If entity(CurrentEntities, 5) > (Exp.MapSizeY * 16) - 16 Then entity(CurrentEntities, 5) = (Exp.MapSizeY * 16) - 16
+            If entity(CurrentEntities, 5) < 0 Then entity(CurrentEntities, 5) = 0
+
+            GoTo skipoldspawn
             Select Case TimeMode
                 Case 0 'day time
                     Select Case Ceil(Rnd * 100000)
@@ -1272,6 +1869,7 @@ Sub Entities (Command As Byte)
                     End Select
 
             End Select
+            skipoldspawn:
             'check if entity is inside of a tile, if so, then either retry or un summon
 
         Case 1 'Calculate Entity Shit (For all entities on current map
@@ -3471,6 +4069,7 @@ Sub Alert (img, message As String)
     If timeout < 60 Then Alert img, message Else timeout = 0
 End Sub
 
+
 Sub INTER
     Select Case KeyPressed
         Case 15616
@@ -3481,6 +4080,7 @@ Sub INTER
             Flag.InventoryOpen = Flag.InventoryOpen + 1
         Case 27
             PauseMenu
+
 
     End Select
 End Sub
@@ -3691,6 +4291,7 @@ Sub COLDET (entity)
 
     End If
 
+    GoTo aparentlyUnused
     Player.tile = GroundTile(PlayerTileX, PlayerTileY)
     Select Case Player.facing
         Case 0
@@ -3706,7 +4307,7 @@ Sub COLDET (entity)
             If Player.x + 8 + 16 >= Exp.MapSizeX * 16 Then Exit Select
             Player.tilefacing = GroundTile(Int((Player.x + 8 + 16) / 16) + 1, PlayerTileY)
     End Select
-
+    aparentlyUnused:
 
 
 
@@ -3910,6 +4511,7 @@ Sub DEV
         Print "FPS:" + Str$(OGLFPS) + " / TPS:" + Str$(FRAMEPS) + " / Tick:" + Str$(CurrentTick)
         Print "Window:"; CameraPositionX; ","; CameraPositionY
         Print "Current World: "; WorldName; " (" + SavedMap + Str$(CurrentDimension) + ")";
+        Print "(" + Trim$(Str$(Exp.MapSizeX)) + "," + Trim$(Str$(Exp.MapSizeY)) + "," + Trim$(Str$(Exp.ParLen)) + ")";
         If WorldReadOnly = 1 Then Print "(R/O)"
         If WorldReadOnly = 0 Then Print
         Print "World Seed:"; WorldSeed
@@ -4057,6 +4659,11 @@ Sub DEV
             KeyClear
             Locate 28, 1: Input "Command:", comin
             Select Case comin
+
+                Case "structure", "stg"
+                    Dim StName As String
+                    Locate 28, 1: Input "Structure Name?", StName
+                    GenerateStructure StName
                 Case "explode"
                     Dim testval, tx, ty
                     Locate 28, 1: Print "Experimental, use no clip or you may get stuck"
@@ -4246,9 +4853,8 @@ Sub DEV
                 Case "rendermode", "rm"
                     Locate 28, 1: Print "         "
                     Locate 28, 1: Input "Mode:  ", RenderMode
-                    If RenderMode = 2 Then Flag.RenderOverride = 0
-                    If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
-                    If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
+
+                    TempRender
                 Case "updatemap", "um"
                     For i = 0 To Exp.MapSizeY + 1
                         For ii = 0 To Exp.MapSizeX + 1
@@ -4348,6 +4954,7 @@ Sub DEV
                 Case "nec", "newcommand"
                     Locate 28, 1: Input comin
                     SendChat (comin)
+
                 Case Else
 
             End Select
@@ -4361,6 +4968,12 @@ Sub DEV
 
         PrintMode KeepBackground
     End If
+End Sub
+
+Sub TempRender
+    If RenderMode = 2 Then Flag.RenderOverride = 0
+    If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
+    If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
 End Sub
 
 Sub SendChat (ChatMessage As String)
@@ -4769,7 +5382,7 @@ End Function
 Sub LOADWORLD
     Print "began loading world"
     Dim defaultmap As String
-    Dim As integer i, ii
+    Dim As Integer i, ii
     Dim As Integer iii
     Dim total
     Dim MapProtocol As Integer
@@ -5397,7 +6010,10 @@ Sub ErrorHandler
     Print "Error Code:"; Err
     Locate 2, 1
     ENDPRINT "Error Line:" + Str$(ErrorLine)
-    Print Exp.MapSizeX, Exp.MapSizeY
+    If Exp.Active <> 0 Then
+        Print "Active Experimental Mode:" + Trim$(Str$(Exp.Active))
+        Print "Map Size: " + Trim$(Str$(Exp.MapSizeX)) + ","; Trim$(Str$(Exp.MapSizeY)) + " PL:" + Trim$(Str$(Exp.ParLen))
+    End If
     Dim i
     For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
     '    Print "--------------------------------------------------------------------------------"
@@ -5480,20 +6096,7 @@ Sub ErrorHandler
                 End If
             Loop
         Case 104
-            CENTERPRINT "_"
-            CENTERPRINT "/   \"
-            CENTERPRINT "/       \"
-            CENTERPRINT "/     o     \"
-            CENTERPRINT "/             \"
-            CENTERPRINT "/_______________\"
-            CENTERPRINT "|                 |"
-            CENTERPRINT "|    HATSUNE      |"
-            CENTERPRINT "|      MIKU       |"
-            CENTERPRINT "|_________________|"
-            CENTERPRINT "/                   \"
-            CENTERPRINT "/                     \"
-            CENTERPRINT "/                       \"
-            CENTERPRINT "/_________________________\"
+            CENTERPRINT "This error is unused"
             CONTPROMPT
         Case 105
             CENTERPRINT "This world is missing files, unable to load world."
@@ -5524,6 +6127,9 @@ Sub ErrorHandler
             CENTERPRINT "Subscript out of range, this error occurs when an array exceeds its bounds"
             CENTERPRINT "This is most likely a programming error, please let the developer know."
             CENTERPRINT ""
+            CONTPROMPT
+        Case 63
+            CENTERPRINT "Failed to load/save"
             CONTPROMPT
 
 
@@ -5669,8 +6275,11 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     KeyClear
     AutoDisplay
 
+    If Exp.Active = 1 GoTo skipthisboi
     Input "World Name?", WorldName
     Input "World Seed? (0 for random)", WorldSeed
+    skipthisboi:
+
 
     If WorldSeed = 0 Then
         Randomize Using Timer
@@ -5703,243 +6312,10 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     LOADWORLD
 End Sub
 
-Function ValidSpawn
-
-End Function
 
 Function Cave1DimSeed
     Cave1DimSeed = Perlin(((SavedMapX * Exp.MapSizeX)) / Gen.TempScale, ((SavedMapY * Exp.MapSizeY)) / Gen.TempScale, 0, Perlin((1 + SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (1 + SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed))
 End Function
-
-Sub GenerateMap (Dimension As Byte)
-    Dim i, ii, iii
-    Dim PerlinTile As Double
-    Dim DimensionSeed As Double
-
-    Select Case Dimension
-        Case 0
-            'generate overworld
-            For i = 0 To Exp.MapSizeY + 1
-                For ii = 0 To Exp.MapSizeX + 1
-
-                    'generate base tiles
-                    GroundTile(ii, i) = 2
-                    TileData(ii, i, 4) = 255
-                    WallTile(ii, i) = 1
-                    TileData(ii, i, 5) = 255
-                    CeilingTile(ii, i) = 1
-                    TileData(ii, i, 6) = 255
-
-
-                    'generate terrain
-                    PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 0, WorldSeed)
-                    Select Case PerlinTile
-
-                        Case Is < 0.35
-                            GroundTile(ii, i) = 13
-                        Case 0.35 To 0.4
-                            GroundTile(ii, i) = 29
-                        Case Is > 0.7
-                            GroundTile(ii, i) = 4
-                            WallTile(ii, i) = 28
-
-                        Case Is > 0.6
-                            GroundTile(ii, i) = 4
-                            WallTile(ii, i) = 19
-                    End Select
-
-                    'generate structures
-
-
-                Next
-            Next
-
-            'generate biomes
-            For i = 0 To Exp.MapSizeY + 1
-                For ii = 0 To Exp.MapSizeX + 1
-                    PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.TempScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.TempScale, 0, Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed))
-                    Select Case PerlinTile
-
-                        Case Is < 0.25
-                            'permafrost (being in this biome will damage you
-                        Case 0.25 To 0.35
-                            'snowy
-                            Select Case GroundTile(ii, i)
-                                Case 13
-                                    GroundTile(ii, i) = 14
-
-                            End Select
-                        Case 0.35 To 0.55
-                            'planes
-                        Case 0.55 To 0.65
-                            'forrest
-                            '   Case Is > 0.75
-                            'lava    (needless to say being here will damage you, but even on land
-                        Case Is > 0.75
-                            'desert
-                            Select Case GroundTile(ii, i)
-                                Case Is <> 13
-                                    GroundTile(ii, i) = 29
-                            End Select
-
-
-                    End Select
-
-                Next
-            Next
-
-            'set feature seed
-            Randomize Using Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed)
-
-            'generate features
-            For i = 0 To Exp.MapSizeY + 1
-                For ii = 0 To Exp.MapSizeX + 1
-
-
-                    If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
-
-                        If Ceil(Rnd * 10) = 5 Then
-                            WallTile(ii, i) = 5
-                        End If
-
-                        'generate ground wood items
-                        If Ceil(Rnd * 150) = 50 Then
-                            WallTile(ii, i) = 11
-                            NewContainer SavedMapX, SavedMapY, ii, i
-                            OpenContainer SavedMapX, SavedMapY, ii, i
-                            For iii = 0 To InvParameters
-                                Container(0, 0, iii) = ItemIndex(19, iii)
-                            Next
-                            Container(0, 0, 7) = Ceil(Rnd * 3)
-                            CloseContainer SavedMapX, SavedMapY, ii, i
-                        End If
-
-                        'generate ground Stone items
-                        If Ceil(Rnd * 300) = 50 Then
-                            WallTile(ii, i) = 11
-                            NewContainer SavedMapX, SavedMapY, ii, i
-                            OpenContainer SavedMapX, SavedMapY, ii, i
-                            For iii = 0 To InvParameters
-                                Container(0, 0, iii) = ItemIndex(29, iii)
-                            Next
-                            Container(0, 0, 7) = Ceil(Rnd * 2)
-                            CloseContainer SavedMapX, SavedMapY, ii, i
-                        End If
-
-
-                        'generate berry bushes
-                        If Ceil(Rnd * 250) = 125 Then
-                            WallTile(ii, i) = 12
-                        End If
-
-                        'generate carrots
-                        If Ceil(Rnd * 600) = 300 Then
-                            WallTile(ii, i) = 17
-                        End If
-
-
-                    End If
-
-                    'update set tiles
-                    UpdateTile ii, i
-                Next
-            Next
-            'generate cave entrance
-            For i = 0 To Exp.MapSizeY + 1
-                For ii = 0 To Exp.MapSizeX + 1
-
-                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 30, Cave1DimSeed)
-                        Case Is > 0.73 'connect vshaft to above layer
-                            WallTile(ii, i) = 26
-                            GroundTile(ii, i) = 4
-
-
-                        Case Is > 0.69 'lol
-                            WallTile(ii, i) = 4
-
-
-                        Case Is < 0.23 'connect vshaft to above layer
-                            WallTile(ii, i) = 26
-                            GroundTile(ii, i) = 4
-
-
-                        Case Is < 0.27 'fill in vshaft
-                            WallTile(ii, i) = 4
-
-                    End Select
-
-                Next
-            Next
-            'add a way for generatemap to save to its specific dimension file, and for genmap to actually know what dimension its generating
-            'essentially make genmap have its own saving function or some shit idk
-
-        Case -1 'caves
-
-            'set Cave1 seed
-            DimensionSeed = Cave1DimSeed
-            'generate cave1
-
-            For i = 0 To Exp.MapSizeY + 1
-                For ii = 0 To Exp.MapSizeX + 1
-
-                    'generate base tiles
-                    GroundTile(ii, i) = 4 '47
-                    TileData(ii, i, 4) = 255
-                    WallTile(ii, i) = 27
-                    TileData(ii, i, 5) = 255
-                    CeilingTile(ii, i) = 1
-                    TileData(ii, i, 6) = 255
-
-
-                    'generate hShafts
-                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY + 1)) / Gen.HeightScale, 10, DimensionSeed)
-                        Case 0.27 To 0.3 'low val cave
-                            WallTile(ii, i) = 1
-                        Case 0.5 To 0.56 'high val cave
-                            WallTile(ii, i) = 1
-                    End Select
-
-                    'generate vShafts
-
-                    Select Case Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY + 1)) / Gen.HeightScale, 30, DimensionSeed)
-                        Case Is > 0.73 'connect vshaft to above layer
-                            WallTile(ii, i) = 1
-                            GroundTile(ii, i) = 48
-
-
-                        Case Is > 0.69 'lol
-                            WallTile(ii, i) = 1
-
-                        Case Is < 0.23 'connect vshaft to above layer
-                            WallTile(ii, i) = 14
-                            GroundTile(ii, i) = 48
-
-
-                        Case Is < 0.27 'fill in vshaft
-                            WallTile(ii, i) = 1
-
-                    End Select
-
-
-
-                    'generate structures
-
-                    UpdateTile ii, i
-                Next
-            Next
-
-
-            'generate vShaft
-            'connect vShaft to above layer
-
-            'generate hShaft
-
-            'set features
-
-        Case 1 'aquifer
-
-    End Select
-End Sub
 
 
 
@@ -5973,9 +6349,9 @@ Function Perlin (x As Single, y As Single, z As Single, seed As Single) 'i did n
         Next
     End If
 
-    x = Abs(x)
-    y = Abs(y)
-    z = Abs(z)
+    '  x = Abs(x)
+    ' y = Abs(y)
+    'z = Abs(z)
 
     Dim xi As Single, yi As Single, zi As Single
     xi = Int(x)

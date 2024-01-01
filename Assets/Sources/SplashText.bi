@@ -1,4 +1,4 @@
-Const SplashCount = 20
+Const SplashCount = 34
 Dim Shared As String Splash(SplashCount)
 Splash(0) = "Definitive"
 Splash(1) = "Water"
@@ -21,6 +21,24 @@ Splash(17) = "Novaflux"
 Splash(18) = "Cherry"
 Splash(19) = "Sour"
 Splash(20) = "Sweet"
+Splash(21) = "Aetherian"
+Splash(22) = "Jewish"
+Splash(23) = "Hood"
+Splash(24) = "Ingsoc"
+Splash(25) = "1984"
+Splash(26) = "Template... Respose"
+Splash(27) = "Diaper"
+Splash(28) = Str$(pi)
+Splash(29) = "Master"
+Splash(30) = "Dalbajob"
+Splash(31) = "BDSM"
+Splash(32) = "FAFO"
+Splash(33) = "Doritos Locos Tacos"
+Splash(34) = "Grape"
+
+For i = 0 To SplashCount 'use this to test new splashes comment out when not testing
+    ' Splash(i) = Str$(pi)
+Next
 
 
 

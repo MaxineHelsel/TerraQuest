@@ -478,7 +478,8 @@ TileIndexData(31, 3) = 0 'has interior shadow
 TileIndexData(31, 4) = 33 'resistance
 TileIndexData(31, 5) = 0 'is solid
 TileIndexData(31, 9) = 0.35 'friction
-TileIndexData(31, 10) = 2.5
+TileIndexData(31, 10) = 3
+
 
 '32 eggplant lvl1
 TileName(32, 0) = "Eggplant" 'Name of the tile
@@ -697,3 +698,25 @@ TileIndexData(48, 6) = 5 'light casts
 
 '51 wooden ladder wall
 
+'52 Dynamite
+TileName(27, 0) = "Limestone Wall" 'Name of the tile
+TileName(27, 1) = "Placeholder" 'tooltip
+TileIndex(27, 0) = 1 'layer definition
+TileIndex(27, 1) = 240 'x position on tilesheet
+TileIndex(27, 2) = 16 'y position on tilesheet
+TileIndex(27, 3) = 27 'itemid
+TileIndexData(27, 0) = 1 'collision
+TileIndexData(27, 1) = 1 'casts shadow
+TileIndexData(27, 2) = 1 'blocks shadow
+TileIndexData(27, 3) = 0 'has interior shadow
+TileIndexData(27, 4) = 54 'resistance
+TileIndexData(27, 5) = 1 'is solid
+
+
+'53 Creative Power Source
+
+'54 Power Wire
+
+'55 Logic Wire
+
+'56 Switch
