@@ -20,8 +20,8 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240311A"
-Game.Version = "B1.3-240311A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240311b"
+Game.Version = "B1.3-240311b
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -1600,6 +1600,10 @@ Sub UseItem (Slot)
         Case 0, 5 'Block placing
             If Inventory(0, Slot, 0) = 5 Then
                 If GroundTile(FacingX, FacingY) <> 21 Then Exit Sub
+            End If
+            If Inventory(0, Slot, 3) = 16 Then
+                If CurrentDimension = 0 Then Inventory(0, Slot, 4) = 0
+                If CurrentDimension = -1 Then Inventory(0, Slot, 4) = 1
             End If
             Select Case Inventory(0, Slot, 4)
                 Case 0
@@ -4440,6 +4444,10 @@ Sub Crafting
             Case "-1 -1 -1 |-1 122 -1 |-1 22 -1 |" 'torch
                 CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(120, i)
                 CraftingGrid(0, Player.CraftingLevel, 7) = 2
+
+            Case "19 -1 19 |48 19 48 |19 -1 19 |" 'Wooden Ladder
+                CraftingGrid(0, Player.CraftingLevel, i) = ItemIndex(25, i)
+
 
 
 
