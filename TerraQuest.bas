@@ -20,8 +20,8 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 231231A"
-Game.Version = "B1.3-231231A"
+Game.Buildinfo = "Beta 1.3 Edge Build 240311A"
+Game.Version = "B1.3-240311A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
@@ -37,16 +37,24 @@ Dim Shared ScreenShake.Duration As Integer
 Dim Shared ScreenShake.Remaining As Integer
 
 Dim Shared Flag.FullBright As Unsigned Bit
+Dim Shared Flag.CommandFeedback
+Dim Shared Flag.ChatOpen
 
 Dim Shared Exp.Active As Byte
 Dim Shared Exp.MapSizeX As Integer
 Dim Shared Exp.MapSizeY As Integer
 Dim Shared Exp.ParLen As Integer
 
+Dim Shared Game.WorldCount
+
+Dim Shared TextureSize As Unsigned Byte
+
+
+TextureSize = 15
 Exp.MapSizeX = 40
 Exp.MapSizeY = 30
 Exp.ParLen = 256
-
+Flag.CommandFeedback = 1
 
 'parse command line arguments
 Select Case LCase$(Command$)
@@ -66,16 +74,9 @@ Select Case LCase$(Command$)
     Case "software"
         DefaultRenderMode = 0
         Flag.RenderOverride = 1
+
 End Select
 
-If Exp.Active = 2 Then
-    '  Print "ParLen = Number of Parameters 'XYL-3.cdf' ( > X*Y*" + Trim$(Str$(TileParameters)) + ")"
-    Input "MapSizeX", Exp.MapSizeX
-    Input "MapSizeY", Exp.MapSizeY
-    Print Exp.MapSizeX * Exp.MapSizeY
-    Print "Set this to at least 128 for classic sized maps, 256 or higher for custom sizes"
-    Input "ParLen", Exp.ParLen
-End If
 
 ReDim Shared GroundTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
 ReDim Shared WallTile(Exp.MapSizeX + 1, Exp.MapSizeY + 1)
@@ -93,7 +94,8 @@ Title.MapSize = 50
 
 temptitle:
 INITIALIZE
-If Exp.Active <> 1 Then GoTo oldtitle
+'If Exp.Active <> 1 Then GoTo oldtitle
+If Command$ = "oldtitle" GoTo oldtitle
 mainmenu:
 Do
     Dim Selected
@@ -127,8 +129,11 @@ Loop
 
 loadworldmenu:
 Do
+    While InKey$ <> "": Wend
     Cls
+    Files
     Input "Please enter a world name to load", WorldName
+
     LOADWORLD
 Loop
 
@@ -172,14 +177,17 @@ Do
                     UpdateTile ii, i
                 Next
             Next
+            Open "Assets/Worlds/WorldList.cdf" As #1
+            Put #1, 1, Game.WorldCount
+            Close #1
             SpreadLight 1
             GoTo game
 
 
         Case 6
-            GoTo mainmenu
+            GoTo createorload
     End Select
-    Limit 60
+    Limit 30
 Loop
 
 
@@ -195,7 +203,32 @@ Do
 
         Case 2
         Case 6
+            GoTo Controls
+        Case 7
             GoTo mainmenu
+    End Select
+Loop
+
+Controls:
+Do
+    Cls
+    Selected = Menu(4)
+    Display
+    Select Case Selected
+        Case 16
+            GoTo controls2
+        Case 17
+            GoTo Settings
+    End Select
+Loop
+controls2:
+Do
+    Cls
+    Selected = Menu(5)
+    Display
+    Select Case Selected
+        Case 13
+            GoTo Controls
     End Select
 Loop
 
@@ -290,6 +323,7 @@ Do
     DayLightCycle
 
     GameChat
+    Playerchat
 
     'Bug fixes/hacks
     MinMemFix
@@ -332,15 +366,50 @@ Error 102
 
 
 
+
+
+
+
+
 RepeaterOutpost:
 
 Data
+
+Sub Playerchat
+    Static ChatBuffer As String
+    Static CharBuffer As String
+    If Flag.ChatOpen = 0 And KeyPressed = 116 Then
+        While InKey$ <> "": Wend
+        Flag.ChatOpen = 1
+    End If
+
+    If Flag.ChatOpen = 1 Then
+        PrintMode FillBackground
+        Color , RGBA(0, 0, 0, 128)
+        If KeyHit = 13 Then Flag.ChatOpen = 2: While InKey$ <> "": Wend
+        If KeyHit = 8 Then ChatBuffer = Left$(ChatBuffer, Len(ChatBuffer) - 1): While InKey$ <> "": Wend
+        CharBuffer = InKey$
+        If CharBuffer = Chr$(8) Then ChatBuffer = Left$(ChatBuffer, Len(ChatBuffer) - 1): While InKey$ <> "": Wend
+        If CharBuffer <> Chr$(8) Then ChatBuffer = ChatBuffer + CharBuffer
+        Locate (ScreenRezY / 16) - 6, 1: Print "Chat: "; ChatBuffer
+        PrintMode KeepBackground
+        Color , RGBA(0, 0, 0, 0)
+    End If
+
+    If Flag.ChatOpen = 2 Then
+        SendChat ChatBuffer
+        Flag.ChatOpen = 0
+        ChatBuffer = ""
+    End If
+End Sub
+
+
 
 Sub ScreenShot
     Static Mode
     Static PriorRender
     Static SSName As String
-    If DirExists("Assets\ScreenShots\") = 0 Then MkDir "Assets\ScreenShots\"
+
 
     'listen for f2
     If KeyPressed = 15360 Then
@@ -358,6 +427,7 @@ Sub ScreenShot
         Case 2 'save that bitch
             SSName = Date$ + "_" + Time$ 'Generate screenshot name
             SaveImage SSName, , "PNG" ' save screenshot
+            If DirExists("Assets\ScreenShots\") = 0 Then MkDir "Assets\ScreenShots\" 'check if screenshots directory exists
             Select Case Game.HostOS 'move screenshot to the screenshots directory, because path in filename doesnt work
                 Case "Linux", "Mac OS"
                     Shell Hide "mv " + SSName + ".png ./Assets/ScreenShots/"
@@ -508,6 +578,7 @@ Sub GenerateMap (Dimension As Byte)
 
             If Rnd * 500 < 5 Then GenerateStructure "TestStructure"
 
+
             'generate cave entrance
             For i = 0 To Exp.MapSizeY + 1
                 For ii = 0 To Exp.MapSizeX + 1
@@ -609,35 +680,41 @@ Sub GenerateStructure (StructName As String)
     Dim StructStartX
     Dim StructStartY
     Dim TileBK
+    Dim TMPtile
     Dim i, ii
 
     Select Case StructName
         Case "TestStructure"
-            StructSizeX = 4
-            StructSizeY = 4
             Restore TestStructure
-
+        Case "ARN_EgressGateway"
+            Restore ARN_EgressGateway
+        Case "RuinedCottage"
+            Restore RuinedCottage
     End Select
+
+    Read StructSizeX
+    Read StructSizeY
 
 
     StructStartX = Int(Rnd * (Exp.MapSizeX - StructSizeX)) + 1
     StructStartY = Int(Rnd * (Exp.MapSizeY - StructSizeY)) + 1
 
+
     'ground
     For ii = StructStartY To StructStartY + StructSizeY
         For i = StructStartX To StructStartX + StructSizeX
             TileBK = GroundTile(i, ii)
-            Read GroundTile(i, ii)
-            If GroundTile(i, ii) = -1 Then GroundTile(i, ii) = TileBK
+            Read TMPtile
+            If TMPtile = -1 Then GroundTile(i, ii) = TileBK Else GroundTile(i, ii) = TMPtile
         Next
     Next
 
     'wall
     For ii = StructStartY To StructStartY + StructSizeY
         For i = StructStartX To StructStartX + StructSizeX
-            TileBK = GroundTile(i, ii)
-            Read WallTile(i, ii)
-            If GroundTile(i, ii) = -1 Then GroundTile(i, ii) = TileBK
+            TileBK = WallTile(i, ii)
+            Read TMPtile
+            If TMPtile = -1 Then WallTile(i, ii) = TileBK Else WallTile(i, ii) = TMPtile
         Next
     Next
 
@@ -665,6 +742,7 @@ End Sub
 
 Sub ChestLoot (Table As String)
     Dim iii
+    Dim rnditem
     Select Case Table
         Case "TestStructure-Chest"
             For iii = 0 To InvParameters
@@ -674,12 +752,48 @@ Sub ChestLoot (Table As String)
             For iii = 0 To InvParameters
                 Container(1, 0, iii) = ItemIndex(104, iii) 'AES
             Next
-            Container(0, 1, 7) = 1
+            Container(1, 0, 7) = 1
             For iii = 0 To InvParameters
                 Container(2, 0, iii) = ItemIndex(37, iii) 'Eggplant seeds
             Next
-            Container(0, 2, 7) = 3
+            Container(2, 0, 7) = 3
 
+        Case "AES-Ground"
+            For iii = 0 To InvParameters
+                Container(0, 0, iii) = ItemIndex(104, iii) 'aes'
+            Next
+
+        Case "Cottage"
+
+            Select Case Int(Rnd * 4)
+                Case 0
+                    rnditem = 73
+                Case 1
+                    rnditem = 74
+                Case 2
+                    rnditem = 76
+                Case 3
+                    rnditem = 80
+                Case 4
+                    rnditem = 82
+            End Select
+
+            For iii = 0 To InvParameters
+                Container(0, 0, iii) = ItemIndex(5, iii) 'bush
+                Container(0, 1, iii) = ItemIndex(48, iii) 'iron
+                Container(0, 2, iii) = ItemIndex(103, iii) 'IRC
+                Container(0, 3, iii) = ItemIndex(108, iii) 'emerald
+                Container(0, 4, iii) = ItemIndex(26, iii) 'carrot
+                Container(0, 5, iii) = ItemIndex(24, iii) 'health wheel
+                Container(1, 0, iii) = ItemIndex(rnditem, iii) 'random tool
+            Next
+            Container(0, 0, 7) = 7
+            Container(0, 1, 7) = 4
+            Container(0, 2, 7) = 1
+            Container(0, 3, 7) = 2
+            Container(0, 4, 7) = 13
+            Container(0, 5, 7) = 3
+            Container(1, 0, 7) = 1
 
     End Select
 End Sub
@@ -895,9 +1009,10 @@ Sub Textbox (Diag, Opt)
             Print
             CENTERPRINT DiagSel(5, Opt) + "Sprite Packs"
             Print
+            CENTERPRINT DiagSel(6, Opt) + "Controls"
             Print
             Print
-            CENTERPRINT DiagSel(6, Opt) + "Main Menu"
+            CENTERPRINT DiagSel(7, Opt) + "Main Menu"
         Case 2
             CENTERPRINT DiagSel(1, Opt) + "Create World"
             Print
@@ -931,7 +1046,41 @@ Sub Textbox (Diag, Opt)
             CENTERPRINT DiagSel(5, Opt) + "Create World"
             Print
             CENTERPRINT DiagSel(6, Opt) + "Go Back"
+        Case 4
+            CENTERPRINT DiagSel(1, Opt) + "Move Up: W"
+            CENTERPRINT DiagSel(2, Opt) + "Move Down: S"
+            CENTERPRINT DiagSel(3, Opt) + "Move Left: A"
+            CENTERPRINT DiagSel(4, Opt) + "Move Right: D"
+            CENTERPRINT DiagSel(5, Opt) + "Inventory Up: "
+            CENTERPRINT DiagSel(6, Opt) + "Inventory Down: "
+            CENTERPRINT DiagSel(7, Opt) + "Inventory Left: "
+            CENTERPRINT DiagSel(8, Opt) + "Inventory Right: "
+            CENTERPRINT DiagSel(9, Opt) + "Open Inventory: E"
+            CENTERPRINT DiagSel(10, Opt) + "Cycle Tabs: Tab"
+            CENTERPRINT DiagSel(11, Opt) + "Anticycle Tabs: LShift"
+            CENTERPRINT DiagSel(12, Opt) + "Inventory Select: Enter"
+            CENTERPRINT DiagSel(13, Opt) + "Split Stack: \"
+            CENTERPRINT DiagSel(14, Opt) + "Inventory Use Item: Space"
+            CENTERPRINT DiagSel(15, Opt) + "Inventory Drop Item: Q"
+            Print
+            CENTERPRINT DiagSel(16, Opt) + "More..."
+            CENTERPRINT DiagSel(17, Opt) + "Back"
 
+        Case 5
+            CENTERPRINT DiagSel(1, Opt) + "Use Hotbar 1: 1"
+            CENTERPRINT DiagSel(2, Opt) + "Use Hotbar 2: 2"
+            CENTERPRINT DiagSel(3, Opt) + "Use Hotbar 3: 3"
+            CENTERPRINT DiagSel(4, Opt) + "Use Hotbar 4: 4"
+            CENTERPRINT DiagSel(5, Opt) + "Use Hotbar 5: 5"
+            CENTERPRINT DiagSel(6, Opt) + "Use Hotbar 6: 6"
+            CENTERPRINT DiagSel(7, Opt) + "Pause Game: Esc"
+            CENTERPRINT DiagSel(8, Opt) + "Toggle Hud: F1"
+            CENTERPRINT DiagSel(9, Opt) + "Take Screenshot: F2"
+            CENTERPRINT DiagSel(10, Opt) + "Toggle Debug Mode: F3"
+            CENTERPRINT DiagSel(11, Opt) + "Open Commands (Debug Only): /"
+            CENTERPRINT DiagSel(12, Opt) + "Open Chat: T"
+            Print
+            CENTERPRINT DiagSel(13, Opt) + "Back: "
 
     End Select
     Display
@@ -966,15 +1115,21 @@ End Function
 
 Function Menu (MenuNum)
     Static HighlightedOption
+    If HighlightedOption = 0 Then HighlightedOption = 1
 
     Dim i
     Dim OptCount
     Menu = 0
     Static SplashText, fh
+
     If fh = 0 Then
         SplashText = Int(Rnd * SplashCount)
         fh = 1
     End If
+    'imma be honest it got lazy, im high af
+    Dim MenuImageLong As Long
+    MenuImageLong = LoadImage("Assets\Sprites\TitleScreen\titlescreen1.png", 32)
+    If MenuImageLong <> -1 Then PutImage (0, 0), MenuImageLong, 0, (0, 0)
 
     Select Case MenuNum
         Case 0 ' Title Screen
@@ -998,7 +1153,7 @@ Function Menu (MenuNum)
             'Draw Options buttons
 
             Textbox 1, HighlightedOption
-            OptCount = 6
+            OptCount = 7
         Case 2
             'put title screen icon
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
@@ -1019,7 +1174,22 @@ Function Menu (MenuNum)
             CENTERPRINT "Single Player"
             Textbox 3, HighlightedOption
             OptCount = 6
-
+        Case 4
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT Game.Title + " " + Game.Buildinfo
+            Print
+            CENTERPRINT "Single Player"
+            Textbox 4, HighlightedOption
+            OptCount = 17
+        Case 5
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT Game.Title + " " + Game.Buildinfo
+            Print
+            CENTERPRINT "Single Player"
+            Textbox 5, HighlightedOption
+            OptCount = 13
 
 
     End Select
@@ -1377,10 +1547,10 @@ Sub Precip2
                 '  GoTo skipthisfuckinshittoo
                 If VisibleCheck(ii, i) = 1 Then
                     If LocalTempGrab(ii, i) < 0.34 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * SnowFrame), 0)-(15 + (16 * SnowFrame), 15)
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * SnowFrame), 0)-(TextureSize + ((TextureSize + 1) * SnowFrame), TextureSize)
                     End If
                     If LocalTempGrab(ii, i) > 0.34 And LocalTempGrab(ii, i) < 0.90 Then
-                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * RainFrame), 0 + 16)-(15 + (16 * RainFrame), 15 + 16)
+                        PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * RainFrame), 0 + 16)-(TextureSize + ((TextureSize + 1) * RainFrame), TextureSize + (TextureSize + 1))
 
                     End If
 
@@ -1414,7 +1584,7 @@ Sub PrecipOverlay
         For i = 0 To Exp.MapSizeY
             For ii = 0 To Exp.MapSizeX
                 If VisibleCheck(ii, i) = 1 Then
-                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + (16 * AnimFrame), 0 + (16 * (PrecipitationLevel - 1)))-(15 + (16 * AnimFrame), 15 + (16 * (PrecipitationLevel - 1)))
+                    PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Precipitation, , (0 + ((TextureSize + 1) * AnimFrame), 0 + ((TextureSize + 1) * (PrecipitationLevel - 1)))-(TextureSize + ((TextureSize + 1) * AnimFrame), TextureSize + ((TextureSize + 1) * (PrecipitationLevel - 1)))
                 End If
             Next
         Next
@@ -1782,7 +1952,7 @@ Function ValidSpawn (TileX, TileY)
     If LocalTemperature(TileX, TileY) < 0 Or LocalTemperature(TileX, TileY) > 1 Then ValidSpawn = 0
 End Function
 
-Sub Entities (Command As Byte)
+Sub Entities (Command As Byte) 'welcome to the yandere dev section of code
     Randomize Timer
     Dim i, ii
     Dim EntX, EntY
@@ -2986,45 +3156,45 @@ End Sub
 
 
 Function Item1
-    Item1 = KeyDown(49)
+    If Flag.ChatOpen = 0 Then Item1 = KeyDown(49)
 End Function
 
 Function Item2
-    Item2 = KeyDown(50)
+    If Flag.ChatOpen = 0 Then Item2 = KeyDown(50)
 End Function
 
 Function Item3
-    Item3 = KeyDown(51)
+    If Flag.ChatOpen = 0 Then Item3 = KeyDown(51)
 End Function
 
 Function Item4
-    Item4 = KeyDown(52)
+    If Flag.ChatOpen = 0 Then Item4 = KeyDown(52)
 End Function
 
 Function Item5
-    Item5 = KeyDown(53)
+    If Flag.ChatOpen = 0 Then Item5 = KeyDown(53)
 End Function
 
 Function Item6
-    Item6 = KeyDown(54)
+    If Flag.ChatOpen = 0 Then Item6 = KeyDown(54)
 End Function
 
 
 
 Function MoveUp
-    MoveUp = KeyDown(119)
+    If Flag.ChatOpen = 0 Then MoveUp = KeyDown(119)
 End Function
 
 Function MoveDown
-    MoveDown = KeyDown(115)
+    If Flag.ChatOpen = 0 Then MoveDown = KeyDown(115)
 End Function
 
 Function MoveLeft
-    MoveLeft = KeyDown(97)
+    If Flag.ChatOpen = 0 Then MoveLeft = KeyDown(97)
 End Function
 
 Function MoveRight
-    MoveRight = KeyDown(100)
+    If Flag.ChatOpen = 0 Then MoveRight = KeyDown(100)
 End Function
 
 
@@ -4040,6 +4210,25 @@ End Sub
 
 Sub UpdateTile (TileX, TileY)
     Dim i, ii
+
+    If WallTile(TileX, TileY) = 61 Then 'get rid of egress doors if lockdown protocol is already disabled
+        If Virus.Status > 0 Then WallTile(TileX, TileY) = 1
+    End If
+
+    If WallTile(TileX, TileY) = 57 Then
+        If Virus.Status > 0 Then WallTile(TileX, TileY) = 58
+    End If
+
+    If WallTile(TileX, TileY) = 58 Then
+        'check for active teleport link
+        'if true, update to show active link walltile(tilex,tiley)=59
+    End If
+
+    If WallTile(TileX, TileY) = 59 Then
+        'check for active teleport link
+        'if no longer acive, break link walltile(tilex,tiley)=58
+    End If
+
     If TileIndexData(GroundTile(TileX, TileY), 0) = 1 Or TileIndexData(WallTile(TileX, TileY), 0) = 1 Then TileData(TileX, TileY, 0) = 1 Else TileData(TileX, TileY, 0) = 0
     If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
     If TileIndexData(GroundTile(TileX, TileY), 2) = 1 Or TileIndexData(WallTile(TileX, TileY), 2) = 1 Then TileData(TileX, TileY, 2) = 1 Else TileData(TileX, TileY, 2) = 0
@@ -4078,10 +4267,11 @@ Sub INTER
             Flag.HudDisplay = Flag.HudDisplay + 1
         Case 101
             Flag.InventoryOpen = Flag.InventoryOpen + 1
+
         Case 27
             PauseMenu
 
-
+            ' keydown
     End Select
 End Sub
 
@@ -4660,6 +4850,9 @@ Sub DEV
             Locate 28, 1: Input "Command:", comin
             Select Case comin
 
+                Case "txs"
+                    Locate 28, 1: Input "Texture Size?", TextureSize
+
                 Case "structure", "stg"
                     Dim StName As String
                     Locate 28, 1: Input "Structure Name?", StName
@@ -4971,7 +5164,7 @@ Sub DEV
 End Sub
 
 Sub TempRender
-    If RenderMode = 2 Then Flag.RenderOverride = 0
+    If RenderMode = 2 Then Flag.RenderOverride = 0: SwitchRender (1)
     If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
     If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
 End Sub
@@ -4995,7 +5188,7 @@ Sub SendChat (ChatMessage As String)
 
     'check if message is a command, and execute if it is
     If Left$(ChatMessage, 1) = "/" And noPlayerTag = 0 Then
-        WorldCommands (ChatMessage)
+        WorldCommands ChatMessage, Flag.CommandFeedback
         Exit Sub
     End If
 
@@ -5038,22 +5231,19 @@ End Sub
 
 
 
-Sub WorldCommands (CommandString As String)
+Sub WorldCommands (CommandString As String, Feedback As Byte)
 
     Dim CommandBase As String
     Dim Parameters(10) As String
     Dim LastPos
     Dim i, ii
-
-
     CommandString = CommandString + " " 'adds an aditional space to the end of the command string so the parameter parse function can actually grab the last parameter
     CommandBase = LCase$(Trim$(Left$(CommandString, InStr(CommandString, " ")))) 'parses out the base command into a seperate string
     LastPos = InStr(CommandString, " ") 'pulls the start position of the first parameter (assuming only 1 space before the parameter, awaiting testing for various garbage inputs and thing not expected
-
     'parses command parameters into an array to make managing a bit easier
     For i = 0 To 10
 
-        Parameters(i) = LCase$(Trim$(Mid$(CommandString, LastPos, InStr(LastPos, CommandString, " "))))
+        Parameters(i) = LCase$(Trim$(Mid$(CommandString, LastPos, InStr(LastPos + 1, CommandString, " ") - LastPos)))
         LastPos = InStr(LastPos + 1, CommandString, " ")
         If Parameters(i) = CommandBase Then Exit For 'kills looping for additional parameters that dont exist and eventually just pulling the command as parameters... not that it really matters, nor does this actually work
     Next
@@ -5064,69 +5254,44 @@ Sub WorldCommands (CommandString As String)
             SendChat Chr$(21) + "/resolution (short: /res) [x] [y] alters the games resolution"
             SendChat Chr$(21) + "/weather [mode] changes current weather mode"
             SendChat Chr$(21) + "/settile (short:/st) [layer] [tile] {x} {y}"
-            SendChat Chr$(21) + "/viruslevel (short:/vl) [virus level] changes the current NovaFlux-Xx world infection level"
             SendChat Chr$(21) + "/filltile (short:/ft) [layer] [tile] {x1} {y1} [x2] [y2]"
+            SendChat Chr$(21) + "/viruslevel (short:/vl) [virus level] changes the current NovaFlux-Xx world infection level"
+            SendChat Chr$(21) + "/togglebloodmoon (short:/tbm) Toggles the blood moon flag"
+            SendChat Chr$(21) + "/coordinate (short:/ctp) [x] [y] Teleports the player to the exact coordinate specified"
+            SendChat Chr$(21) + "/teleport (short:/tp) [x] [y] Teleports to a tile coordinate"
+            SendChat Chr$(21) + "/randomtickspeed (short:/rts) [value] Sets the games random tick speed, used for the rate of random event ocurance"
+            SendChat Chr$(21) + "/day [value] Sets the current day of the year"
+            SendChat Chr$(21) + "/gamemode (short:/gm) [value] Changes your gamemode"
+            SendChat Chr$(21) + "/stillcam (short:/sc) Freezes the camera"
+            SendChat Chr$(21) + "/fullcam (short:/fc) Shows the full screen map"
+            SendChat Chr$(21) + "/freecam (short:/frc) Allows you to move just the camera"
+            SendChat Chr$(21) + "/noclip (short:/nc) Disables tile colision globally"
+            SendChat Chr$(21) + "/fullrender (short:/fr) Disables render optimizations (draws the full map)"
+            SendChat Chr$(21) + "/tickrate-unlock (short:/tru) Unlocks the 60tps target tickrate"
+            SendChat Chr$(21) + "/exit Closes the game"
+            SendChat Chr$(21) + "/error [Error number] Triggers an error"
+            SendChat Chr$(21) + "/health [value] Sets the current health"
+            SendChat Chr$(21) + "/maxhealth [value] Seth the number of health wheels"
+            SendChat Chr$(21) + "/track (short:/tr) [Mode] Changes the debug menu data tracker mode"
+            SendChat Chr$(21) + "/save Saves the game settings and the current map"
+            SendChat Chr$(21) + "/updatemap (short:/um) forces a tile update across the entire map"
+            SendChat Chr$(21) + "/structure (short:/str) [Structure name] Spawns a structure"
+            SendChat Chr$(21) + "/explode [Strength] [x] [y] Creates and explosion"
+            SendChat Chr$(21) + "/screenshake (short:/ss) [Strength] [Duration] Shakes the Screen"
+            SendChat Chr$(21) + "/changedimension (short:/cd) [value] Changes the dimension"
+            SendChat Chr$(21) + "/help2 Page 2"
+        Case "/help2"
+            SendChat Chr$(21) + "Showing help list page 2"
+
+
+
         Case "/res", "/resolution"
             ScreenRezX = Val(Parameters(0))
             ScreenRezY = Val(Parameters(1))
             Screen NewImage(ScreenRezX + 1, ScreenRezY + 1, 32)
-            SendChat Chr$(21) + "Resolution set to " + Trim$(Str$(ScreenRezX)) + "x" + Trim$(Str$(ScreenRezY))
-        Case "/vl", "/viruslevel"
-            Virus.Status = Val(Parameters(0))
-            SendChat Chr$(21) + "Virus level updated"
-        Case "/tbm", "/togglebloodmoon"
-            Flag.IsBloodmoon = Flag.IsBloodmoon + 1
-            Swap Texture.Shadows, Texture.Shadows_Bloodmoon
-            If Flag.IsBloodmoon = 1 Then PlaySound Sounds.bloodmoon_spawn
-            SendChat Chr$(21) + "Blood moon has been toggled"
-        Case "/ctp", "/coordinate"
-            Player.x = Val(Parameters(0))
-            Player.y = Val(Parameters(1))
-        Case "/tp"
-            Player.x = Val(Parameters(0)) * 16
-            Player.y = Val(Parameters(1)) * 16
+            If Feedback = 1 Then SendChat Chr$(21) + "Resolution set to " + Trim$(Str$(ScreenRezX)) + "x" + Trim$(Str$(ScreenRezY))
         Case "/weather"
             PrecipitationLevel = Val(Parameters(0))
-        Case "/rts"
-            RandomTickRate = Val(Parameters(0))
-        Case "/day"
-            CurrentDay = Val(Parameters(0))
-        Case "/gm", "/gamemode"
-            GameMode = Val(Parameters(0))
-
-
-        Case "/stillcam", "/sc"
-            Flag.StillCam = Flag.StillCam + 1
-        Case "/fullcam", "/fc"
-            Flag.FullCam = Flag.FullCam + 1
-        Case "/freecam", "/frc"
-            Flag.FreeCam = Flag.FreeCam + 1
-        Case "/noclip", "/nc"
-            Flag.NoClip = Flag.NoClip + 1
-        Case "/fullrender", "/fr"
-            Flag.FullRender = Flag.FullRender + 1
-        Case "/framerate-unlock", "/fru"
-            Flag.FrameRateLock = Flag.FrameRateLock + 1
-
-
-
-        Case "/exit"
-            System
-        Case "/error"
-            Error Val(Parameters(0))
-
-
-        Case "/health"
-            Player.health = Val(Parameters(0))
-        Case "/maxhealth"
-            Player.MaxHealth = Val(Parameters(0))
-
-        Case "/tr", "/track"
-            Debug.Tracking = Parameters(0)
-
-        Case "/save"
-            SAVEMAP
-            SAVESETTINGS
 
         Case "/st", "/settile"
             Parameters(2) = Str$(PlayerTileX): Parameters(3) = Str$(PlayerTileY)
@@ -5138,7 +5303,7 @@ Sub WorldCommands (CommandString As String)
                 Case 2
                     CeilingTile(Val(Parameters(2)), Val(Parameters(3))) = Val(Parameters(1))
             End Select
-            SendChat Chr$(21) + "Tile Placed"
+            If Feedback = 1 Then SendChat Chr$(21) + "Tile Placed"
         Case "/ft", "/filltile"
             SendChat Chr$(21) + "this command is broked at the moment"
             If Parameters(4) = "" And Parameters(5) = "" Then
@@ -5166,175 +5331,211 @@ Sub WorldCommands (CommandString As String)
 
                 Next
             Next
+
+        Case "/vl", "/viruslevel"
+            Virus.Status = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Virus level updated"
+        Case "/tbm", "/togglebloodmoon"
+            Flag.IsBloodmoon = Flag.IsBloodmoon + 1
+            Swap Texture.Shadows, Texture.Shadows_Bloodmoon
+            If Flag.IsBloodmoon = 1 Then PlaySound Sounds.bloodmoon_spawn
+            If Feedback = 1 Then SendChat Chr$(21) + "Blood moon has been toggled"
+        Case "/ctp", "/coordinate"
+            Player.x = Val(Parameters(0))
+            Player.y = Val(Parameters(1))
+            If Feedback = 1 Then SendChat Chr$(21) + "You are now... Here"
+        Case "/tp", "/teleport"
+            Player.x = Val(Parameters(0)) * 16
+            Player.y = Val(Parameters(1)) * 16
+            If Feedback = 1 Then SendChat Chr$(21) + "You are now... On this Tile"
+        Case "/rts", "/randomtickspeed"
+            RandomTickRate = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Random tick speed updated"
+        Case "/day"
+            CurrentDay = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Day is now " + Parameters(0)
+        Case "/gm", "/gamemode"
+            GameMode = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Gamemode Updated"
+
+        Case "/stillcam", "/sc"
+            Flag.StillCam = Flag.StillCam + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Still Cam Toggled"
+        Case "/fullcam", "/fc"
+            Flag.FullCam = Flag.FullCam + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Full Cam Toggled"
+        Case "/freecam", "/frc"
+            Flag.FreeCam = Flag.FreeCam + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Free Cam Toggled"
+        Case "/noclip", "/nc"
+            Flag.NoClip = Flag.NoClip + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "No Clip Toggled"
+        Case "/fullrender", "/fr"
+            Flag.FullRender = Flag.FullRender + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Render optimizations Toggled"
+        Case "/tickrate-unlock", "/tru"
+            Flag.FrameRateLock = Flag.FrameRateLock + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Tickrate limiter Toggled"
+
+
+        Case "/exit"
+            If Feedback = 1 Then SendChat Chr$(21) + "Goodbye :("
+            System
+        Case "/error"
+            Error Val(Parameters(0))
+
+
+        Case "/health"
+            Player.health = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Health updated"
+        Case "/maxhealth"
+            Player.MaxHealth = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Health Wheels updated"
+        Case "/tr", "/track"
+            Debug.Tracking = Parameters(0)
+            If Feedback = 1 Then SendChat Chr$(21) + "Now Tracking " + Parameters(0)
+        Case "/save"
+            SAVEMAP
+            SAVESETTINGS
+            If Feedback = 1 Then SendChat Chr$(21) + "Save Complete!"
         Case "/um", "/updatemap"
             For i = 0 To Exp.MapSizeY + 1
                 For ii = 0 To Exp.MapSizeX + 1
                     UpdateTile ii, i
                 Next
             Next
+            SpreadLight (5)
+            If Feedback = 1 Then SendChat Chr$(21) + "Map Tile Update Performed"
+        Case "/structure", "/stg"
+            GenerateStructure Parameters(0)
+            If Feedback = 1 Then SendChat Chr$(21) + "Generated Structure " + Parameters(0) + " at a random position on this map"
+        Case "/explode"
+            Explosion Val(Parameters(1)), Val(Parameters(2)), Val(Parameters(0)), 0
+            If Feedback = 1 Then SendChat Chr$(21) + "Boom!"
 
+        Case "/screenshake", "/ss"
+            ScreenShake.Strength = Val(Parameters(0)): ScreenShake.Remaining = Val(Parameters(1))
+            If Feedback = 1 Then SendChat Chr$(21) + "Aetheria quakes beneath you"
+
+        Case "/changedimension", "/cd"
+            SAVEMAP
+            CurrentDimension = Val(Parameters(0))
+            LOADMAP SavedMap
+            If Feedback = 1 Then SendChat Chr$(21) + "Changed Dimension"
+        Case "/frameskip", "/fs"
+            RefreshOpt = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Frameskip updated"
+
+        Case "/fullbright", "/fb"
+            Flag.FullBright = Flag.FullBright + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Fullbright Toggled"
+        Case "/feedback"
+            Flag.CommandFeedback = Flag.CommandFeedback + 1
+        Case "/spreadlight", "/spl"
             SpreadLight (1)
-            SendChat Chr$(21) + "Map Tile Update Preformed"
+            If Val(Parameters(0)) = 1 Then SpreadHeat
+        Case "/load"
+            LOADMAP (Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Map File Loaded"
+        Case "/loadworld"
+            WorldName = Parameters(0)
+            LOADWORLD
+            If Feedback = 1 Then SendChat Chr$(21) + "World Loaded"
+        Case "/tiledata", "/td"
+            TileData(Val(Parameters(0)), Val(Parameters(1)), Val(Parameters(2))) = Val(Parameters(3))
+            If Feedback = 1 Then SendChat Chr$(21) + "Tile Data Updated"
+        Case "/itemdata", "/id"
+            Inventory(Val(Parameters(0)), Val(Parameters(1)), Val(Parameters(2))) = Val(Parameters(3))
+            If Feedback = 1 Then SendChat Chr$(21) + "Item Data Updated"
+        Case "/bgdraw"
+            BGDraw = BGDraw + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Background Tile Draw Toggled"
+        Case "/shadowcase", "/sh"
+            Flag.CastShadows = Flag.CastShadows + 1
+            If Feedback = 1 Then SendChat Chr$(21) + "Shadows Toggled"
+        Case "/rendermode", "/rm"
+            RenderMode = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Render mode updated"
+        Case "/tickrate", "/tk"
+            Settings.TickRate = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "TickRate Updated"
+        Case "/time"
+            GameTime = Val(Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Time Updated"
+        Case "/lightlevel", "/ll"
+            GlobalLightLevel = Val(Parameters(0))
+            TempRender
+            If Feedback = 1 Then SendChat Chr$(21) + "Global Light Level Updated"
+        Case "/genmap"
+            GenerateMap 0
+            If Feedback = 1 Then SendChat Chr$(21) + "Map Regenerated"
+        Case "/give", "/item"
+            NewStack Val(Parameters(0)), Val(Parameters(1))
+            If Feedback = 1 Then SendChat Chr$(21) + "Item Stack Given " + Str$(Val(Parameters(0))) + Str$(Val(Parameters(1)))
+        Case "/summon"
+            Dim RandomCords
+            If Parameters(2) = "" And Parameters(3) = "" Then RandomCords = 1
+
+            For ii = 0 To Val(Parameters(1))
+                CurrentEntities = CurrentEntities + 1
+                For i = 0 To EntityParameters
+                    entity(CurrentEntities, i) = SummonEntity(Val(Parameters(0)), i)
+                Next
+                If RandomCords = 1 Then
+                    Parameters(2) = Str$(Int(Rnd * Exp.MapSizeX))
+                    Parameters(3) = Str$(Int(Rnd * Exp.MapSizeY))
+                End If
+
+                entity(CurrentEntities, 4) = Val(Parameters(2))
+                entity(CurrentEntities, 5) = Val(Parameters(3))
+
+            Next
+            If Feedback = 1 Then SendChat Chr$(21) + "Entity Summoned"
+        Case "/masstp"
+            For i = 0 To CurrentEntities
+                entity(i, 4) = Player.x
+                entity(i, 5) = Player.y
+            Next
+            If Feedback = 1 Then SendChat Chr$(21) + "COME HITHER"
+        Case "/effect"
+            For i = 0 To MaxEffects
+                If EffectArray(i, 0, 0) = 0 Then
+                    For ii = 0 To EffectParameters
+                        EffectArray(i, ii, 0) = Val(Parameters(ii))
+                    Next
+                    Exit For
+                End If
+            Next
+            If Feedback = 1 Then SendChat Chr$(21) + "Effect Applied"
+        Case "/effectsource", "/es"
+
+            Effects 1, Parameters(0), 0
+            If Feedback = 1 Then SendChat Chr$(21) + "Effect Applied"
+        Case "/new"
+            NewWorld
+        Case "/togglewriteprotect"
+            WorldReadOnly = WorldReadOnly + 1
+            If WorldReadOnly > 1 Then WorldReadOnly = 0
+            Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
+            Put #1, 4, WorldReadOnly
+            Close #1
+            If WorldReadOnly = 1 Then If Feedback = 1 Then SendChat Chr$(21) + "World is Write Protected"
+            If WorldReadOnly = 0 Then If Feedback = 1 Then SendChat Chr$(21) + "World is no longer Write Protected"
+        Case "/map-teleport", "/maptp"
+            ChangeMap 1, Val(Parameters(0)), Val(Parameters(1))
+            If Feedback = 1 Then SendChat Chr$(21) + "Moved to new map"
+
+            '--------------------------------
         Case Else
             SendChat Chr$(21) + "Command " + Chr$(34) + CommandBase + Chr$(34) + " Not Found."
 
     End Select
 
 
-    Exit Sub
-
-    Dim dv, fillid, fillx, filly, databit, dmapx, dmapy
-    Select Case CommandString
-
-
-
-
-        Case "load"
-            Locate 28, 1: Print "                                "
-            Locate 28, 1: Input "Name of Map File to load: ", map.filename
-            LOADMAP (map.filename)
-        Case "loadworld"
-            Locate 28, 1: Print "                                "
-            Locate 28, 1: Input "Name of World Folder to load: ", WorldName
-            LOADWORLD
-        Case "spl"
-            SpreadLight (1)
-        Case "sph"
-            SpreadHeat
-
-
-        Case "network"
-
-            Locate 28, 2: Input "Test Network Multiplayer: ", fillid
-
-
-
-
-
-        Case "tiledata", "td"
-            Locate 28, 1: Print "                 "
-            Locate 28, 1: Input "Select Data Bit: ", databit
-            Locate 28, 1: Print "                   "
-            Locate 28, 1: Input "Select Data Value: ", TileData(PlayerTileX, PlayerTileY, databit)
-
-        Case "itemdata", "id"
-            Locate 28, 1: Print "                 "
-            Locate 28, 1: Input "Select Data Bit: ", databit
-            Locate 28, 1: Print "                   "
-            Locate 28, 1: Input "Select Data Value: ", Inventory(0, CursorHoverX, databit)
-
-
-
-        Case "bgdraw"
-            BGDraw = BGDraw + 1
-        Case "shadowcast", "sh"
-            Flag.CastShadows = Flag.CastShadows + 1
-
-        Case "new"
-            NewWorld
-
-        Case "lightlevel", "ll"
-            Locate 28, 1: Print "                    "
-            Locate 28, 1: Input "Select Light Level:  ", GlobalLightLevel
-        Case "rendermode", "rm"
-            Locate 28, 1: Print "         "
-            Locate 28, 1: Input "Mode:  ", RenderMode
-            If RenderMode = 2 Then Flag.RenderOverride = 0
-            If RenderMode = 0 Then Flag.RenderOverride = 1: SwitchRender (0)
-            If RenderMode = 1 Then Flag.RenderOverride = 1: SwitchRender (1)
-        Case "tickrate", "tk"
-            Locate 28, 1: Print "          "
-            Locate 28, 1: Input "TickRate:  ", Settings.TickRate
-        Case "time"
-            Locate 28, 1: Print "          "
-            Locate 28, 1: Input "Set time:  ", GameTime
-        Case "maptp"
-            Locate 28, 1: Print "              "
-            Locate 28, 1: Input "MapX Cord", dmapx
-            Locate 28, 1: Print "              "
-            Locate 28, 1: Input "MapY Cord", dmapy
-            ChangeMap 1, dmapx, dmapy
-        Case "genmap"
-            GenerateMap 0
-        Case "masstp"
-            For i = 0 To CurrentEntities
-                entity(i, 4) = Player.x
-                entity(i, 5) = Player.y
-            Next
-        Case "give", "item"
-            Locate 28, 1: Print "                   "
-            Locate 28, 1: Input "ItemID to give ", dmapx
-            Locate 28, 1: Print "                   "
-            Locate 28, 1: Input "Ammount ", dmapy
-
-            NewStack dmapx, dmapy
-        Case "summon"
-            Dim temp As Integer
-            Dim cord As Byte
-            Locate 28, 1: Print "                   "
-            Locate 28, 1: Input "EntityID to summon ", dmapx
-            Locate 28, 1: Print "                                            "
-            Locate 28, 1: Input "Number of this entity to spawn ", temp
-            Locate 28, 1: Print "                                            "
-            Locate 28, 1: Input "Rand(0) or Set(1) Cords ", cord
-            If cord = 1 Then
-                Dim entx, enty
-                Locate 28, 1: Print "                              "
-                Locate 28, 1: Input "X Cord ", entx
-                Locate 28, 1: Print "                                            "
-                Locate 28, 1: Input "Y Cord ", enty
-            End If
-
-
-            '  For DMapY = 0 To 100
-
-            For ii = 0 To temp
-                CurrentEntities = CurrentEntities + 1
-                For i = 0 To EntityParameters
-                    entity(CurrentEntities, i) = SummonEntity(dmapx, i)
-                Next
-                If cord = 1 Then
-                    entity(CurrentEntities, 4) = entx
-                    entity(CurrentEntities, 5) = enty
-                End If
-            Next
-            ' Next
-        Case "kill"
-            Locate 28, 1: Print "                      "
-            Locate 28, 1: Input "EntityNumber to Kill ", dmapx
-            EntityDespawn dmapx
-
-        Case "effect"
-
-            For i = 0 To MaxEffects
-                If EffectArray(i, 0, 0) = 0 Then
-                    For ii = 0 To EffectParameters
-                        Locate 28, 1: Print "                               "
-                        Locate 28, 1: Print "Effect Value", ii, "to apply ";: Input ; dmapx
-
-                        EffectArray(i, ii, 0) = dmapx
-                    Next
-                    Exit For
-                End If
-            Next
-        Case "effectsource", "es"
-            '  Dim CommandString As String
-            Locate 28, 1: Print "                      "
-            Locate 28, 1: Input "Effect source to apply", CommandString
-
-            Effects 1, CommandString, 0
-        Case "togglewriteprotect"
-            WorldReadOnly = WorldReadOnly + 1
-            If WorldReadOnly > 1 Then WorldReadOnly = 0
-            Open "Assets\Worlds\" + WorldName + "\Manifest.cdf" As #1
-            Put #1, 4, WorldReadOnly
-            Close #1
-
-        Case Else
-    End Select
-
 End Sub
 
+'  worldcommands ("/maptp "+targetmapx+ " " +targetmapy,0)
+'    worldcommands ("/tp "+targettilex+ " " +targettiley,0)
 
 
 
@@ -6206,11 +6407,11 @@ Sub SetMap
     For i = 1 To Exp.MapSizeY
         For ii = 1 To Exp.MapSizeX
             If VisibleCheck(ii, i) = 1 Then
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + 15, TileIndex(GroundTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(GroundTile(ii, i), 1), TileIndex(GroundTile(ii, i), 2))-(TileIndex(GroundTile(ii, i), 1) + TextureSize, TileIndex(GroundTile(ii, i), 2) + TextureSize)
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 4) / 32) * 16, 32)-((Int(TileData(ii, i, 4) / 32) * 16) + 15, 47)
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + 15, TileIndex(WallTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(WallTile(ii, i), 1), TileIndex(WallTile(ii, i), 2))-(TileIndex(WallTile(ii, i), 1) + TextureSize, TileIndex(WallTile(ii, i), 2) + TextureSize)
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 5) / 32) * 16, 32)-((Int(TileData(ii, i, 5) / 32) * 16) + 15, 47)
-                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + 15, TileIndex(CeilingTile(ii, i), 2) + 15)
+                PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.TileSheet, , (TileIndex(CeilingTile(ii, i), 1), TileIndex(CeilingTile(ii, i), 2))-(TileIndex(CeilingTile(ii, i), 1) + TextureSize, TileIndex(CeilingTile(ii, i), 2) + TextureSize)
                 PutImage ((ii - 1) * 16, (i - 1) * 16)-(((ii - 1) * 16) + 15.75, ((i - 1) * 16) + 15.75), Texture.Shadows, , (Int(TileData(ii, i, 6) / 32) * 16, 32)-((Int(TileData(ii, i, 6) / 32) * 16) + 15, 47)
             End If
         Next
@@ -6274,11 +6475,6 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     Cls
     KeyClear
     AutoDisplay
-
-    If Exp.Active = 1 GoTo skipthisboi
-    Input "World Name?", WorldName
-    Input "World Seed? (0 for random)", WorldSeed
-    skipthisboi:
 
 
     If WorldSeed = 0 Then

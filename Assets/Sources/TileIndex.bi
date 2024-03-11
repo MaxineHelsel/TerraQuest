@@ -553,7 +553,7 @@ TileIndexData(36, 0) = 1 'collision
 TileIndexData(36, 1) = 1 'casts shadow
 TileIndexData(36, 2) = 1 'blocks shadow
 TileIndexData(36, 3) = 0 'has interior shadow
-TileIndexData(36, 4) = 59 'resistance
+TileIndexData(36, 4) = 500 'resistance
 TileIndexData(36, 5) = 1 'is solid
 
 TileName(37, 0) = "Aetherian Wall" 'Name of the tile
@@ -566,7 +566,7 @@ TileIndexData(37, 0) = 1 'collision
 TileIndexData(37, 1) = 1 'casts shadow
 TileIndexData(37, 2) = 1 'blocks shadow
 TileIndexData(37, 3) = 0 'has interior shadow
-TileIndexData(37, 4) = 59 'resistance
+TileIndexData(37, 4) = 500 'resistance
 TileIndexData(37, 5) = 1 'is solid
 
 TileName(38, 0) = "Aetherian Wall" 'Name of the tile
@@ -579,7 +579,7 @@ TileIndexData(38, 0) = 1 'collision
 TileIndexData(38, 1) = 1 'casts shadow
 TileIndexData(38, 2) = 1 'blocks shadow
 TileIndexData(38, 3) = 0 'has interior shadow
-TileIndexData(38, 4) = 59 'resistance
+TileIndexData(38, 4) = 500 'resistance
 TileIndexData(38, 5) = 1 'is solid
 
 TileName(39, 0) = "Aetherian Wall" 'Name of the tile
@@ -592,7 +592,7 @@ TileIndexData(39, 0) = 1 'collision
 TileIndexData(39, 1) = 1 'casts shadow
 TileIndexData(39, 2) = 1 'blocks shadow
 TileIndexData(39, 3) = 0 'has interior shadow
-TileIndexData(39, 4) = 59 'resistance
+TileIndexData(39, 4) = 500 'resistance
 TileIndexData(39, 5) = 1 'is solid
 
 TileName(40, 0) = "Aetherian Wall" 'Name of the tile
@@ -605,7 +605,7 @@ TileIndexData(40, 0) = 1 'collision
 TileIndexData(40, 1) = 1 'casts shadow
 TileIndexData(40, 2) = 1 'blocks shadow
 TileIndexData(40, 3) = 0 'has interior shadow
-TileIndexData(40, 4) = 59 'resistance
+TileIndexData(40, 4) = 500 'resistance
 TileIndexData(40, 5) = 1 'is solid
 
 TileName(41, 0) = "Aetherian Wall" 'Name of the tile
@@ -618,7 +618,7 @@ TileIndexData(41, 0) = 1 'collision
 TileIndexData(41, 1) = 1 'casts shadow
 TileIndexData(41, 2) = 1 'blocks shadow
 TileIndexData(41, 3) = 0 'has interior shadow
-TileIndexData(41, 4) = 59 'resistance
+TileIndexData(41, 4) = 500 'resistance
 TileIndexData(41, 5) = 1 'is solid
 '42 aetherian carpet
 
@@ -632,7 +632,7 @@ TileIndexData(42, 0) = 0 'collision
 TileIndexData(42, 1) = 0 'casts shadow
 TileIndexData(42, 2) = 0 'blocks shadow
 TileIndexData(42, 3) = 0 'has interior shadow
-TileIndexData(42, 4) = 59 'resistance
+TileIndexData(42, 4) = 500 'resistance
 TileIndexData(42, 5) = 0 'is solid
 TileIndexData(42, 9) = 0.2 'friction
 TileIndexData(42, 10) = 1
@@ -699,18 +699,18 @@ TileIndexData(48, 6) = 5 'light casts
 '51 wooden ladder wall
 
 '52 Dynamite
-TileName(27, 0) = "Limestone Wall" 'Name of the tile
-TileName(27, 1) = "Placeholder" 'tooltip
-TileIndex(27, 0) = 1 'layer definition
-TileIndex(27, 1) = 240 'x position on tilesheet
-TileIndex(27, 2) = 16 'y position on tilesheet
-TileIndex(27, 3) = 27 'itemid
-TileIndexData(27, 0) = 1 'collision
-TileIndexData(27, 1) = 1 'casts shadow
-TileIndexData(27, 2) = 1 'blocks shadow
-TileIndexData(27, 3) = 0 'has interior shadow
-TileIndexData(27, 4) = 54 'resistance
-TileIndexData(27, 5) = 1 'is solid
+TileName(52, 0) = "Dynamite" 'Name of the tile
+TileName(52, 1) = "Placeholder" 'tooltip
+TileIndex(52, 0) = 1 'layer definition
+TileIndex(52, 1) = 160 'x position on tilesheet
+TileIndex(52, 2) = 48 'y position on tilesheet
+TileIndex(52, 3) = 52 'itemid
+TileIndexData(52, 0) = 1 'collision
+TileIndexData(52, 1) = 1 'casts shadow
+TileIndexData(52, 2) = 1 'blocks shadow
+TileIndexData(52, 3) = 0 'has interior shadow
+TileIndexData(52, 4) = 54 'resistance
+TileIndexData(52, 5) = 1 'is solid
 
 
 '53 Creative Power Source
@@ -720,3 +720,71 @@ TileIndexData(27, 5) = 1 'is solid
 '55 Logic Wire
 
 '56 Switch
+
+'57-60 teleporter computers
+TileName(57, 0) = "Locked Down Computer" 'Name of the tile
+TileName(57, 1) = "Placeholder" 'tooltip
+TileIndex(57, 0) = 1 'layer definition
+TileIndex(57, 1) = 176 'x position on tilesheet
+TileIndex(57, 2) = 48 'y position on tilesheet
+TileIndex(57, 3) = 57 'itemid
+TileIndexData(57, 0) = 1 'collision
+TileIndexData(57, 1) = 0 'casts shadow
+TileIndexData(57, 2) = 0 'blocks shadow
+TileIndexData(57, 3) = 0 'has interior shadow
+TileIndexData(57, 4) = 999 'resistance
+TileIndexData(57, 5) = 1 'is solid
+
+TileName(58, 0) = "Unlinked Computer" 'Name of the tile
+TileName(58, 1) = "Placeholder" 'tooltip
+TileIndex(58, 0) = 1 'layer definition
+TileIndex(58, 1) = 192 'x position on tilesheet
+TileIndex(58, 2) = 48 'y position on tilesheet
+TileIndex(58, 3) = 58 'itemid
+TileIndexData(58, 0) = 1 'collision
+TileIndexData(58, 1) = 0 'casts shadow
+TileIndexData(58, 2) = 0 'blocks shadow
+TileIndexData(58, 3) = 0 'has interior shadow
+TileIndexData(58, 4) = 999 'resistance
+TileIndexData(58, 5) = 1 'is solid
+
+TileName(59, 0) = "Linked Computer" 'Name of the tile
+TileName(59, 1) = "Placeholder" 'tooltip
+TileIndex(59, 0) = 1 'layer definition
+TileIndex(59, 1) = 208 'x position on tilesheet
+TileIndex(59, 2) = 48 'y position on tilesheet
+TileIndex(59, 3) = 59 'itemid
+TileIndexData(59, 0) = 1 'collision
+TileIndexData(59, 1) = 0 'casts shadow
+TileIndexData(59, 2) = 0 'blocks shadow
+TileIndexData(59, 3) = 0 'has interior shadow
+TileIndexData(59, 4) = 999 'resistance
+TileIndexData(59, 5) = 1 'is solid
+
+TileName(60, 0) = "Broken Computer" 'Name of the tile
+TileName(60, 1) = "Placeholder" 'tooltip
+TileIndex(60, 0) = 1 'layer definition
+TileIndex(60, 1) = 224 'x position on tilesheet
+TileIndex(60, 2) = 48 'y position on tilesheet
+TileIndex(60, 3) = 60 'itemid
+TileIndexData(60, 0) = 1 'collision
+TileIndexData(60, 1) = 0 'casts shadow
+TileIndexData(60, 2) = 0 'blocks shadow
+TileIndexData(60, 3) = 0 'has interior shadow
+TileIndexData(60, 4) = 999 'resistance
+TileIndexData(60, 5) = 1 'is solid
+
+TileName(61, 0) = "ARN Egress Gate" 'Name of the tile
+TileName(61, 1) = "Placeholder" 'tooltip
+TileIndex(61, 0) = 1 'layer definition
+TileIndex(61, 1) = 240 'x position on tilesheet
+TileIndex(61, 2) = 48 'y position on tilesheet
+TileIndex(61, 3) = 61 'itemid
+TileIndexData(61, 0) = 1 'collision
+TileIndexData(61, 1) = 0 'casts shadow
+TileIndexData(61, 2) = 1 'blocks shadow
+TileIndexData(61, 3) = 0 'has interior shadow
+TileIndexData(61, 4) = 500 'resistance
+TileIndexData(61, 5) = 1 'is solid
+
+
