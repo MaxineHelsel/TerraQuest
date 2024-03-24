@@ -1,7 +1,8 @@
 $NoPrefix
+Rem $Debug
 Option Explicit
 On Error GoTo ERRORHANDLE
-Randomize Using Timer
+'randomize Using Timer
 Screen NewImage(641, 481, 32) '40x30
 PrintMode KeepBackground
 DisplayOrder Hardware , Software
@@ -20,13 +21,16 @@ Title "TerraQuest"
 '$include: 'Assets\Sources\SplashText.bi'
 
 Game.Title = "TerraQuest: Tales of Aetheria"
-Game.Buildinfo = "Beta 1.3 Edge Build 240311b"
-Game.Version = "B1.3-240311b
+Game.Buildinfo = "Beta 1.3 Edge Build 240324A"
+Game.Version = "B1.3-240324A"
 Game.MapProtocol = 2
 Game.ManifestProtocol = 2
 Game.Designation = "Edge"
 Game.FCV = 1
 Game.NetPort = 46290
+
+Flag.FullCam = 1
+Flag.FullRender = 1
 
 Dim Shared RefreshOpt As Byte
 Dim Shared CurrentRefresh As Byte
@@ -48,6 +52,17 @@ Dim Shared Exp.ParLen As Integer
 Dim Shared Game.WorldCount
 
 Dim Shared TextureSize As Unsigned Byte
+
+'Network Fuckery Variables and Types
+Dim Shared Network.PrimaryHost 'variable for telling the client whether we are the primary host, should not change at all during game session
+Dim Shared Network.HostMode 'variable for telling the client whether we are map host or not, can change dynamically through gameplay
+Dim Shared Network.ServerAddress As String 'ip address
+Dim Shared Network.ClientPlayerName
+ReDim Shared Network.PlayerNames(10) As String
+ReDim Shared Network.PlayerDataArray(10, 5) '(playerID,Value)
+
+
+
 
 
 TextureSize = 15
@@ -100,17 +115,27 @@ mainmenu:
 Do
     Dim Selected
     Cls
+    DEV
     Selected = Menu(0)
     Display
     Select Case Selected
 
         Case 1
             GoTo createorload
+        Case 2
+            GoTo StartMultiplayer
         Case 3
             GoTo Settings
     End Select
 Loop
 Error 102
+
+StartMultiplayer:
+Do
+
+Loop
+
+
 createorload:
 Do
     Cls
@@ -135,6 +160,7 @@ Do
     Input "Please enter a world name to load", WorldName
 
     LOADWORLD
+    GoTo game
 Loop
 
 createworldmenu:
@@ -179,6 +205,9 @@ Do
             Next
             Open "Assets/Worlds/WorldList.cdf" As #1
             Put #1, 1, Game.WorldCount
+
+            'put world name into worldlist
+
             Close #1
             SpreadLight 1
             GoTo game
@@ -283,6 +312,8 @@ If DefaultRenderMode = 2 Then
 End If
 Flag.FadeIn = 1
 Do
+    NetworkUpdate
+
     'Run status effects
     For i = 0 To CurrentEntities
         OnTopEffect i
@@ -337,7 +368,10 @@ Do
     End If
 
     If Exp.Active <> 0 Then Locate 1, 1: CENTERPRINT "EXPERIMENTAL MODE ENABLED (" + Game.Version + "-EX" + Trim$(Str$(Exp.Active)) + ")"
+
+    'Grab keyboard input once in the loop here, and use that value everywhere else. this is to avoid overfishing the keyboard buffer
     KeyPressed = KeyHit
+
     If Flag.FrameRateLock = 0 Then Limit Settings.FrameRate
     CurrentTick = CurrentTick + Settings.TickRate
     If Flag.ScreenRefreshSkip = 0 Then
@@ -374,6 +408,25 @@ Error 102
 RepeaterOutpost:
 
 Data
+
+Sub NetworkUpdate
+    Select Case Network.PrimaryHost
+        Case 0 'primary client
+            'recieve resync packet (server tick, current time, player list, map host users and map cords)
+        Case 1 'primary host
+            'check for map close to save
+            'send resync packet
+    End Select
+
+    Select Case Network.HostMode
+        Case 0 'map client
+            'recieve map and entity data
+        Case 1 'map host
+            'send map and entity data
+            '[in map change function] check for existing players in map and transfer map host
+
+    End Select
+End Sub
 
 Sub Playerchat
     Static ChatBuffer As String
@@ -460,10 +513,9 @@ Sub GenerateMap (Dimension As Byte)
                     TileData(ii, i, 5) = 255
                     CeilingTile(ii, i) = 1
                     TileData(ii, i, 6) = 255
-
-
                     'generate terrain
                     PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.HeightScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.HeightScale, 0, WorldSeed)
+
                     Select Case PerlinTile
 
                         Case Is < 0.35
@@ -479,8 +531,6 @@ Sub GenerateMap (Dimension As Byte)
                             WallTile(ii, i) = 19
                     End Select
 
-                    'generate structures
-
 
                 Next
             Next
@@ -489,10 +539,17 @@ Sub GenerateMap (Dimension As Byte)
             For i = 0 To Exp.MapSizeY + 1
                 For ii = 0 To Exp.MapSizeX + 1
                     PerlinTile = Perlin((ii + (SavedMapX * Exp.MapSizeX)) / Gen.TempScale, (i + (SavedMapY * Exp.MapSizeY)) / Gen.TempScale, 0, Perlin((SavedMapX * Exp.MapSizeX) / Gen.HeightScale, (SavedMapY * Exp.MapSizeY) / Gen.HeightScale, 0, WorldSeed))
-                    Select Case PerlinTile
+                    Select Case PerlinTile 'generate base biome tiles
 
                         Case Is < 0.25
                             'permafrost (being in this biome will damage you
+                            Select Case GroundTile(ii, i)
+                                Case 2, 3, 29
+                                    GroundTile(ii, i) = 47 'smooth snow
+                                Case 13
+                                    GroundTile(ii, i) = 14
+                            End Select
+
                         Case 0.25 To 0.35
                             'snowy
                             Select Case GroundTile(ii, i)
@@ -504,8 +561,8 @@ Sub GenerateMap (Dimension As Byte)
                             'planes
                         Case 0.55 To 0.65
                             'forrest
-                            '   Case Is > 0.75
-                            'lava    (needless to say being here will damage you, but even on land
+
+
                         Case Is > 0.75
                             'desert
                             Select Case GroundTile(ii, i)
@@ -513,8 +570,48 @@ Sub GenerateMap (Dimension As Byte)
                                     GroundTile(ii, i) = 29
                             End Select
 
-
+                            'red yellow green purple blue teal ice
                     End Select
+
+                    If WallTile(ii, i) = 1 Then 'check if air
+                        If GroundTile(ii, i) = 2 Or GroundTile(ii, i) = 3 Or GroundTile(ii, i) = 46 Or GroundTile(ii, i) = 47 Or GroundTile(ii, i) = 29 Then
+
+                            'generate flowers based on temperature
+                            Select EveryCase PerlinTile
+                                Case Is < 0.2 'ice flower
+                                    If GroundTile(ii, i) <> 29 Then If Ceil(Rnd * 25) = 3 Then WallTile(ii, i) = 73
+                                Case 0.15 To 0.35 'teal flower
+                                    If GroundTile(ii, i) <> 29 Then If Ceil((Rnd * 200) - Abs((((PerlinTile * 100) - 15) - 10))) > 185 Then
+                                            WallTile(ii, i) = 72
+                                        End If
+                                    End If
+                                Case 0.25 To 0.45 'blue flower
+                                    If GroundTile(ii, i) <> 29 Then If Ceil((Rnd * 200) - Abs((((PerlinTile * 100) - 25) - 10))) > 185 Then
+                                            WallTile(ii, i) = 71
+                                        End If
+                                    End If
+                                Case 0.35 To 0.55 'purple flower
+                                    If GroundTile(ii, i) <> 29 Then If Ceil((Rnd * 200) - Abs((((PerlinTile * 100) - 35) - 10))) > 185 Then
+                                            WallTile(ii, i) = 70
+                                        End If
+                                    End If
+                                Case 0.45 To 0.65 'green flower
+                                    If GroundTile(ii, i) <> 29 Then If Ceil((Rnd * 200) - Abs((((PerlinTile * 100) - 45) - 10))) > 185 Then
+                                            WallTile(ii, i) = 69
+                                        End If
+                                    End If
+                                Case 0.55 To 0.85 'yellow flower
+                                    If Ceil((Rnd * 200) - Abs((((PerlinTile * 100) - 55) - 15))) > 180 Then
+                                        WallTile(ii, i) = 68
+                                    End If
+                                Case Is > 0.75
+                                    If Ceil(Rnd * 25) = 3 Then WallTile(ii, i) = 67
+
+                            End Select
+                        End If
+
+                    End If
+
 
                 Next
             Next
@@ -525,16 +622,30 @@ Sub GenerateMap (Dimension As Byte)
             'generate features
             For i = 0 To Exp.MapSizeY + 1
                 For ii = 0 To Exp.MapSizeX + 1
+                    'target any air tile
 
+                    'target smooth snow with air
+                    If GroundTile(ii, i) = 47 And WallTile(ii, i) = 1 Then
+                        If Ceil(Rnd * 15) = 10 Then GroundTile(ii, i) = 46 'snow drifts
 
+                        If Ceil(Rnd * 20) = 5 Then
+                            WallTile(ii, i) = 45
+                        End If
+
+                    End If
+
+                    'target grass with air
                     If GroundTile(ii, i) = 2 And WallTile(ii, i) = 1 Then
 
+
+                        'generate bushes
                         If Ceil(Rnd * 10) = 5 Then
                             WallTile(ii, i) = 5
+                            If PerlinTile < 0.27 Then WallTile(ii, i) = 45
                         End If
 
                         'generate ground wood items
-                        If Ceil(Rnd * 150) = 50 Then
+                        If Ceil(Rnd * 300) = 50 Then
                             WallTile(ii, i) = 11
                             NewContainer SavedMapX, SavedMapY, ii, i
                             OpenContainer SavedMapX, SavedMapY, ii, i
@@ -546,7 +657,7 @@ Sub GenerateMap (Dimension As Byte)
                         End If
 
                         'generate ground Stone items
-                        If Ceil(Rnd * 300) = 50 Then
+                        If Ceil(Rnd * 600) = 50 Then
                             WallTile(ii, i) = 11
                             NewContainer SavedMapX, SavedMapY, ii, i
                             OpenContainer SavedMapX, SavedMapY, ii, i
@@ -556,7 +667,6 @@ Sub GenerateMap (Dimension As Byte)
                             Container(0, 0, 7) = Ceil(Rnd * 2)
                             CloseContainer SavedMapX, SavedMapY, ii, i
                         End If
-
 
                         'generate berry bushes
                         If Ceil(Rnd * 250) = 125 Then
@@ -1077,10 +1187,22 @@ Sub Textbox (Diag, Opt)
             CENTERPRINT DiagSel(8, Opt) + "Toggle Hud: F1"
             CENTERPRINT DiagSel(9, Opt) + "Take Screenshot: F2"
             CENTERPRINT DiagSel(10, Opt) + "Toggle Debug Mode: F3"
-            CENTERPRINT DiagSel(11, Opt) + "Open Commands (Debug Only): /"
+            CENTERPRINT DiagSel(11, Opt) + "Open Legacy Commands (Debug Only): /"
             CENTERPRINT DiagSel(12, Opt) + "Open Chat: T"
             Print
-            CENTERPRINT DiagSel(13, Opt) + "Back: "
+            CENTERPRINT DiagSel(13, Opt) + "Back"
+
+        Case 6
+            CENTERPRINT DiagSel(1, Opt) + "Username: "
+            Print
+            CENTERPRINT DiagSel(2, Opt) + "IP Address: "
+            Print
+            Print
+            CENTERPRINT DiagSel(3, Opt) + "Host Game"
+            Print
+            CENTERPRINT DiagSel(4, Opt) + "Join Game (Specify IP)"
+            Print
+            CENTERPRINT DiagSel(5, Opt) + "Back"
 
     End Select
     Display
@@ -1142,7 +1264,7 @@ Function Menu (MenuNum)
 
             Textbox 0, HighlightedOption
             OptCount = 3
-        Case 1
+        Case 1 'settings
             'put title screen icon
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
@@ -1154,7 +1276,7 @@ Function Menu (MenuNum)
 
             Textbox 1, HighlightedOption
             OptCount = 7
-        Case 2
+        Case 2 'create or load
             'put title screen icon
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
@@ -1166,29 +1288,37 @@ Function Menu (MenuNum)
 
             Textbox 2, HighlightedOption
             OptCount = 3
-        Case 3
+        Case 3 'new world
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Single Player"
+            CENTERPRINT "Create New World"
             Textbox 3, HighlightedOption
             OptCount = 6
-        Case 4
+        Case 4 'Controls
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Single Player"
+            CENTERPRINT "Controls"
             Textbox 4, HighlightedOption
             OptCount = 17
-        Case 5
+        Case 5 'Controls 2
             ENDPRINT "(" + Splash(SplashText) + " Edition!)"
             Locate 2, 1
             CENTERPRINT Game.Title + " " + Game.Buildinfo
             Print
-            CENTERPRINT "Single Player"
+            CENTERPRINT "Controls"
             Textbox 5, HighlightedOption
+            OptCount = 13
+        Case 6 'Start Multiplayer
+            ENDPRINT "(" + Splash(SplashText) + " Edition!)"
+            Locate 2, 1
+            CENTERPRINT Game.Title + " " + Game.Buildinfo
+            Print
+            CENTERPRINT "MultiPlayer"
+            Textbox 6, HighlightedOption
             OptCount = 13
 
 
@@ -2230,7 +2360,7 @@ Function LootTable (tType As Byte, ID As Integer)
     Select Case tType
         Case 1 'tile drops
             Select Case ID
-                Case 19 '                low tier stone
+                Case 19 'low tier stone
                     LootTable = 29 'stone
                     If Int(Rnd * 50) < 5 Then LootTable = 122 'coal
                     If Int(Rnd * 100) < 15 Then LootTable = 38 'tin
@@ -2252,6 +2382,10 @@ Function LootTable (tType As Byte, ID As Integer)
                     LootTable = 114
                     If Int(Rnd * 150) < 16 Then LootTable = 42 'titanium
                     If Int(Rnd * 700) < 5 Then LootTable = 109 'Amethyst
+                Case 74 'limestone nodule
+                    LootTable = 114
+                    If Int(Rnd * 50) < 16 Then LootTable = 42 'titanium
+                    If Int(Rnd * 200) < 5 Then LootTable = 109 'Amethyst
 
             End Select
         Case 2 'mob drops
@@ -3740,7 +3874,7 @@ Function EffectIndex (Sources As String, Value As Single)
                 Case 1
                     EffectIndex = 2 'frame duration
                 Case 2
-                    EffectIndex = 30 'frame cooldown
+                    EffectIndex = 60 'frame cooldown
                 Case 3
                     EffectIndex = 1 'damage
 
@@ -4237,9 +4371,9 @@ Sub UpdateTile (TileX, TileY)
     If TileIndexData(GroundTile(TileX, TileY), 1) = 1 Or TileIndexData(WallTile(TileX, TileY), 1) = 1 Then TileData(TileX, TileY, 1) = 1 Else TileData(TileX, TileY, 1) = 0
     If TileIndexData(GroundTile(TileX, TileY), 2) = 1 Or TileIndexData(WallTile(TileX, TileY), 2) = 1 Then TileData(TileX, TileY, 2) = 1 Else TileData(TileX, TileY, 2) = 0
     If TileIndexData(GroundTile(TileX, TileY), 3) = 1 And TileIndexData(WallTile(TileX, TileY), 2) = 0 Then TileData(TileX, TileY, 3) = 1 Else TileData(TileX, TileY, 3) = 0
-    '  TileData(TileX, TileY, 4) = TileIndexData(GroundTile(TileX, TileY), 4)
-    '  TileData(TileX, TileY, 5) = TileIndexData(WallTile(TileX, TileY), 4)
-    '  TileData(TileX, TileY, 6) = TileIndexData(CeilingTile(TileX, TileY), 4)
+    TileData(TileX, TileY, 4) = 255
+    TileData(TileX, TileY, 5) = 255
+    TileData(TileX, TileY, 6) = 255
     TileData(TileX, TileY, 7) = TileIndexData(WallTile(TileX, TileY), 5)
     TileData(TileX, TileY, 8) = 0
     If TileIndexData(GroundTile(TileX, TileY), 6) > TileData(TileX, TileY, 8) Then TileData(TileX, TileY, 8) = TileIndexData(GroundTile(TileX, TileY), 6)
@@ -4654,7 +4788,7 @@ End Sub
 
 Sub DEV
     'Exit Sub
-    If Flag.DebugMode = 1 Or CurrentTick < 1 Then
+    If Flag.DebugMode = 1 Then
         PrintMode FillBackground
         Color , RGBA(0, 0, 0, 128)
         Dim comin As String
@@ -5261,7 +5395,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             SendChat Chr$(21) + "Showing command help list"
             SendChat Chr$(21) + "/resolution (short: /res) [x] [y] alters the games resolution"
             SendChat Chr$(21) + "/weather [mode] changes current weather mode"
-            SendChat Chr$(21) + "/settile (short:/st) [layer] [tile] {x} {y}"
+            SendChat Chr$(21) + "/settile (short:/st) [layer] [tile] {x} {y} Sets a tile at a specific position"
             SendChat Chr$(21) + "/filltile (short:/ft) [layer] [tile] {x1} {y1} [x2] [y2]"
             SendChat Chr$(21) + "/viruslevel (short:/vl) [virus level] changes the current NovaFlux-Xx world infection level"
             SendChat Chr$(21) + "/togglebloodmoon (short:/tbm) Toggles the blood moon flag"
@@ -5290,6 +5424,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             SendChat Chr$(21) + "/help2 Page 2"
         Case "/help2"
             SendChat Chr$(21) + "Showing help list page 2"
+            SendChat Chr$(21) + "/frameskip (short:/fs) [value] Sets the frameskip interval to better reach 60tps"
 
 
 
@@ -5300,7 +5435,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             If Feedback = 1 Then SendChat Chr$(21) + "Resolution set to " + Trim$(Str$(ScreenRezX)) + "x" + Trim$(Str$(ScreenRezY))
         Case "/weather"
             PrecipitationLevel = Val(Parameters(0))
-
+            If Feedback = 1 Then SendChat Chr$(21) + "Set precipitation level"
         Case "/st", "/settile"
             Parameters(2) = Str$(PlayerTileX): Parameters(3) = Str$(PlayerTileY)
             Select Case Val(Parameters(0))
@@ -5430,6 +5565,7 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
             CurrentDimension = Val(Parameters(0))
             LOADMAP SavedMap
             If Feedback = 1 Then SendChat Chr$(21) + "Changed Dimension"
+
         Case "/frameskip", "/fs"
             RefreshOpt = Val(Parameters(0))
             If Feedback = 1 Then SendChat Chr$(21) + "Frameskip updated"
@@ -5532,6 +5668,9 @@ Sub WorldCommands (CommandString As String, Feedback As Byte)
         Case "/map-teleport", "/maptp"
             ChangeMap 1, Val(Parameters(0)), Val(Parameters(1))
             If Feedback = 1 Then SendChat Chr$(21) + "Moved to new map"
+        Case "/loadmap", "/lm"
+            LOADMAP (Parameters(0))
+            If Feedback = 1 Then SendChat Chr$(21) + "Loaded map files over current map"
 
             '--------------------------------
         Case Else
@@ -5622,6 +5761,9 @@ Sub LOADWORLD
     Get #1, 14, CurrentDay
     Get #1, 15, WeatherCountDown
     Get #1, 16, PrecipitationLevel
+    Get #1, 17, CurrentDimension
+    Get #1, 18, Exp.MapSizeX
+    Get #1, 19, Exp.MapSizeY
 
     Close #1
     Print "Opening player"
@@ -5653,6 +5795,7 @@ Sub LOADWORLD
 
     'GET #1, 4, map.protected
     Print "World data loaded, loading local map"
+    ChangeMapSize
     LOADMAP (SavedMap)
 End Sub
 
@@ -5926,6 +6069,9 @@ Sub SAVEMAP
     Put #1, 15, WeatherCountDown
     Put #1, 16, PrecipitationLevel
     Put #1, 17, CurrentDimension
+    Put #1, 18, Exp.MapSizeX
+    Put #1, 19, Exp.MapSizeY
+
     Close #1
     Open "Assets\Worlds\" + WorldName + "\Player.cdf" As #1
     total = 1
@@ -6219,10 +6365,10 @@ Sub ErrorHandler
     Print "Error Code:"; Err
     Locate 2, 1
     ENDPRINT "Error Line:" + Str$(ErrorLine)
-    If Exp.Active <> 0 Then
-        Print "Active Experimental Mode:" + Trim$(Str$(Exp.Active))
-        Print "Map Size: " + Trim$(Str$(Exp.MapSizeX)) + ","; Trim$(Str$(Exp.MapSizeY)) + " PL:" + Trim$(Str$(Exp.ParLen))
-    End If
+    '  If Exp.Active <> 0 Then
+    Print "Active Experimental Mode:" + Trim$(Str$(Exp.Active))
+    Print "Map Size: " + Trim$(Str$(Exp.MapSizeX)) + ","; Trim$(Str$(Exp.MapSizeY)) + " PL:" + Trim$(Str$(Exp.ParLen))
+    ' End If
     Dim i
     For i = 0 To Int((ScreenRezX / 8) - 1): Print "-";: Next
     '    Print "--------------------------------------------------------------------------------"
@@ -6377,7 +6523,7 @@ End Function
 
 
 Sub _GL
-    'If Flag.RenderOverride <> 0 Then Exit Sub
+    If Flag.RenderOverride <> 0 Then Exit Sub
     OpenGLFPS
 End Sub
 
@@ -6499,11 +6645,13 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     SAVEMAP 'necessary for at least 1 map to be saved before running generate map, because savemap is also responsible for creating the file structure for the world
     GenerateMap 0 'generates -1,0 so that its not just saving a completely empty map
     SAVEMAP 'saves that generated map
+    ' LOADWORLD
+
 
     Do 'generates the map that the player will actually spawn in, also checks to see if the player CAN even spawn in this map and is not in some ocean, if not it will try the next map over, the reason map -1,0 is generated first is so that this loop is cleaner
         SavedMapX = SavedMapX + 1
         GenerateMap 0
-    Loop Until WallTile(PlayerTileX, PlayerTileY) = 1
+    Loop Until WallTile(PlayerTileX, PlayerTileY) = 1 'loop until validspawn(player.x,player.y)=1
 
     SpawnPointX = Player.x
     SpawnPointY = Player.y
@@ -6512,7 +6660,8 @@ Sub NewWorld '(worldname as string, worldseed as integer64)
     SAVEMAP 'saves only the map that the player will spawn on, why waste write cycles
     Print "map generated, loading world"
     Delay 0.5
-    WorldSeed = 0
+    ' WorldSeed = 0
+
     LOADWORLD
 End Sub
 
@@ -6525,7 +6674,7 @@ End Function
 
 
 
-Function Perlin (x As Single, y As Single, z As Single, seed As Single) 'i did not write this function
+Function Perlin (x As Single, y As Single, z As Single, seed As Integer64) 'i did not write this function
     Randomize seed
 
     Static p5NoiseSetup As _Byte
