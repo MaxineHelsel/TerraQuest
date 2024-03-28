@@ -3,6 +3,10 @@
 
 ### WARNING This is the edge branch, meaning this version could be incomplete, unstable, untested, broken, etc. If you are looking for the latest released version, switch to stable.
 
+# Official Discord Server
+
+- https://discord.gg/xUqAjgRRcS
+
 # Download instructions
 
 - Click 'Branch' and choose which version you want
